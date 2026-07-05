@@ -62,12 +62,12 @@ def create_app() -> FastAPI:
     )
 
     # Register middleware (order matters - last registered = first executed)
-    app.add_middleware(SecurityHeadersMiddleware)
-    app.add_middleware(PerformanceMiddleware)
-    app.add_middleware(AIRateLimitMiddleware)
-    app.add_middleware(RateLimitMiddleware, requests_per_minute=settings.RATE_LIMIT_PER_MINUTE)
-    app.add_middleware(LoggingMiddleware)
-    app.add_middleware(RequestIDMiddleware)
+    #app.add_middleware(SecurityHeadersMiddleware)
+    #app.add_middleware(PerformanceMiddleware)
+    #app.add_middleware(AIRateLimitMiddleware)
+    #app.add_middleware(RateLimitMiddleware, requests_per_minute=settings.RATE_LIMIT_PER_MINUTE)
+    #app.add_middleware(LoggingMiddleware)
+    #app.add_middleware(RequestIDMiddleware)
 
     # CORS
     app.add_middleware(
