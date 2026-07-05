@@ -1,20 +1,36 @@
 ---
-import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import DashboardLayout from "../../layouts/DashboardLayout.astro";
 ---
 
 <DashboardLayout title="Recruitment - SynapseHR">
   <div class="space-y-6" id="recruitment-root">
-
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+    >
       <div>
         <h1 class="page-title">Recruitment</h1>
-        <p class="page-subtitle">AI-powered candidate management & hiring pipeline</p>
+        <p class="page-subtitle">
+          AI-powered candidate management & hiring pipeline
+        </p>
       </div>
       <div class="flex gap-3">
-        <button id="uploadResumeBtn" class="btn btn-primary flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        <button
+          id="uploadResumeBtn"
+          class="btn btn-primary flex items-center gap-2"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            ></path>
           </svg>
           Upload Resume
         </button>
@@ -24,38 +40,99 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="card p-5 relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent pointer-events-none"></div>
-        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Candidates</p>
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent pointer-events-none"
+        >
+        </div>
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">
+          Total Candidates
+        </p>
         <p id="stat-total" class="text-3xl font-bold text-white mt-2">—</p>
         <div class="mt-2 flex items-center gap-1 text-xs text-indigo-400">
-          <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
+          <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"
+            ><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+            ></path></svg
+          >
           <span>All applicants</span>
         </div>
       </div>
       <div class="card p-5 relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent pointer-events-none"></div>
-        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Shortlisted</p>
-        <p id="stat-shortlisted" class="text-3xl font-bold text-amber-400 mt-2">—</p>
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent pointer-events-none"
+        >
+        </div>
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">
+          Shortlisted
+        </p>
+        <p id="stat-shortlisted" class="text-3xl font-bold text-amber-400 mt-2">
+          —
+        </p>
         <div class="mt-2 flex items-center gap-1 text-xs text-amber-400">
-          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+            ></path></svg
+          >
           <span>Top candidates</span>
         </div>
       </div>
       <div class="card p-5 relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent pointer-events-none"></div>
-        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Interviews</p>
-        <p id="stat-interviews" class="text-3xl font-bold text-blue-400 mt-2">—</p>
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent pointer-events-none"
+        >
+        </div>
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">
+          Interviews
+        </p>
+        <p id="stat-interviews" class="text-3xl font-bold text-blue-400 mt-2">
+          —
+        </p>
         <div class="mt-2 flex items-center gap-1 text-xs text-blue-400">
-          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            ></path></svg
+          >
           <span>Scheduled</span>
         </div>
       </div>
       <div class="card p-5 relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none"></div>
-        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Hired</p>
-        <p id="stat-hired" class="text-3xl font-bold text-emerald-400 mt-2">—</p>
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none"
+        >
+        </div>
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">
+          Hired
+        </p>
+        <p id="stat-hired" class="text-3xl font-bold text-emerald-400 mt-2">
+          —
+        </p>
         <div class="mt-2 flex items-center gap-1 text-xs text-emerald-400">
-          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg
+          >
           <span>Successful hires</span>
         </div>
       </div>
@@ -65,10 +142,24 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     <div class="card p-4">
       <div class="flex flex-col sm:flex-row gap-3">
         <div class="flex-1 relative">
-          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          <svg
+            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
-          <input type="text" id="searchInput" placeholder="Search candidates, skills, role..." class="input pl-9 w-full" />
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search candidates, skills, role..."
+            class="input pl-9 w-full"
+          />
         </div>
         <select id="stageFilter" class="input w-full sm:w-44">
           <option value="">All Stages</option>
@@ -110,7 +201,22 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             <tr>
               <td colspan="6" class="text-center py-10 text-slate-400">
                 <div class="flex flex-col items-center gap-2">
-                  <svg class="w-8 h-8 text-slate-600 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                  <svg
+                    class="w-8 h-8 text-slate-600 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    ><circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"></circle><path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    ></path></svg
+                  >
                   Loading candidates...
                 </div>
               </td>
@@ -122,51 +228,134 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   </div>
 
   <!-- Upload Resume Modal -->
-  <div id="uploadModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div
+    id="uploadModal"
+    class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+  >
     <div class="card w-full max-w-lg p-6">
       <div class="flex items-center justify-between mb-5">
         <h3 class="text-lg font-semibold text-white">Upload Resume</h3>
-        <button id="closeUpload" class="text-slate-400 hover:text-white transition-colors">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        <button
+          id="closeUpload"
+          class="text-slate-400 hover:text-white transition-colors"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"></path></svg
+          >
         </button>
       </div>
 
       <!-- Drop zone -->
-      <div id="dropZone" class="border-2 border-dashed border-slate-600 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-500/5 transition-all mb-4">
-        <svg class="w-10 h-10 text-slate-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      <div
+        id="dropZone"
+        class="border-2 border-dashed border-slate-600 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-500/5 transition-all mb-4"
+      >
+        <svg
+          class="w-10 h-10 text-slate-500 mx-auto mb-3"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          ></path>
         </svg>
-        <p class="text-slate-300 font-medium">Drop resume here or <span class="text-indigo-400">browse</span></p>
+        <p class="text-slate-300 font-medium">
+          Drop resume here or <span class="text-indigo-400">browse</span>
+        </p>
         <p class="text-slate-500 text-sm mt-1">PDF, DOCX, or TXT • Max 10MB</p>
-        <input type="file" id="resumeFile" class="hidden" accept=".pdf,.docx,.txt" />
-        <p id="fileSelected" class="text-indigo-400 text-sm mt-2 hidden font-medium"></p>
+        <input
+          type="file"
+          id="resumeFile"
+          class="hidden"
+          accept=".pdf,.docx,.txt"
+        />
+        <p
+          id="fileSelected"
+          class="text-indigo-400 text-sm mt-2 hidden font-medium"
+        >
+        </p>
       </div>
 
       <div class="space-y-3">
         <div>
-          <label class="form-label">Job Title <span class="text-slate-500">(optional)</span></label>
-          <input type="text" id="jobTitle" class="input" placeholder="e.g. Python Backend Engineer" />
+          <label class="form-label"
+            >Job Title <span class="text-slate-500">(optional)</span></label
+          >
+          <input
+            type="text"
+            id="jobTitle"
+            class="input"
+            placeholder="e.g. Python Backend Engineer"
+          />
         </div>
         <div>
-          <label class="form-label">Job Description <span class="text-slate-500">(optional — enables AI scoring)</span></label>
-          <textarea id="jobDescription" class="input" rows="3" placeholder="Paste the job description to auto-score the candidate..."></textarea>
+          <label class="form-label"
+            >Job Description <span class="text-slate-500"
+              >(optional — enables AI scoring)</span
+            ></label
+          >
+          <textarea
+            id="jobDescription"
+            class="input"
+            rows="3"
+            placeholder="Paste the job description to auto-score the candidate..."
+          ></textarea>
         </div>
       </div>
 
       <div id="uploadProgress" class="hidden mt-4">
         <div class="flex items-center gap-3 text-sm text-indigo-400">
-          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"
+            ><circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"></circle><path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg
+          >
           <span id="uploadStatusText">Parsing resume with AI...</span>
         </div>
         <div class="mt-2 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-          <div id="uploadProgressBar" class="h-full bg-indigo-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+          <div
+            id="uploadProgressBar"
+            class="h-full bg-indigo-500 rounded-full transition-all duration-500"
+            style="width: 0%"
+          >
+          </div>
         </div>
       </div>
 
       <div class="flex gap-3 justify-end mt-5">
         <button id="cancelUpload" class="btn btn-secondary">Cancel</button>
         <button id="submitUpload" class="btn btn-primary">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+            ></path></svg
+          >
           Parse with AI
         </button>
       </div>
@@ -174,16 +363,36 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   </div>
 
   <!-- Candidate Detail Modal -->
-  <div id="detailModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div
+    id="detailModal"
+    class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+  >
     <div class="card w-full max-w-4xl max-h-[90vh] overflow-y-auto p-0">
       <!-- Modal Header -->
-      <div class="sticky top-0 bg-slate-800 border-b border-slate-700 p-5 flex items-center justify-between z-10">
+      <div
+        class="sticky top-0 bg-slate-800 border-b border-slate-700 p-5 flex items-center justify-between z-10"
+      >
         <div>
-          <h3 id="detail-name" class="text-lg font-bold text-white">Candidate Details</h3>
+          <h3 id="detail-name" class="text-lg font-bold text-white">
+            Candidate Details
+          </h3>
           <p id="detail-role" class="text-sm text-slate-400 mt-0.5"></p>
         </div>
-        <button id="closeDetail" class="text-slate-400 hover:text-white transition-colors">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        <button
+          id="closeDetail"
+          class="text-slate-400 hover:text-white transition-colors"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"></path></svg
+          >
         </button>
       </div>
 
@@ -195,22 +404,30 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             <p class="text-xs text-slate-400 mt-1">Overall Match</p>
           </div>
           <div class="bg-slate-700/40 rounded-xl p-4 text-center">
-            <div class="text-3xl font-bold text-blue-400" id="d-skill-score">—</div>
+            <div class="text-3xl font-bold text-blue-400" id="d-skill-score">
+              —
+            </div>
             <p class="text-xs text-slate-400 mt-1">Skill Match</p>
           </div>
           <div class="bg-slate-700/40 rounded-xl p-4 text-center">
-            <div class="text-3xl font-bold text-purple-400" id="d-exp-score">—</div>
+            <div class="text-3xl font-bold text-purple-400" id="d-exp-score">
+              —
+            </div>
             <p class="text-xs text-slate-400 mt-1">Experience</p>
           </div>
           <div class="bg-slate-700/40 rounded-xl p-4 text-center">
-            <div class="text-3xl font-bold text-emerald-400" id="d-edu-score">—</div>
+            <div class="text-3xl font-bold text-emerald-400" id="d-edu-score">
+              —
+            </div>
             <p class="text-xs text-slate-400 mt-1">Education</p>
           </div>
         </div>
 
         <!-- Recommendation + Stage -->
         <div class="flex flex-wrap items-center gap-3">
-          <span id="d-recommendation" class="px-3 py-1.5 rounded-lg text-sm font-semibold"></span>
+          <span
+            id="d-recommendation"
+            class="px-3 py-1.5 rounded-lg text-sm font-semibold"></span>
           <div class="flex items-center gap-2 ml-auto">
             <label class="text-sm text-slate-400">Stage:</label>
             <select id="d-stage-select" class="input py-1.5 text-sm">
@@ -221,18 +438,42 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
               <option value="hired">Hired ✅</option>
               <option value="rejected">Rejected ❌</option>
             </select>
-            <button id="updateStageBtn" class="btn btn-primary py-1.5 text-sm">Update</button>
+            <button id="updateStageBtn" class="btn btn-primary py-1.5 text-sm"
+              >Update</button
+            >
           </div>
         </div>
 
         <!-- Contact Info -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="flex items-center gap-2 text-sm">
-            <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <svg
+              class="w-4 h-4 text-slate-400 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              ></path></svg
+            >
             <span id="d-email" class="text-slate-300 truncate">—</span>
           </div>
           <div class="flex items-center gap-2 text-sm">
-            <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            <svg
+              class="w-4 h-4 text-slate-400 flex-shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+              ></path></svg
+            >
             <span id="d-phone" class="text-slate-300">—</span>
           </div>
         </div>
@@ -245,7 +486,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
         <!-- Missing Skills -->
         <div id="d-missing-section" class="hidden">
-          <h4 class="text-sm font-semibold text-red-400 mb-2">Missing Skills</h4>
+          <h4 class="text-sm font-semibold text-red-400 mb-2">
+            Missing Skills
+          </h4>
           <div id="d-missing" class="flex flex-wrap gap-2"></div>
         </div>
 
@@ -264,9 +507,25 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         <!-- Interview Questions Section -->
         <div class="border-t border-slate-700 pt-4">
           <div class="flex items-center justify-between mb-3">
-            <h4 class="text-sm font-semibold text-slate-300">AI Interview Questions</h4>
-            <button id="generateQuestionsBtn" class="btn btn-secondary py-1.5 text-xs flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            <h4 class="text-sm font-semibold text-slate-300">
+              AI Interview Questions
+            </h4>
+            <button
+              id="generateQuestionsBtn"
+              class="btn btn-secondary py-1.5 text-xs flex items-center gap-1.5"
+            >
+              <svg
+                class="w-3.5 h-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                ><path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                ></path></svg
+              >
               Generate Questions
             </button>
           </div>
@@ -275,13 +534,35 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
         <!-- Score against JD -->
         <div class="border-t border-slate-700 pt-4">
-          <h4 class="text-sm font-semibold text-slate-300 mb-3">Score Against Job Description</h4>
+          <h4 class="text-sm font-semibold text-slate-300 mb-3">
+            Score Against Job Description
+          </h4>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input type="text" id="score-job-title" class="input sm:col-span-1" placeholder="Job Title" />
-            <textarea id="score-jd" class="input sm:col-span-2" rows="2" placeholder="Paste job description..."></textarea>
+            <input
+              type="text"
+              id="score-job-title"
+              class="input sm:col-span-1"
+              placeholder="Job Title"
+            />
+            <textarea
+              id="score-jd"
+              class="input sm:col-span-2"
+              rows="2"
+              placeholder="Paste job description..."></textarea>
           </div>
           <button id="scoreBtn" class="btn btn-primary mt-3 text-sm py-1.5">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"
+              ></path></svg
+            >
             Run AI Scoring
           </button>
         </div>
@@ -291,118 +572,150 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 </DashboardLayout>
 
 <script>
-  import { api } from '../../services/api';
+  import { api } from "../../services/api";
 
   // ALL API calls must hit the backend (port 8000), NOT Astro (port 4321)
-  const API = 'http://localhost:8000';
+  const API = import.meta.env.PUBLIC_API_URL;
 
   let allCandidates: any[] = [];
   let currentCandidateId: string | null = null;
 
   // ── DOM refs ──
-  const uploadModal = document.getElementById('uploadModal')!;
-  const detailModal = document.getElementById('detailModal')!;
-  const candidatesTable = document.getElementById('candidatesTable')!;
-  const searchInput = document.getElementById('searchInput') as HTMLInputElement;
-  const stageFilter = document.getElementById('stageFilter') as HTMLSelectElement;
-  const scoreFilter = document.getElementById('scoreFilter') as HTMLSelectElement;
+  const uploadModal = document.getElementById("uploadModal")!;
+  const detailModal = document.getElementById("detailModal")!;
+  const candidatesTable = document.getElementById("candidatesTable")!;
+  const searchInput = document.getElementById(
+    "searchInput",
+  ) as HTMLInputElement;
+  const stageFilter = document.getElementById(
+    "stageFilter",
+  ) as HTMLSelectElement;
+  const scoreFilter = document.getElementById(
+    "scoreFilter",
+  ) as HTMLSelectElement;
 
   // Modal open/close
-  document.getElementById('uploadResumeBtn')!.addEventListener('click', () => uploadModal.classList.remove('hidden'));
-  document.getElementById('closeUpload')!.addEventListener('click', () => uploadModal.classList.add('hidden'));
-  document.getElementById('cancelUpload')!.addEventListener('click', () => uploadModal.classList.add('hidden'));
-  document.getElementById('closeDetail')!.addEventListener('click', () => detailModal.classList.add('hidden'));
+  document
+    .getElementById("uploadResumeBtn")!
+    .addEventListener("click", () => uploadModal.classList.remove("hidden"));
+  document
+    .getElementById("closeUpload")!
+    .addEventListener("click", () => uploadModal.classList.add("hidden"));
+  document
+    .getElementById("cancelUpload")!
+    .addEventListener("click", () => uploadModal.classList.add("hidden"));
+  document
+    .getElementById("closeDetail")!
+    .addEventListener("click", () => detailModal.classList.add("hidden"));
 
   // File drop zone
-  const dropZone = document.getElementById('dropZone')!;
-  const resumeFileInput = document.getElementById('resumeFile') as HTMLInputElement;
-  const fileSelectedLabel = document.getElementById('fileSelected')!;
+  const dropZone = document.getElementById("dropZone")!;
+  const resumeFileInput = document.getElementById(
+    "resumeFile",
+  ) as HTMLInputElement;
+  const fileSelectedLabel = document.getElementById("fileSelected")!;
 
-  dropZone.addEventListener('click', () => resumeFileInput.click());
-  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-indigo-500', 'bg-indigo-500/5'); });
-  dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-indigo-500', 'bg-indigo-500/5'); });
-  dropZone.addEventListener('drop', (e) => {
+  dropZone.addEventListener("click", () => resumeFileInput.click());
+  dropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
-    dropZone.classList.remove('border-indigo-500', 'bg-indigo-500/5');
+    dropZone.classList.add("border-indigo-500", "bg-indigo-500/5");
+  });
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("border-indigo-500", "bg-indigo-500/5");
+  });
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.classList.remove("border-indigo-500", "bg-indigo-500/5");
     const files = (e as DragEvent).dataTransfer?.files;
     if (files?.length) {
       const dt = new DataTransfer();
       dt.items.add(files[0]);
       resumeFileInput.files = dt.files;
       fileSelectedLabel.textContent = `📄 ${files[0].name}`;
-      fileSelectedLabel.classList.remove('hidden');
+      fileSelectedLabel.classList.remove("hidden");
     }
   });
-  resumeFileInput.addEventListener('change', () => {
+  resumeFileInput.addEventListener("change", () => {
     const f = resumeFileInput.files?.[0];
     if (f) {
       fileSelectedLabel.textContent = `📄 ${f.name}`;
-      fileSelectedLabel.classList.remove('hidden');
+      fileSelectedLabel.classList.remove("hidden");
     }
   });
 
   // Upload submit
-  document.getElementById('submitUpload')!.addEventListener('click', async () => {
-    const file = resumeFileInput.files?.[0];
-    if (!file) { alert('Please select a resume file.'); return; }
-
-    const progress = document.getElementById('uploadProgress')!;
-    const progressBar = document.getElementById('uploadProgressBar')!;
-    const statusText = document.getElementById('uploadStatusText')!;
-    progress.classList.remove('hidden');
-
-    const steps = [
-      { text: 'Extracting text...', pct: 25 },
-      { text: 'Parsing with AI...', pct: 55 },
-      { text: 'Scoring candidate...', pct: 80 },
-      { text: 'Saving to database...', pct: 95 },
-    ];
-    let stepIdx = 0;
-    const stepInterval = setInterval(() => {
-      if (stepIdx < steps.length) {
-        statusText.textContent = steps[stepIdx].text;
-        progressBar.style.width = steps[stepIdx].pct + '%';
-        stepIdx++;
+  document
+    .getElementById("submitUpload")!
+    .addEventListener("click", async () => {
+      const file = resumeFileInput.files?.[0];
+      if (!file) {
+        alert("Please select a resume file.");
+        return;
       }
-    }, 800);
 
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const jobTitle = (document.getElementById('jobTitle') as HTMLInputElement).value;
-      const jobDescription = (document.getElementById('jobDescription') as HTMLTextAreaElement).value;
-      if (jobTitle) formData.append('job_title', jobTitle);
-      if (jobDescription) formData.append('job_description', jobDescription);
+      const progress = document.getElementById("uploadProgress")!;
+      const progressBar = document.getElementById("uploadProgressBar")!;
+      const statusText = document.getElementById("uploadStatusText")!;
+      progress.classList.remove("hidden");
 
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API}/api/v1/recruitment/upload`, {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      });
-
-      clearInterval(stepInterval);
-      progressBar.style.width = '100%';
-      statusText.textContent = '✅ Done!';
-
-      if (!response.ok) throw new Error(await response.text());
-
-      setTimeout(() => {
-        uploadModal.classList.add('hidden');
-        progress.classList.add('hidden');
-        progressBar.style.width = '0%';
-        resumeFileInput.value = '';
-        fileSelectedLabel.classList.add('hidden');
-        (document.getElementById('jobTitle') as HTMLInputElement).value = '';
-        (document.getElementById('jobDescription') as HTMLTextAreaElement).value = '';
-        loadCandidates();
+      const steps = [
+        { text: "Extracting text...", pct: 25 },
+        { text: "Parsing with AI...", pct: 55 },
+        { text: "Scoring candidate...", pct: 80 },
+        { text: "Saving to database...", pct: 95 },
+      ];
+      let stepIdx = 0;
+      const stepInterval = setInterval(() => {
+        if (stepIdx < steps.length) {
+          statusText.textContent = steps[stepIdx].text;
+          progressBar.style.width = steps[stepIdx].pct + "%";
+          stepIdx++;
+        }
       }, 800);
-    } catch (err: any) {
-      clearInterval(stepInterval);
-      progress.classList.add('hidden');
-      alert('Upload failed: ' + (err.message || 'Unknown error'));
-    }
-  });
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const jobTitle = (
+          document.getElementById("jobTitle") as HTMLInputElement
+        ).value;
+        const jobDescription = (
+          document.getElementById("jobDescription") as HTMLTextAreaElement
+        ).value;
+        if (jobTitle) formData.append("job_title", jobTitle);
+        if (jobDescription) formData.append("job_description", jobDescription);
+
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(`${API}/api/v1/recruitment/upload`, {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+
+        clearInterval(stepInterval);
+        progressBar.style.width = "100%";
+        statusText.textContent = "✅ Done!";
+
+        if (!response.ok) throw new Error(await response.text());
+
+        setTimeout(() => {
+          uploadModal.classList.add("hidden");
+          progress.classList.add("hidden");
+          progressBar.style.width = "0%";
+          resumeFileInput.value = "";
+          fileSelectedLabel.classList.add("hidden");
+          (document.getElementById("jobTitle") as HTMLInputElement).value = "";
+          (
+            document.getElementById("jobDescription") as HTMLTextAreaElement
+          ).value = "";
+          loadCandidates();
+        }, 800);
+      } catch (err: any) {
+        clearInterval(stepInterval);
+        progress.classList.add("hidden");
+        alert("Upload failed: " + (err.message || "Unknown error"));
+      }
+    });
 
   // Filters
   const applyFilters = () => {
@@ -410,42 +723,46 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     const stage = stageFilter.value;
     const minScore = scoreFilter.value ? parseFloat(scoreFilter.value) : null;
 
-    const filtered = allCandidates.filter(c => {
-      const matchSearch = !search || c.full_name.toLowerCase().includes(search)
-        || (c.current_role || '').toLowerCase().includes(search)
-        || (c.skills || []).some((s: string) => s.toLowerCase().includes(search));
+    const filtered = allCandidates.filter((c) => {
+      const matchSearch =
+        !search ||
+        c.full_name.toLowerCase().includes(search) ||
+        (c.current_role || "").toLowerCase().includes(search) ||
+        (c.skills || []).some((s: string) => s.toLowerCase().includes(search));
       const matchStage = !stage || c.stage === stage;
-      const matchScore = minScore === null || (c.overall_score ?? 0) >= minScore;
+      const matchScore =
+        minScore === null || (c.overall_score ?? 0) >= minScore;
       return matchSearch && matchStage && matchScore;
     });
 
     renderCandidates(filtered);
-    document.getElementById('candidate-count')!.textContent = `${filtered.length} of ${allCandidates.length}`;
+    document.getElementById("candidate-count")!.textContent =
+      `${filtered.length} of ${allCandidates.length}`;
   };
 
-  searchInput.addEventListener('input', applyFilters);
-  stageFilter.addEventListener('change', applyFilters);
-  scoreFilter.addEventListener('change', applyFilters);
+  searchInput.addEventListener("input", applyFilters);
+  stageFilter.addEventListener("change", applyFilters);
+  scoreFilter.addEventListener("change", applyFilters);
 
   // Render helpers
   function stageLabel(stage: string) {
     const map: Record<string, { label: string; cls: string }> = {
-      new: { label: 'New', cls: 'badge-info' },
-      shortlisted: { label: 'Shortlisted ⭐', cls: 'badge-warning' },
-      interview_scheduled: { label: 'Interview', cls: 'badge-info' },
-      offer_sent: { label: 'Offer Sent', cls: 'badge-success' },
-      hired: { label: 'Hired ✅', cls: 'badge-success' },
-      rejected: { label: 'Rejected', cls: 'badge-error' },
+      new: { label: "New", cls: "badge-info" },
+      shortlisted: { label: "Shortlisted ⭐", cls: "badge-warning" },
+      interview_scheduled: { label: "Interview", cls: "badge-info" },
+      offer_sent: { label: "Offer Sent", cls: "badge-success" },
+      hired: { label: "Hired ✅", cls: "badge-success" },
+      rejected: { label: "Rejected", cls: "badge-error" },
     };
-    const s = map[stage] || { label: stage, cls: 'badge-info' };
+    const s = map[stage] || { label: stage, cls: "badge-info" };
     return `<span class="badge ${s.cls}">${s.label}</span>`;
   }
 
   function scoreColor(score: number | null) {
-    if (score === null || score === undefined) return 'text-slate-400';
-    if (score >= 80) return 'text-emerald-400';
-    if (score >= 65) return 'text-amber-400';
-    return 'text-red-400';
+    if (score === null || score === undefined) return "text-slate-400";
+    if (score >= 80) return "text-emerald-400";
+    if (score >= 65) return "text-amber-400";
+    return "text-red-400";
   }
 
   function renderCandidates(candidates: any[]) {
@@ -459,26 +776,43 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       return;
     }
 
-    candidatesTable.innerHTML = candidates.map(c => {
-      const skills = (c.skills || []).slice(0, 4).map((s: string) =>
-        `<span class="px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded text-xs">${s}</span>`
-      ).join('') + ((c.skills?.length > 4) ? `<span class="text-xs text-slate-500">+${c.skills.length - 4}</span>` : '');
+    candidatesTable.innerHTML = candidates
+      .map((c) => {
+        const skills =
+          (c.skills || [])
+            .slice(0, 4)
+            .map(
+              (s: string) =>
+                `<span class="px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded text-xs">${s}</span>`,
+            )
+            .join("") +
+          (c.skills?.length > 4
+            ? `<span class="text-xs text-slate-500">+${c.skills.length - 4}</span>`
+            : "");
 
-      const score = c.overall_score != null ? `<span class="font-bold ${scoreColor(c.overall_score)}">${c.overall_score}%</span>` : '<span class="text-slate-500">Not scored</span>';
+        const score =
+          c.overall_score != null
+            ? `<span class="font-bold ${scoreColor(c.overall_score)}">${c.overall_score}%</span>`
+            : '<span class="text-slate-500">Not scored</span>';
 
-      return `<tr class="hover:bg-slate-700/30 cursor-pointer transition-colors" data-id="${c.id}">
+        return `<tr class="hover:bg-slate-700/30 cursor-pointer transition-colors" data-id="${c.id}">
         <td>
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-              ${c.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+              ${c.full_name
+                .split(" ")
+                .map((n: string) => n[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase()}
             </div>
             <div>
               <div class="font-medium text-white text-sm">${c.full_name}</div>
-              <div class="text-xs text-slate-400">${c.email || '—'}</div>
+              <div class="text-xs text-slate-400">${c.email || "—"}</div>
             </div>
           </div>
         </td>
-        <td class="text-slate-300 text-sm">${c.current_role || '—'}</td>
+        <td class="text-slate-300 text-sm">${c.current_role || "—"}</td>
         <td><div class="flex flex-wrap gap-1">${skills}</div></td>
         <td>${score}</td>
         <td>${stageLabel(c.stage)}</td>
@@ -486,11 +820,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
           <button class="btn btn-secondary py-1 px-2.5 text-xs view-candidate" data-id="${c.id}">View</button>
         </td>
       </tr>`;
-    }).join('');
+      })
+      .join("");
 
     // Row click → open detail
-    document.querySelectorAll('[data-id]').forEach(el => {
-      el.addEventListener('click', (e) => {
+    document.querySelectorAll("[data-id]").forEach((el) => {
+      el.addEventListener("click", (e) => {
         const id = (el as HTMLElement).dataset.id;
         if (id) openCandidateDetail(id);
       });
@@ -499,9 +834,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
   async function openCandidateDetail(id: string) {
     currentCandidateId = id;
-    detailModal.classList.remove('hidden');
+    detailModal.classList.remove("hidden");
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem("access_token");
       const res = await fetch(`${API}/api/v1/recruitment/candidates/${id}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -509,213 +844,288 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       const c = json.data;
       renderDetailModal(c);
     } catch (err) {
-      console.error('Failed to load candidate detail', err);
+      console.error("Failed to load candidate detail", err);
     }
   }
 
   function renderDetailModal(c: any) {
-    document.getElementById('detail-name')!.textContent = c.full_name;
-    document.getElementById('detail-role')!.textContent = c.current_role || c.job_title || '';
-    document.getElementById('d-email')!.textContent = c.email || '—';
-    document.getElementById('d-phone')!.textContent = c.phone || '—';
+    document.getElementById("detail-name")!.textContent = c.full_name;
+    document.getElementById("detail-role")!.textContent =
+      c.current_role || c.job_title || "";
+    document.getElementById("d-email")!.textContent = c.email || "—";
+    document.getElementById("d-phone")!.textContent = c.phone || "—";
 
     // Scores
     const overall = c.overall_score;
-    const overallEl = document.getElementById('d-overall-score')!;
-    overallEl.textContent = overall != null ? `${overall}%` : '—';
+    const overallEl = document.getElementById("d-overall-score")!;
+    overallEl.textContent = overall != null ? `${overall}%` : "—";
     overallEl.className = `text-3xl font-bold ${scoreColor(overall)}`;
-    document.getElementById('d-skill-score')!.textContent = c.skill_match_score != null ? `${c.skill_match_score}%` : '—';
-    document.getElementById('d-exp-score')!.textContent = c.experience_score != null ? `${c.experience_score}%` : '—';
-    document.getElementById('d-edu-score')!.textContent = c.education_score != null ? `${c.education_score}%` : '—';
+    document.getElementById("d-skill-score")!.textContent =
+      c.skill_match_score != null ? `${c.skill_match_score}%` : "—";
+    document.getElementById("d-exp-score")!.textContent =
+      c.experience_score != null ? `${c.experience_score}%` : "—";
+    document.getElementById("d-edu-score")!.textContent =
+      c.education_score != null ? `${c.education_score}%` : "—";
 
     // Recommendation badge
-    const recEl = document.getElementById('d-recommendation')!;
+    const recEl = document.getElementById("d-recommendation")!;
     const recMap: Record<string, string> = {
-      'Highly Recommended': 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-      'Recommended': 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-      'Consider': 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
-      'Not Recommended': 'bg-red-500/20 text-red-400 border border-red-500/30',
+      "Highly Recommended":
+        "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
+      Recommended: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
+      Consider: "bg-amber-500/20 text-amber-400 border border-amber-500/30",
+      "Not Recommended": "bg-red-500/20 text-red-400 border border-red-500/30",
     };
-    recEl.textContent = c.recommendation || 'Not Scored';
-    recEl.className = `px-3 py-1.5 rounded-lg text-sm font-semibold ${recMap[c.recommendation] || 'bg-slate-700 text-slate-300'}`;
+    recEl.textContent = c.recommendation || "Not Scored";
+    recEl.className = `px-3 py-1.5 rounded-lg text-sm font-semibold ${recMap[c.recommendation] || "bg-slate-700 text-slate-300"}`;
 
     // Stage select
-    const stageSelect = document.getElementById('d-stage-select') as HTMLSelectElement;
+    const stageSelect = document.getElementById(
+      "d-stage-select",
+    ) as HTMLSelectElement;
     stageSelect.value = c.stage;
 
     // Skills
-    const skillsEl = document.getElementById('d-skills')!;
-    skillsEl.innerHTML = (c.skills || []).map((s: string) =>
-      `<span class="px-2.5 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 rounded-lg text-xs font-medium">${s}</span>`
-    ).join('') || '<span class="text-slate-500 text-sm">No skills listed</span>';
+    const skillsEl = document.getElementById("d-skills")!;
+    skillsEl.innerHTML =
+      (c.skills || [])
+        .map(
+          (s: string) =>
+            `<span class="px-2.5 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 rounded-lg text-xs font-medium">${s}</span>`,
+        )
+        .join("") ||
+      '<span class="text-slate-500 text-sm">No skills listed</span>';
 
     // Missing skills
     if (c.missing_skills?.length) {
-      document.getElementById('d-missing-section')!.classList.remove('hidden');
-      document.getElementById('d-missing')!.innerHTML = c.missing_skills.map((s: string) =>
-        `<span class="px-2.5 py-1 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-xs">${s}</span>`
-      ).join('');
+      document.getElementById("d-missing-section")!.classList.remove("hidden");
+      document.getElementById("d-missing")!.innerHTML = c.missing_skills
+        .map(
+          (s: string) =>
+            `<span class="px-2.5 py-1 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-xs">${s}</span>`,
+        )
+        .join("");
     } else {
-      document.getElementById('d-missing-section')!.classList.add('hidden');
+      document.getElementById("d-missing-section")!.classList.add("hidden");
     }
 
     // Experience
-    const expEl = document.getElementById('d-experience')!;
-    expEl.innerHTML = (c.experience || []).map((e: any) =>
-      `<div class="p-3 bg-slate-700/30 rounded-lg">
-        <div class="font-medium text-slate-200">${e.role || ''} at ${e.company || ''}</div>
-        <div class="text-xs text-slate-500 mt-0.5">${e.duration || ''}</div>
-        ${e.description ? `<div class="text-xs text-slate-400 mt-1">${e.description}</div>` : ''}
-      </div>`
-    ).join('') || '<div class="text-slate-500">No experience data</div>';
+    const expEl = document.getElementById("d-experience")!;
+    expEl.innerHTML =
+      (c.experience || [])
+        .map(
+          (e: any) =>
+            `<div class="p-3 bg-slate-700/30 rounded-lg">
+        <div class="font-medium text-slate-200">${e.role || ""} at ${e.company || ""}</div>
+        <div class="text-xs text-slate-500 mt-0.5">${e.duration || ""}</div>
+        ${e.description ? `<div class="text-xs text-slate-400 mt-1">${e.description}</div>` : ""}
+      </div>`,
+        )
+        .join("") || '<div class="text-slate-500">No experience data</div>';
 
     // Education
-    const eduEl = document.getElementById('d-education')!;
-    eduEl.innerHTML = (c.education || []).map((e: any) =>
-      `<div class="p-3 bg-slate-700/30 rounded-lg">
-        <div class="font-medium text-slate-200">${e.degree || ''}</div>
-        <div class="text-xs text-slate-400 mt-0.5">${e.institution || ''} ${e.year ? '· ' + e.year : ''}</div>
-      </div>`
-    ).join('') || '<div class="text-slate-500">No education data</div>';
+    const eduEl = document.getElementById("d-education")!;
+    eduEl.innerHTML =
+      (c.education || [])
+        .map(
+          (e: any) =>
+            `<div class="p-3 bg-slate-700/30 rounded-lg">
+        <div class="font-medium text-slate-200">${e.degree || ""}</div>
+        <div class="text-xs text-slate-400 mt-0.5">${e.institution || ""} ${e.year ? "· " + e.year : ""}</div>
+      </div>`,
+        )
+        .join("") || '<div class="text-slate-500">No education data</div>';
 
     // Interview Questions
     renderInterviewQuestions(c.interview_questions || []);
   }
 
   function renderInterviewQuestions(questions: any[]) {
-    const qEl = document.getElementById('d-questions')!;
+    const qEl = document.getElementById("d-questions")!;
     if (!questions.length) {
-      qEl.innerHTML = '<p class="text-slate-500 text-sm">No questions generated yet. Click "Generate Questions".</p>';
+      qEl.innerHTML =
+        '<p class="text-slate-500 text-sm">No questions generated yet. Click "Generate Questions".</p>';
       return;
     }
 
     const groups: Record<string, any[]> = {};
-    questions.forEach(q => {
-      const cat = q.category || 'General';
+    questions.forEach((q) => {
+      const cat = q.category || "General";
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(q);
     });
 
-    const diffColor = (d: string) => d === 'Hard' ? 'text-red-400' : d === 'Medium' ? 'text-amber-400' : 'text-emerald-400';
+    const diffColor = (d: string) =>
+      d === "Hard"
+        ? "text-red-400"
+        : d === "Medium"
+          ? "text-amber-400"
+          : "text-emerald-400";
 
-    qEl.innerHTML = Object.entries(groups).map(([cat, qs]) => `
+    qEl.innerHTML = Object.entries(groups)
+      .map(
+        ([cat, qs]) => `
       <div>
         <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">${cat}</h5>
         <div class="space-y-1.5">
-          ${qs.map((q: any, i: number) => `
+          ${qs
+            .map(
+              (q: any, i: number) => `
             <div class="flex gap-2 p-2.5 bg-slate-700/30 rounded-lg text-sm">
               <span class="text-slate-500 flex-shrink-0 font-mono">${i + 1}.</span>
               <div class="flex-1">
                 <span class="text-slate-200">${q.question}</span>
-                ${q.difficulty ? `<span class="ml-2 text-xs ${diffColor(q.difficulty)}">[${q.difficulty}]</span>` : ''}
+                ${q.difficulty ? `<span class="ml-2 text-xs ${diffColor(q.difficulty)}">[${q.difficulty}]</span>` : ""}
               </div>
             </div>
-          `).join('')}
+          `,
+            )
+            .join("")}
         </div>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
   }
 
   // Generate interview questions
-  document.getElementById('generateQuestionsBtn')!.addEventListener('click', async () => {
-    if (!currentCandidateId) return;
-    const btn = document.getElementById('generateQuestionsBtn')!;
-    btn.textContent = 'Generating...';
-    btn.setAttribute('disabled', 'true');
+  document
+    .getElementById("generateQuestionsBtn")!
+    .addEventListener("click", async () => {
+      if (!currentCandidateId) return;
+      const btn = document.getElementById("generateQuestionsBtn")!;
+      btn.textContent = "Generating...";
+      btn.setAttribute("disabled", "true");
 
-    try {
-      const token = localStorage.getItem('access_token');
-      const res = await fetch(`${API}/api/v1/recruitment/candidates/${currentCandidateId}/interview-questions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({}),
-      });
-      const json = await res.json();
-      renderInterviewQuestions(json.data?.interview_questions || []);
-    } catch (err) {
-      console.error('Failed to generate questions', err);
-    } finally {
-      btn.textContent = 'Generate Questions';
-      btn.removeAttribute('disabled');
-    }
-  });
+      try {
+        const token = localStorage.getItem("access_token");
+        const res = await fetch(
+          `${API}/api/v1/recruitment/candidates/${currentCandidateId}/interview-questions`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({}),
+          },
+        );
+        const json = await res.json();
+        renderInterviewQuestions(json.data?.interview_questions || []);
+      } catch (err) {
+        console.error("Failed to generate questions", err);
+      } finally {
+        btn.textContent = "Generate Questions";
+        btn.removeAttribute("disabled");
+      }
+    });
 
   // Score against JD
-  document.getElementById('scoreBtn')!.addEventListener('click', async () => {
+  document.getElementById("scoreBtn")!.addEventListener("click", async () => {
     if (!currentCandidateId) return;
-    const jt = (document.getElementById('score-job-title') as HTMLInputElement).value;
-    const jd = (document.getElementById('score-jd') as HTMLTextAreaElement).value;
-    if (!jd) { alert('Please enter a job description to score against.'); return; }
+    const jt = (document.getElementById("score-job-title") as HTMLInputElement)
+      .value;
+    const jd = (document.getElementById("score-jd") as HTMLTextAreaElement)
+      .value;
+    if (!jd) {
+      alert("Please enter a job description to score against.");
+      return;
+    }
 
-    const btn = document.getElementById('scoreBtn')!;
-    btn.textContent = 'Scoring...';
-    btn.setAttribute('disabled', 'true');
+    const btn = document.getElementById("scoreBtn")!;
+    btn.textContent = "Scoring...";
+    btn.setAttribute("disabled", "true");
 
     try {
-      const token = localStorage.getItem('access_token');
-      const res = await fetch(`${API}/api/v1/recruitment/candidates/${currentCandidateId}/score`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ job_title: jt || 'Position', job_description: jd }),
-      });
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(
+        `${API}/api/v1/recruitment/candidates/${currentCandidateId}/score`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            job_title: jt || "Position",
+            job_description: jd,
+          }),
+        },
+      );
       const json = await res.json();
       renderDetailModal(json.data);
       await loadCandidates();
     } catch (err) {
-      console.error('Failed to score candidate', err);
+      console.error("Failed to score candidate", err);
     } finally {
-      btn.textContent = 'Run AI Scoring';
-      btn.removeAttribute('disabled');
+      btn.textContent = "Run AI Scoring";
+      btn.removeAttribute("disabled");
     }
   });
 
   // Update stage
-  document.getElementById('updateStageBtn')!.addEventListener('click', async () => {
-    if (!currentCandidateId) return;
-    const stage = (document.getElementById('d-stage-select') as HTMLSelectElement).value;
-    try {
-      const token = localStorage.getItem('access_token');
-      await fetch(`${API}/api/v1/recruitment/candidates/${currentCandidateId}/stage`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ stage }),
-      });
-      await loadCandidates();
-      // Update badge in modal
-      const stageEl = document.querySelector(`[data-id="${currentCandidateId}"] .badge`);
-      if (stageEl) stageEl.outerHTML = stageLabel(stage);
-    } catch (err) {
-      console.error('Failed to update stage', err);
-    }
-  });
+  document
+    .getElementById("updateStageBtn")!
+    .addEventListener("click", async () => {
+      if (!currentCandidateId) return;
+      const stage = (
+        document.getElementById("d-stage-select") as HTMLSelectElement
+      ).value;
+      try {
+        const token = localStorage.getItem("access_token");
+        await fetch(
+          `${API}/api/v1/recruitment/candidates/${currentCandidateId}/stage`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ stage }),
+          },
+        );
+        await loadCandidates();
+        // Update badge in modal
+        const stageEl = document.querySelector(
+          `[data-id="${currentCandidateId}"] .badge`,
+        );
+        if (stageEl) stageEl.outerHTML = stageLabel(stage);
+      } catch (err) {
+        console.error("Failed to update stage", err);
+      }
+    });
 
   async function loadStats() {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem("access_token");
       const res = await fetch(`${API}/api/v1/recruitment/stats`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const json = await res.json();
       const d = json.data;
-      document.getElementById('stat-total')!.textContent = d.total_candidates ?? '0';
-      document.getElementById('stat-shortlisted')!.textContent = d.shortlisted ?? '0';
-      document.getElementById('stat-interviews')!.textContent = d.interviews_scheduled ?? '0';
-      document.getElementById('stat-hired')!.textContent = d.hired ?? '0';
+      document.getElementById("stat-total")!.textContent =
+        d.total_candidates ?? "0";
+      document.getElementById("stat-shortlisted")!.textContent =
+        d.shortlisted ?? "0";
+      document.getElementById("stat-interviews")!.textContent =
+        d.interviews_scheduled ?? "0";
+      document.getElementById("stat-hired")!.textContent = d.hired ?? "0";
     } catch (err) {
-      console.error('Failed to load stats', err);
+      console.error("Failed to load stats", err);
     }
   }
 
   async function loadCandidates() {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem("access_token");
       const res = await fetch(`${API}/api/v1/recruitment/candidates`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const json = await res.json();
       allCandidates = json.data || [];
       renderCandidates(allCandidates);
-      document.getElementById('candidate-count')!.textContent = `${allCandidates.length} candidates`;
+      document.getElementById("candidate-count")!.textContent =
+        `${allCandidates.length} candidates`;
       await loadStats();
     } catch (err) {
       candidatesTable.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-400">Failed to load candidates</td></tr>`;
