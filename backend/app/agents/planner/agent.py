@@ -36,8 +36,8 @@ class PlannerAgent(BaseAgent):
             user_id=user_id,
         )
 
-        # Step 1: Classify intent
-        intent = self._classify_intent(user_message)
+        # Step 1: Classify intent using LLM if available, else use keyword matching
+        intent = await self._classify_intent(user_message)
 
         # Step 2: Determine required workflow
         workflow = self._determine_workflow(intent, user_message)
@@ -69,25 +69,68 @@ class PlannerAgent(BaseAgent):
 
         return result
 
-    def _classify_intent(self, message: str) -> str:
-        """Classify the user's intent."""
+    async def _classify_intent(self, message: str) -> str:
+        """Classify the user's intent using LLM if available, else keyword matching."""
+        # Try LLM-based classification first
+        try:
+            from app.core.llm import generate_text
+            
+            system_prompt = (
+                "You are an intent classifier for an HR assistant. "
+                "Classify the user's message into exactly one of these categories:\n"
+                "- leave_request: Applying for leave, requesting time off, vacation\n"
+                "- leave_balance: Checking leave balance, remaining days\n"
+                "- leave_history: Viewing past leaves, leave history\n"
+                "- policy_query: Asking about policies, rules, guidelines\n"
+                "- document_generation: Requesting documents, letters, certificates\n"
+                "- employee_info: Asking about employees, staff, team\n"
+                "- department_info: Asking about departments, teams\n"
+                "- approval: Approving, rejecting, pending requests\n"
+                "- analytics: Reports, statistics, metrics\n"
+                "- greeting: Hello, hi, greetings\n"
+                "- help: Asking for help, capabilities\n"
+                "- general_inquiry: Anything else\n\n"
+                "Return ONLY the category name, nothing else."
+            )
+            
+            response = await generate_text(
+                messages=[{"role": "user", "content": message}],
+                system_prompt=system_prompt
+            )
+            
+            if response:
+                intent = response.strip().lower().replace(" ", "_").replace("-", "_")
+                # Validate intent is one of the known categories
+                valid_intents = [
+                    "leave_request", "leave_balance", "leave_history", "policy_query",
+                    "document_generation", "employee_info", "department_info", "approval",
+                    "analytics", "greeting", "help", "general_inquiry"
+                ]
+                if intent in valid_intents:
+                    logger.info("intent_classified_by_llm", intent=intent)
+                    return intent
+        except Exception as e:
+            logger.warning("llm_classification_failed", error=str(e))
+        
+        # Fallback to keyword-based classification
+        return self._classify_intent_keywords(message)
+
+    def _classify_intent_keywords(self, message: str) -> str:
+        """Classify intent using keyword matching (fallback method)."""
         message_lower = message.lower()
 
         intent_patterns = {
+            "leave_request": ["leave", "vacation", "time off", "day off", "pto", "apply leave", "take leave", "need leave", "want leave"],
+            "leave_balance": ["balance", "remaining leave", "how many days", "leave balance", "check balance"],
+            "leave_history": ["history", "past leave", "previous leave", "my leaves", "leave history"],
             "policy_query": ["policy", "policies", "handbook", "rules", "guideline"],
-            "leave_request": ["leave", "vacation", "time off", "day off", "pto"],
-            "leave_balance": ["balance", "remaining leave", "how many days"],
             "document_generation": ["document", "letter", "certificate", "generate", "offer", "experience"],
-            "employee_info": ["employee", "staff", "team member", "colleague", "coworker"],
+            "employee_info": ["employee", "staff", "team member", "colleague", "coworker", "who works"],
             "department_info": ["department", "team", "division"],
             "approval": ["approve", "approval", "pending", "reject"],
             "analytics": ["analytics", "report", "statistics", "metrics", "data", "insights"],
-            "onboarding": ["onboarding", "new hire", "join", "started", "welcome"],
-            "offboarding": ["offboarding", "resign", "exit", "leaving", "termination"],
-            "promotion": ["promotion", "promote", "senior", "advance"],
-            "transfer": ["transfer", "move to", "reassign"],
-            "benefits": ["benefits", "insurance", "medical", "401k", "perks"],
-            "holiday": ["holiday", "holidays", "office closed", "company holiday"],
+            "greeting": ["hello", "hi", "hey", "good morning", "good afternoon", "good evening"],
+            "help": ["help", "what can you do", "capabilities", "features"],
         }
 
         for intent, patterns in intent_patterns.items():
@@ -101,18 +144,15 @@ class PlannerAgent(BaseAgent):
         workflow_map = {
             "leave_request": "leave_workflow",
             "leave_balance": "leave_balance_check",
+            "leave_history": "leave_history",
             "policy_query": "policy_search",
             "document_generation": "document_generation",
             "employee_info": "employee_lookup",
             "department_info": "department_lookup",
             "approval": "approval_workflow",
             "analytics": "analytics_report",
-            "onboarding": "onboarding",
-            "offboarding": "offboarding",
-            "promotion": "promotion",
-            "transfer": "transfer",
-            "benefits": "policy_search",
-            "holiday": "policy_search",
+            "greeting": "general_assistance",
+            "help": "general_assistance",
             "general_inquiry": "general_assistance",
         }
         return workflow_map.get(intent, "general_assistance")
@@ -126,16 +166,13 @@ class PlannerAgent(BaseAgent):
         agent_map = {
             "leave_request": "leave",
             "leave_balance": "leave",
+            "leave_history": "leave",
             "policy_query": "policy",
             "document_generation": "document",
             "approval": "approval",
             "analytics": "analytics",
-            "onboarding": "hr",
-            "offboarding": "hr",
-            "promotion": "hr",
-            "transfer": "hr",
-            "benefits": "policy",
-            "holiday": "policy",
+            "greeting": "hr",
+            "help": "hr",
             "employee_info": "hr",
             "department_info": "hr",
         }

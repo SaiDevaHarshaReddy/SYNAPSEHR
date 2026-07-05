@@ -211,9 +211,6 @@ async def chat(
         response_text = agent_result.get("message", "I'm processing your request.")
         sources_used = agent_result.get("sources", None)
 
-        # Add intent information
-        response_text = f"**Intent:** {intent.replace('_', ' ').title()}\n\n{response_text}"
-
         # Execute workflow if needed
         workflow_steps = None
         if intent == "leave_request" and agent_result.get("apply_now") is True:

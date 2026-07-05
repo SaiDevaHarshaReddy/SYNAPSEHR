@@ -2,13 +2,21 @@
 
 import uuid
 from pathlib import Path
+from typing import Any
 
 import structlog
 
 from app.rag.chunker import TextChunker, Chunk
-from app.rag.embeddings import EmbeddingService
 from app.rag.parser import DocumentParser
-from app.rag.vector_store import VectorStoreService
+
+try:
+    from app.rag.embeddings import EmbeddingService
+    from app.rag.vector_store import VectorStoreService
+    RAG_AVAILABLE = True
+except ModuleNotFoundError:
+    RAG_AVAILABLE = False
+    EmbeddingService = None
+    VectorStoreService = None
 
 logger = structlog.get_logger()
 
@@ -18,12 +26,16 @@ class Retriever:
 
     def __init__(
         self,
-        embedding_service: EmbeddingService | None = None,
-        vector_store: VectorStoreService | None = None,
+        embedding_service: Any = None,
+        vector_store: Any = None,
         chunker: TextChunker | None = None,
     ):
-        self.embedding = embedding_service or EmbeddingService()
-        self.vector_store = vector_store or VectorStoreService()
+        if RAG_AVAILABLE:
+            self.embedding = embedding_service or EmbeddingService()
+            self.vector_store = vector_store or VectorStoreService()
+        else:
+            self.embedding = None
+            self.vector_store = None
         self.chunker = chunker or TextChunker()
 
     async def index_document(
@@ -38,6 +50,9 @@ class Retriever:
         uploaded_by: str | None = None,
     ) -> int:
         """Index a document into the vector store. Returns number of chunks indexed."""
+        if not RAG_AVAILABLE:
+            logger.warning("rag_unavailable", action="index_document")
+            return 0
         # Step 1: Parse document
         text = DocumentParser.parse(file_path)
         if not text:
@@ -101,6 +116,9 @@ class Retriever:
         category: str | None = None,
     ) -> list[dict]:
         """Retrieve relevant chunks for a query."""
+        if not RAG_AVAILABLE:
+            logger.warning("rag_unavailable", action="retrieve")
+            return []
         # Embed the query
         query_embedding = self.embedding.embed_query(query)
 
@@ -143,11 +161,15 @@ class Retriever:
 
     async def delete_document(self, document_id: str) -> None:
         """Remove all chunks for a document from the vector store."""
+        if not RAG_AVAILABLE:
+            return
         self.vector_store.delete_by_metadata({"document_id": document_id})
         logger.info("document_removed_from_index", document_id=document_id)
 
     async def get_index_stats(self) -> dict:
         """Get vector store statistics."""
+        if not RAG_AVAILABLE:
+            return {"total_chunks": 0, "collection": "none"}
         return {
             "total_chunks": self.vector_store.get_count(),
             "collection": self.vector_store.collection_name,

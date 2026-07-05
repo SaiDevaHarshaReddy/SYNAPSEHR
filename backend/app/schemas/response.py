@@ -31,15 +31,6 @@ class ErrorResponse(BaseModel):
     error: ErrorDetail
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
-    """Paginated list response format."""
-
-    success: bool = True
-    message: str = "Operation successful"
-    data: list[T] = []
-    pagination: PaginationInfo
-
-
 class PaginationInfo(BaseModel):
     """Pagination metadata."""
 
@@ -49,6 +40,15 @@ class PaginationInfo(BaseModel):
     total_pages: int
     has_next: bool
     has_previous: bool
+
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    """Paginated list response format."""
+
+    success: bool = True
+    message: str = "Operation successful"
+    data: list[T] = []
+    pagination: PaginationInfo
 
 
 class HealthResponse(BaseModel):

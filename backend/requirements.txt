@@ -6,6 +6,7 @@ python-multipart==0.0.9
 # Database
 sqlalchemy[asyncio]==2.0.35
 asyncpg==0.29.0
+aiosqlite==0.20.0
 alembic==1.13.2
 
 # Validation & Settings
@@ -24,10 +25,7 @@ langchain-openai==0.2.1
 langchain-community==0.3.1
 langgraph==0.2.28
 
-# RAG / Embeddings
-sentence-transformers==3.1.1
-chromadb==0.5.5
-langchain-chroma==0.1.4
+# RAG / Embeddings (removed)
 
 # Document Processing
 pypdf==4.3.1
