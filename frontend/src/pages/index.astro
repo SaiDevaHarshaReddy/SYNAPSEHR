@@ -1,0 +1,26 @@
+---
+// Index page - redirect to dashboard or login
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="refresh" content="0;url=/login" />
+    <title>SynapseHR</title>
+  </head>
+  <body>
+    <script>
+      // Check if user is authenticated
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          window.location.href = '/dashboard';
+        } else {
+          window.location.href = '/login';
+        }
+      }
+    </script>
+  </body>
+</html>

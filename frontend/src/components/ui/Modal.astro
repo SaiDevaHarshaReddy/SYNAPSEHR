@@ -1,0 +1,61 @@
+---
+interface Props {
+  open: boolean;
+  title?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  id?: string;
+}
+
+const { open = false, title, size = 'md', id } = Astro.props;
+
+const sizeClasses: Record<string, string> = {
+  sm: 'max-w-md',
+  md: 'max-w-lg',
+  lg: 'max-w-2xl',
+  xl: 'max-w-4xl',
+};
+---
+
+<div
+  id={id}
+  class:list={[
+    'fixed inset-0 z-50 flex items-center justify-center p-4',
+    open ? 'pointer-events-auto' : 'pointer-events-none',
+  ]}
+  role="dialog"
+  aria-modal="true"
+  aria-label={title || 'Dialog'}
+>
+  <!-- Backdrop -->
+  <div 
+    class:list={[
+      'absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300',
+      open ? 'opacity-100' : 'opacity-0',
+    ]}
+    aria-hidden="true"
+  ></div>
+  
+  <!-- Panel -->
+  <div class:list={[
+    'relative bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 w-full mx-4 shadow-elevated',
+    'transition-all duration-300',
+    sizeClasses[size],
+    open ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4',
+  ]}>
+    {title && (
+      <div class="flex items-center justify-between mb-5 pb-4 border-b border-slate-800/50">
+        <h3 class="text-lg font-semibold text-white">{title}</h3>
+        <button
+          onclick={`document.getElementById('${id}').classList.add('hidden')`}
+          class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-indigo-500"
+          aria-label="Close dialog"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    )}
+    <slot />
+  </div>
+</div>

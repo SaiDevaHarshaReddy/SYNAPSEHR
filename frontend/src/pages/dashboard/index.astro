@@ -1,0 +1,238 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import WelcomeCard from '../../components/dashboard/WelcomeCard.astro';
+import StatsGrid from '../../components/dashboard/StatsGrid.astro';
+import QuickActions from '../../components/dashboard/QuickActions.astro';
+import RecentActivity from '../../components/dashboard/RecentActivity.astro';
+---
+
+<DashboardLayout title="Dashboard - SynapseHR">
+  <div class="space-y-6">
+    <WelcomeCard />
+    <StatsGrid />
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <QuickActions />
+      <RecentActivity />
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="card p-6">
+        <h2 class="text-base font-semibold text-white mb-4">Department Headcount</h2>
+        <div class="h-64 relative">
+          <canvas id="dash-dept-chart"></canvas>
+          <div id="dash-dept-empty" class="hidden absolute inset-0 flex items-center justify-center text-slate-500 text-sm">No department data available</div>
+        </div>
+      </div>
+      <div class="card p-6">
+        <h2 class="text-base font-semibold text-white mb-4">Leave Distribution</h2>
+        <div class="h-64 relative">
+          <canvas id="dash-leave-chart"></canvas>
+          <div id="dash-leave-empty" class="hidden absolute inset-0 flex items-center justify-center text-slate-500 text-sm">No leave data available</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employee by Employment Type + Recent Hires -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="card p-6">
+        <h2 class="text-base font-semibold text-white mb-4">Employment Type Breakdown</h2>
+        <div class="h-64 relative">
+          <canvas id="dash-employment-chart"></canvas>
+        </div>
+      </div>
+      <div class="card p-6">
+        <h2 class="text-base font-semibold text-white mb-4">Recent Hires</h2>
+        <div id="dash-recent-hires" class="space-y-3">
+          <div class="text-slate-500 text-sm py-4 text-center">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:8000';
+
+    const CHART_COLORS = {
+      indigo: '#6366f1',
+      amber: '#f59e0b',
+      emerald: '#10b981',
+      red: '#ef4444',
+      blue: '#3b82f6',
+      purple: '#a855f7',
+      slate: '#64748b',
+      cyan: '#06b6d4',
+    };
+
+    async function loadDashboardCharts() {
+      const token = localStorage.getItem('access_token');
+      if (!token) return;
+      const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+
+      // Load department distribution for bar chart
+      try {
+        const res = await fetch(`${API}/api/v1/analytics/departments`, { headers });
+        if (res.ok) {
+          const json = await res.json();
+          const deptData = json.data || [];
+          if (deptData.length > 0) {
+            renderDeptChart(deptData);
+          } else {
+            document.getElementById('dash-dept-empty')!.classList.remove('hidden');
+          }
+        } else {
+          document.getElementById('dash-dept-empty')!.classList.remove('hidden');
+        }
+      } catch {
+        document.getElementById('dash-dept-empty')!.classList.remove('hidden');
+      }
+
+      // Load leave analytics for doughnut chart
+      try {
+        const res = await fetch(`${API}/api/v1/analytics/leave`, { headers });
+        if (res.ok) {
+          const json = await res.json();
+          const leaveData = json.data || {};
+          const hasData = Object.values(leaveData).some((v: any) => v > 0);
+          if (hasData) {
+            renderLeaveChart(leaveData);
+          } else {
+            document.getElementById('dash-leave-empty')!.classList.remove('hidden');
+          }
+        } else {
+          document.getElementById('dash-leave-empty')!.classList.remove('hidden');
+        }
+      } catch {
+        document.getElementById('dash-leave-empty')!.classList.remove('hidden');
+      }
+
+      // Load employees for employment type chart and recent hires
+      try {
+        const res = await fetch(`${API}/api/v1/employees?limit=100`, { headers });
+        if (res.ok) {
+          const json = await res.json();
+          const employees = json.data || [];
+          if (employees.length > 0) {
+            renderEmploymentChart(employees);
+            renderRecentHires(employees);
+          }
+        }
+      } catch {}
+    }
+
+    function renderDeptChart(data: Array<{ department: string; count: number }>) {
+      const ctx = document.getElementById('dash-dept-chart') as HTMLCanvasElement;
+      if (!ctx) return;
+      const colors = [CHART_COLORS.indigo, CHART_COLORS.blue, CHART_COLORS.purple, CHART_COLORS.amber, CHART_COLORS.emerald, CHART_COLORS.cyan];
+      new (window as any).Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(d => d.department),
+          datasets: [{
+            label: 'Employees',
+            data: data.map(d => d.count),
+            backgroundColor: data.map((_, i) => colors[i % colors.length] + 'cc'),
+            borderColor: data.map((_, i) => colors[i % colors.length]),
+            borderWidth: 1,
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: 'rgba(148,163,184,0.08)' }, beginAtZero: true },
+          },
+          plugins: { legend: { display: false } },
+        },
+      });
+    }
+
+    function renderLeaveChart(data: Record<string, number>) {
+      const ctx = document.getElementById('dash-leave-chart') as HTMLCanvasElement;
+      if (!ctx) return;
+      new (window as any).Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Pending', 'Approved', 'Rejected', 'Cancelled'],
+          datasets: [{
+            data: [data.pending || 0, data.approved || 0, data.rejected || 0, data.cancelled || 0],
+            backgroundColor: [CHART_COLORS.amber, CHART_COLORS.emerald, CHART_COLORS.red, CHART_COLORS.slate],
+            borderWidth: 0,
+            hoverOffset: 8,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 16, usePointStyle: true } },
+          },
+        },
+      });
+    }
+
+    function renderEmploymentChart(employees: any[]) {
+      const ctx = document.getElementById('dash-employment-chart') as HTMLCanvasElement;
+      if (!ctx) return;
+      const typeCounts: Record<string, number> = {};
+      employees.forEach(e => {
+        const t = e.employment_type || 'full_time';
+        typeCounts[t] = (typeCounts[t] || 0) + 1;
+      });
+      const labels = Object.keys(typeCounts).map(k => k.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()));
+      const values = Object.values(typeCounts);
+      const colors = [CHART_COLORS.indigo, CHART_COLORS.cyan, CHART_COLORS.amber, CHART_COLORS.emerald];
+      new (window as any).Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors.slice(0, labels.length).map(c => c + 'cc'),
+            borderWidth: 0,
+            hoverOffset: 8,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '60%',
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12, usePointStyle: true } },
+          },
+        },
+      });
+    }
+
+    function renderRecentHires(employees: any[]) {
+      const container = document.getElementById('dash-recent-hires')!;
+      const sorted = [...employees].sort((a, b) => {
+        const da = a.joining_date ? new Date(a.joining_date).getTime() : 0;
+        const db = b.joining_date ? new Date(b.joining_date).getTime() : 0;
+        return db - da;
+      });
+      const recent = sorted.slice(0, 5);
+      if (recent.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">No recent hires</p>';
+        return;
+      }
+      container.innerHTML = recent.map((emp: any) => `
+        <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800/40 transition-colors">
+          <div class="w-9 h-9 rounded-full bg-indigo-500/10 flex items-center justify-center text-sm font-medium text-indigo-400 flex-shrink-0">
+            ${(emp.first_name?.[0] || '')}${(emp.last_name?.[0] || '')}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-white truncate">${emp.first_name} ${emp.last_name}</p>
+            <p class="text-xs text-slate-400">${emp.designation || 'Employee'}</p>
+          </div>
+          <span class="text-xs text-slate-500 flex-shrink-0">${emp.joining_date ? new Date(emp.joining_date).toLocaleDateString() : '—'}</span>
+        </div>
+      `).join('');
+    }
+
+    loadDashboardCharts();
+  </script>
+</DashboardLayout>

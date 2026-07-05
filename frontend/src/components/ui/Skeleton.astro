@@ -1,0 +1,32 @@
+---
+interface Props {
+  class?: string;
+  variant?: 'text' | 'circle' | 'rect' | 'avatar';
+  lines?: number;
+}
+
+const { class: className = '', variant = 'text', lines = 3 } = Astro.props;
+
+const variants: Record<string, string> = {
+  text: '',
+  circle: 'rounded-full',
+  rect: 'rounded-xl',
+  avatar: 'rounded-full',
+};
+---
+
+{variant === 'text' ? (
+  <div class:list={['animate-pulse space-y-3', className]} aria-hidden="true">
+    {Array.from({ length: lines }).map((_, i) => (
+      <div 
+        class="h-4 bg-gradient-to-r from-slate-800 via-slate-700/50 to-slate-800 rounded-lg"
+        style={`width: ${i === lines - 1 ? '60%' : i === 0 ? '90%' : '75%'}; animation-delay: ${i * 0.1}s;`}
+      ></div>
+    ))}
+  </div>
+) : (
+  <div 
+    class:list={['animate-pulse bg-gradient-to-r from-slate-800 via-slate-700/50 to-slate-800', variants[variant], className]}
+    aria-hidden="true"
+  ></div>
+)}

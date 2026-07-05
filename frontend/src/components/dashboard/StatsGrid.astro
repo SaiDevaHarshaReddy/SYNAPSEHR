@@ -1,0 +1,133 @@
+---
+---
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="stats-grid" role="list" aria-label="Dashboard statistics">
+  <!-- Total Employees -->
+  <div class="card-static p-5 group hover-lift stagger-1 animate-fade-in-up" role="listitem">
+    <div class="flex items-center justify-between mb-4">
+      <div class="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 group-hover:bg-indigo-500/15 transition-colors duration-300">
+        <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      </div>
+      <div class="status-dot status-dot-active" aria-label="Active"></div>
+    </div>
+    <p class="text-2xl font-bold text-white tracking-tight" id="stat-employees">-</p>
+    <p class="text-xs text-slate-400 mt-1 font-medium">Total Employees</p>
+    <div class="mt-2 flex items-center gap-2">
+      <span class="text-xs text-emerald-400 font-medium">Active</span>
+      <span class="text-xs text-slate-500">workforce</span>
+      <span id="stat-employees-depts" class="text-xs text-slate-600 ml-auto hidden">· <span id="stat-dept-count">0</span> depts</span>
+    </div>
+  </div>
+
+  <!-- Pending Approvals -->
+  <div class="card-static p-5 group hover-lift stagger-2 animate-fade-in-up" role="listitem">
+    <div class="flex items-center justify-between mb-4">
+      <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 group-hover:bg-amber-500/15 transition-colors duration-300">
+        <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div class="status-dot status-dot-pending" aria-label="Pending"></div>
+    </div>
+    <p class="text-2xl font-bold text-white tracking-tight" id="stat-pending">-</p>
+    <p class="text-xs text-slate-400 mt-1 font-medium">Pending Approvals</p>
+    <div class="mt-2">
+      <span class="text-xs text-amber-400 font-medium">Needs attention</span>
+    </div>
+  </div>
+
+  <!-- Today's Leave -->
+  <div class="card-static p-5 group hover-lift stagger-3 animate-fade-in-up" role="listitem">
+    <div class="flex items-center justify-between mb-4">
+      <div class="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 group-hover:bg-red-500/15 transition-colors duration-300">
+        <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <div class="status-dot status-dot-inactive" aria-label="Out of office"></div>
+    </div>
+    <p class="text-2xl font-bold text-white tracking-tight" id="stat-today-leave">-</p>
+    <p class="text-xs text-slate-400 mt-1 font-medium">Today's Leave</p>
+    <div class="mt-2">
+      <span class="text-xs text-red-400 font-medium">Out of office</span>
+    </div>
+  </div>
+
+  <!-- Candidates -->
+  <div class="card-static p-5 group hover-lift stagger-4 animate-fade-in-up" role="listitem">
+    <div class="flex items-center justify-between mb-4">
+      <div class="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 group-hover:bg-purple-500/15 transition-colors duration-300">
+        <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <div class="status-dot status-dot-active" aria-label="In Pipeline"></div>
+    </div>
+    <p class="text-2xl font-bold text-white tracking-tight" id="stat-candidates">-</p>
+    <p class="text-xs text-slate-400 mt-1 font-medium">Candidates</p>
+    <div class="mt-2 flex items-center gap-2">
+      <span class="text-xs text-purple-400 font-medium">In pipeline</span>
+      <span id="stat-candidate-hired" class="text-xs text-slate-600 ml-auto hidden">· <span id="stat-hired-count">0</span> hired</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:8000';
+
+  async function loadDashboardStats() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+
+    // Dashboard metrics (employees, pending, today's leave)
+    try {
+      const res = await fetch(`${API}/api/v1/analytics/dashboard`, { headers });
+      if (res.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/login';
+        return;
+      }
+      if (res.ok) {
+        const json = await res.json();
+        const m = json.data || {};
+        document.getElementById('stat-employees')!.textContent   = String(m.total_employees   ?? 0);
+        document.getElementById('stat-pending')!.textContent     = String(m.pending_approvals ?? 0);
+        document.getElementById('stat-today-leave')!.textContent = String(m.todays_leave      ?? 0);
+      }
+    } catch (err) {
+      console.warn('Dashboard metrics failed:', err);
+    }
+
+    // Recruitment stats (candidates)
+    try {
+      const res = await fetch(`${API}/api/v1/recruitment/stats`, { headers });
+      if (res.ok) {
+        const json = await res.json();
+        const d = json.data || {};
+        document.getElementById('stat-candidates')!.textContent = String(d.total_candidates ?? 0);
+        if (d.hired > 0) {
+          document.getElementById('stat-candidate-hired')!.classList.remove('hidden');
+          document.getElementById('stat-hired-count')!.textContent = String(d.hired);
+        }
+      }
+    } catch { /* non-critical */ }
+
+    // Load department count for context
+    try {
+      const res = await fetch(`${API}/api/v1/departments`, { headers });
+      if (res.ok) {
+        const json = await res.json();
+        const deptCount = (json.data || []).length;
+        if (deptCount > 0) {
+          document.getElementById('stat-employees-depts')!.classList.remove('hidden');
+          document.getElementById('stat-dept-count')!.textContent = String(deptCount);
+        }
+      }
+    } catch { /* non-critical */ }
+  }
+
+  loadDashboardStats();
+</script>

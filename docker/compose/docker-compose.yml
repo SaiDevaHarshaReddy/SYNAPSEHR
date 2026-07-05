@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: synapsehr
+      POSTGRES_PASSWORD: synapsehr
+      POSTGRES_DB: synapsehr
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synapsehr"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://synapsehr:synapsehr@db:5432/synapsehr
+      - APP_ENV=development
+      - APP_DEBUG=true
+      - JWT_SECRET_KEY=dev-secret-key-change-in-production
+      - JWT_ALGORITHM=HS256
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../backend:/app
+      - ../uploads:/app/uploads
+      - ../generated_documents:/app/generated_documents
+      - ../knowledge:/app/knowledge
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4321:4321"
+    environment:
+      - PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

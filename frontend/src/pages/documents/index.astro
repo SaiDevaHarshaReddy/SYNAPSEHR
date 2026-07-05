@@ -1,0 +1,327 @@
+---
+// Documents page
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Documents - SynapseHR">
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="page-title">Documents</h1>
+        <p class="page-subtitle">Generate and manage HR documents</p>
+      </div>
+      <button id="generateDocBtn" class="btn btn-primary">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Generate Document
+      </button>
+    </div>
+
+    <!-- Document Types -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="card-hover" data-type="offer_letter">
+        <div class="w-12 h-12 bg-primary-600/20 rounded-xl flex items-center justify-center mb-3">
+          <svg class="w-6 h-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h3 class="font-medium text-dark-100">Offer Letter</h3>
+        <p class="text-sm text-dark-400 mt-1">Generate job offer documents</p>
+      </div>
+      <div class="card-hover" data-type="experience_letter">
+        <div class="w-12 h-12 bg-green-600/20 rounded-xl flex items-center justify-center mb-3">
+          <svg class="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h3 class="font-medium text-dark-100">Experience Letter</h3>
+        <p class="text-sm text-dark-400 mt-1">Employment experience certificate</p>
+      </div>
+      <div class="card-hover" data-type="salary_certificate">
+        <div class="w-12 h-12 bg-accent-600/20 rounded-xl flex items-center justify-center mb-3">
+          <svg class="w-6 h-6 text-accent-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h3 class="font-medium text-dark-100">Salary Certificate</h3>
+        <p class="text-sm text-dark-400 mt-1">Salary verification letter</p>
+      </div>
+      <div class="card-hover" data-type="promotion_letter">
+        <div class="w-12 h-12 bg-purple-600/20 rounded-xl flex items-center justify-center mb-3">
+          <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h3 class="font-medium text-dark-100">Promotion Letter</h3>
+        <p class="text-sm text-dark-400 mt-1">Promotion announcement</p>
+      </div>
+    </div>
+
+    <!-- Generated Documents -->
+    <div class="card">
+      <h2 class="text-lg font-semibold text-dark-100 mb-4">Generated Documents</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Document Type</th>
+            <th>Employee</th>
+            <th>Generated</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="documents-table">
+          <tr>
+            <td colspan="4" class="text-center py-8 text-dark-400">
+              No documents generated yet
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Generate Document Modal -->
+  <div id="docModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="card w-full max-w-md mx-4">
+      <h3 class="text-lg font-semibold text-dark-100 mb-4">Generate Document</h3>
+      <form id="docForm" class="space-y-4">
+        <div>
+          <label class="label">Document Type</label>
+          <select id="docType" class="input" required>
+            <option value="">Select type</option>
+            <option value="offer_letter">Offer Letter</option>
+            <option value="appointment_letter">Appointment Letter</option>
+            <option value="experience_letter">Experience Letter</option>
+            <option value="salary_certificate">Salary Certificate</option>
+            <option value="promotion_letter">Promotion Letter</option>
+          </select>
+        </div>
+        <div class="flex gap-3 justify-end">
+          <button type="button" id="cancelDocModal" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Generate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Document Viewer Modal -->
+  <div id="viewerModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 id="viewer-title" class="text-lg font-semibold text-gray-800">Document Preview</h3>
+        <div class="flex items-center gap-2">
+          <button id="downloadBtn" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Download
+          </button>
+          <button id="closeViewer" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="viewer-content" class="flex-1 overflow-y-auto p-8"></div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+  const modal = document.getElementById('docModal') as HTMLDivElement;
+  const generateBtn = document.getElementById('generateDocBtn') as HTMLButtonElement;
+  const cancelBtn = document.getElementById('cancelDocModal') as HTMLButtonElement;
+  const viewerModal = document.getElementById('viewerModal') as HTMLDivElement;
+  const closeViewer = document.getElementById('closeViewer') as HTMLButtonElement;
+  const downloadBtn = document.getElementById('downloadBtn') as HTMLButtonElement;
+  const viewerContent = document.getElementById('viewer-content') as HTMLDivElement;
+  const viewerTitle = document.getElementById('viewer-title') as HTMLHeadingElement;
+
+  generateBtn?.addEventListener('click', () => modal?.classList.remove('hidden'));
+  cancelBtn?.addEventListener('click', () => modal?.classList.add('hidden'));
+  closeViewer?.addEventListener('click', () => viewerModal?.classList.add('hidden'));
+
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  function generateDocContent(type: string, employee: string): string {
+    const docs: Record<string, string> = {
+      offer_letter: `
+        <div style="font-family: Georgia, serif; max-width: 700px; margin: 0 auto; color: #1a1a1a;">
+          <div style="text-align: center; border-bottom: 3px solid #4f46e5; padding-bottom: 20px; margin-bottom: 30px;">
+            <h1 style="font-size: 24px; color: #4f46e5; margin: 0;">SynapseHR Inc.</h1>
+            <p style="color: #666; margin: 5px 0 0;">123 Business St, Tech City, TC 12345</p>
+          </div>
+          <p style="color: #666;">${today}</p>
+          <p style="margin-top: 20px;"><strong>${employee}</strong></p>
+          <p style="margin-top: 20px;">Dear ${employee},</p>
+          <p style="margin-top: 15px; line-height: 1.8;">We are pleased to offer you the position of <strong>Software Engineer</strong> at SynapseHR Inc. We believe your skills and experience will be a valuable addition to our team.</p>
+          <p style="margin-top: 15px; line-height: 1.8;"><strong>Compensation:</strong> $85,000 per annum<br><strong>Employment Type:</strong> Full-Time<br><strong>Start Date:</strong> August 1, 2026<br><strong>Reporting To:</strong> Engineering Manager</p>
+          <p style="margin-top: 15px; line-height: 1.8;">You will be entitled to health insurance, 401(k) matching, 20 days PTO, and other benefits as per company policy.</p>
+          <p style="margin-top: 15px; line-height: 1.8;">Please sign and return this letter by ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} to confirm your acceptance.</p>
+          <p style="margin-top: 30px;">Warm regards,<br><strong>HR Department</strong><br>SynapseHR Inc.</p>
+        </div>`,
+      appointment_letter: `
+        <div style="font-family: Georgia, serif; max-width: 700px; margin: 0 auto; color: #1a1a1a;">
+          <div style="text-align: center; border-bottom: 3px solid #059669; padding-bottom: 20px; margin-bottom: 30px;">
+            <h1 style="font-size: 24px; color: #059669; margin: 0;">SynapseHR Inc.</h1>
+            <p style="color: #666; margin: 5px 0 0;">Appointment Letter</p>
+          </div>
+          <p style="color: #666;">${today}</p>
+          <p style="margin-top: 20px;"><strong>${employee}</strong></p>
+          <p style="margin-top: 20px;">Dear ${employee},</p>
+          <p style="margin-top: 15px; line-height: 1.8;">We are happy to formally appoint you as <strong>Senior Engineer</strong> in the Engineering department, effective immediately.</p>
+          <p style="margin-top: 15px; line-height: 1.8;">Your employment is subject to the terms and conditions outlined in your offer letter and the company's employee handbook. You will report to the Engineering Manager.</p>
+          <p style="margin-top: 15px; line-height: 1.8;">We welcome you to the team and look forward to your contributions.</p>
+          <p style="margin-top: 30px;">Sincerely,<br><strong>HR Department</strong><br>SynapseHR Inc.</p>
+        </div>`,
+      experience_letter: `
+        <div style="font-family: Georgia, serif; max-width: 700px; margin: 0 auto; color: #1a1a1a;">
+          <div style="text-align: center; border-bottom: 3px solid #059669; padding-bottom: 20px; margin-bottom: 30px;">
+            <h1 style="font-size: 24px; color: #059669; margin: 0;">SynapseHR Inc.</h1>
+            <p style="color: #666; margin: 5px 0 0;">Experience Certificate</p>
+          </div>
+          <p style="color: #666;">${today}</p>
+          <p style="margin-top: 20px;"><strong>To Whom It May Concern</strong></p>
+          <p style="margin-top: 20px; line-height: 1.8;">This is to certify that <strong>${employee}</strong> was employed with SynapseHR Inc. as <strong>Software Engineer</strong> from March 2024 to present.</p>
+          <p style="margin-top: 15px; line-height: 1.8;">During their tenure, ${employee} has been a dedicated and valuable team member. They have consistently demonstrated strong technical skills, professionalism, and a collaborative approach to problem-solving.</p>
+          <p style="margin-top: 15px; line-height: 1.8;">We wish ${employee} all the best in their future endeavors.</p>
+          <p style="margin-top: 30px;">Best regards,<br><strong>Sarah Johnson</strong><br>HR Manager<br>SynapseHR Inc.</p>
+        </div>`,
+      salary_certificate: `
+        <div style="font-family: Georgia, serif; max-width: 700px; margin: 0 auto; color: #1a1a1a;">
+          <div style="text-align: center; border-bottom: 3px solid #d97706; padding-bottom: 20px; margin-bottom: 30px;">
+            <h1 style="font-size: 24px; color: #d97706; margin: 0;">SynapseHR Inc.</h1>
+            <p style="color: #666; margin: 5px 0 0;">Salary Certificate</p>
+          </div>
+          <p style="color: #666;">${today}</p>
+          <p style="margin-top: 20px;"><strong>To Whom It May Concern</strong></p>
+          <p style="margin-top: 20px; line-height: 1.8;">This is to certify that <strong>${employee}</strong> is employed with SynapseHR Inc. and receives the following compensation:</p>
+          <div style="margin: 20px 0; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px 0; color: #64748b;">Basic Salary</td><td style="padding: 8px 0; text-align: right; font-weight: 600;">$6,500/month</td></tr>
+              <tr><td style="padding: 8px 0; color: #64748b;">Housing Allowance</td><td style="padding: 8px 0; text-align: right; font-weight: 600;">$1,200/month</td></tr>
+              <tr><td style="padding: 8px 0; color: #64748b;">Transport Allowance</td><td style="padding: 8px 0; text-align: right; font-weight: 600;">$500/month</td></tr>
+              <tr style="border-top: 2px solid #e2e8f0;"><td style="padding: 8px 0; font-weight: 700;">Total Gross Salary</td><td style="padding: 8px 0; text-align: right; font-weight: 700; color: #059669;">$8,200/month</td></tr>
+            </table>
+          </div>
+          <p style="margin-top: 15px; line-height: 1.8; color: #64748b; font-size: 14px;">This certificate is issued upon request for whatever legal purpose it may serve.</p>
+          <p style="margin-top: 30px;">Best regards,<br><strong>Robert Martinez</strong><br>Finance Manager<br>SynapseHR Inc.</p>
+        </div>`,
+      promotion_letter: `
+        <div style="font-family: Georgia, serif; max-width: 700px; margin: 0 auto; color: #1a1a1a;">
+          <div style="text-align: center; border-bottom: 3px solid #7c3aed; padding-bottom: 20px; margin-bottom: 30px;">
+            <h1 style="font-size: 24px; color: #7c3aed; margin: 0;">SynapseHR Inc.</h1>
+            <p style="color: #666; margin: 5px 0 0;">Promotion Letter</p>
+          </div>
+          <p style="color: #666;">${today}</p>
+          <p style="margin-top: 20px;"><strong>${employee}</strong></p>
+          <p style="margin-top: 20px;">Dear ${employee},</p>
+          <p style="margin-top: 15px; line-height: 1.8;">We are delighted to inform you that, in recognition of your outstanding performance and contributions, you have been promoted to <strong>Senior Software Engineer</strong>, effective August 1, 2026.</p>
+          <p style="margin-top: 15px; line-height: 1.8;">Your new compensation package will reflect this promotion, including an increased salary and enhanced benefits. Detailed information will be shared by the Finance department.</p>
+          <p style="margin-top: 15px; line-height: 1.8;">Congratulations on this well-deserved achievement. We look forward to your continued growth and success.</p>
+          <p style="margin-top: 30px;">Best regards,<br><strong>Michael Chen</strong><br>Engineering Manager<br>SynapseHR Inc.</p>
+        </div>`,
+    };
+    return docs[type] || docs.offer_letter;
+  }
+
+  function getPlainText(type: string, employee: string): string {
+    const content = generateDocContent(type, employee);
+    return content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  }
+
+  let currentDoc: any = null;
+
+  function viewDocument(doc: any) {
+    currentDoc = doc;
+    viewerTitle.textContent = `${doc.type} — ${doc.employee}`;
+    viewerContent.innerHTML = `
+      <div style="padding: 40px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        ${generateDocContent(doc.docType || doc.type.toLowerCase().replace(/\s+/g, '_'), doc.employee)}
+      </div>`;
+    viewerModal?.classList.remove('hidden');
+  }
+
+  function downloadDocument(doc: any) {
+    const content = generateDocContent(doc.docType || doc.type.toLowerCase().replace(/\s+/g, '_'), doc.employee);
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${doc.type} - ${doc.employee}</title><style>body{font-family:Georgia,serif;padding:40px;max-width:800px;margin:0 auto;color:#1a1a1a;}@media print{body{padding:20px;}}</style></head><body>${content}</body></html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.type.replace(/\s+/g, '_')}_${doc.employee.replace(/\s+/g, '_')}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  downloadBtn?.addEventListener('click', () => {
+    if (currentDoc) downloadDocument(currentDoc);
+  });
+
+  // Sample generated documents
+  const sampleDocuments = [
+    { id: 'd1', type: 'Experience Letter', docType: 'experience_letter', employee: 'Sarah Johnson', generated: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { id: 'd2', type: 'Offer Letter', docType: 'offer_letter', employee: 'Karan Mehta', generated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+    { id: 'd3', type: 'Salary Certificate', docType: 'salary_certificate', employee: 'Michael Chen', generated: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    { id: 'd4', type: 'Promotion Letter', docType: 'promotion_letter', employee: 'David Kim', generated: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { id: 'd5', type: 'Experience Letter', docType: 'experience_letter', employee: 'Emily Davis', generated: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { id: 'd6', type: 'Offer Letter', docType: 'offer_letter', employee: 'Sneha Reddy', generated: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+  ];
+
+  function renderDocuments() {
+    const tbody = document.getElementById('documents-table');
+    if (!tbody) return;
+    tbody.innerHTML = sampleDocuments.map(doc => `
+      <tr class="hover:bg-slate-700/30 transition-colors">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg ${doc.bg} flex items-center justify-center">
+              <svg class="w-5 h-5 ${doc.color}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${doc.icon}"></path>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-white">${doc.type}</span>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">${doc.employee}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-400">${new Date(doc.generated).toLocaleDateString()}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">
+          <button onclick="downloadDoc('${doc.id}')" class="text-indigo-400 hover:text-indigo-300 mr-3 font-medium">Download</button>
+          <button onclick="viewDoc('${doc.id}')" class="text-slate-400 hover:text-white font-medium">View</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  (window as any).viewDoc = function(id: string) {
+    const doc = sampleDocuments.find(d => d.id === id);
+    if (doc) viewDocument(doc);
+  };
+
+  (window as any).downloadDoc = function(id: string) {
+    const doc = sampleDocuments.find(d => d.id === id);
+    if (doc) downloadDocument(doc);
+  };
+
+  document.getElementById('docForm')?.addEventListener('submit', async (e: any) => {
+    e.preventDefault();
+    const docType = (document.getElementById('docType') as HTMLSelectElement).value;
+    if (!docType) return;
+    const typeNames: Record<string, string> = {
+      offer_letter: 'Offer Letter', appointment_letter: 'Appointment Letter',
+      experience_letter: 'Experience Letter', salary_certificate: 'Salary Certificate',
+      promotion_letter: 'Promotion Letter',
+    };
+    sampleDocuments.unshift({
+      id: 'd' + Date.now(), type: typeNames[docType] || docType, docType,
+      employee: 'New Employee', generated: new Date().toISOString(),
+      icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+      color: 'text-indigo-400', bg: 'bg-indigo-500/10',
+    });
+    renderDocuments();
+    modal?.classList.add('hidden');
+    e.target.reset();
+  });
+
+  renderDocuments();
+</script>

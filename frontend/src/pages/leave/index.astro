@@ -1,0 +1,281 @@
+---
+// Leave page
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Leave Management - SynapseHR">
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="page-title">Leave Management</h1>
+        <p class="page-subtitle">Manage leave requests and balances</p>
+      </div>
+      <button id="requestLeaveBtn" class="btn btn-primary">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Request Leave
+      </button>
+    </div>
+
+    <!-- Leave Balance Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="card p-5">
+        <p class="text-sm text-slate-400">Casual Leave</p>
+        <p class="text-2xl font-bold text-white mt-1" id="balance-casual">-</p>
+        <p class="text-xs text-slate-500">days available</p>
+      </div>
+      <div class="card p-5">
+        <p class="text-sm text-slate-400">Sick Leave</p>
+        <p class="text-2xl font-bold text-white mt-1" id="balance-sick">-</p>
+        <p class="text-xs text-slate-500">days available</p>
+      </div>
+      <div class="card p-5">
+        <p class="text-sm text-slate-400">Annual Leave</p>
+        <p class="text-2xl font-bold text-white mt-1" id="balance-annual">-</p>
+        <p class="text-xs text-slate-500">days available</p>
+      </div>
+      <div class="card p-5">
+        <p class="text-sm text-slate-400">Used This Year</p>
+        <p class="text-2xl font-bold text-white mt-1" id="balance-used">-</p>
+        <p class="text-xs text-slate-500">days</p>
+      </div>
+    </div>
+
+    <!-- Leave History -->
+    <div class="card p-6">
+      <h2 class="text-lg font-semibold text-white mb-4">Leave History</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody id="leaveHistoryTable">
+          <tr>
+            <td colspan="5" class="text-center py-8 text-slate-400">
+              Loading leave requests...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Leave Request Modal -->
+  <div id="leaveModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="card w-full max-w-md mx-4 p-6">
+      <h3 class="text-lg font-semibold text-white mb-4">Request Leave</h3>
+      <form id="leaveForm" class="space-y-4">
+        <div>
+          <label class="form-label">Leave Type</label>
+          <select id="leaveType" class="input" required>
+            <option value="">Select type</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="form-label">Start Date</label>
+            <input type="date" id="startDate" class="input" required />
+          </div>
+          <div>
+            <label class="form-label">End Date</label>
+            <input type="date" id="endDate" class="input" required />
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Reason</label>
+          <textarea id="reason" class="input" rows="3" placeholder="Optional reason..."></textarea>
+        </div>
+        <div class="flex gap-3 justify-end mt-6">
+          <button type="button" id="cancelModal" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+  import { api } from '../../services/api';
+
+  const modal = document.getElementById('leaveModal') as HTMLDivElement;
+  const requestBtn = document.getElementById('requestLeaveBtn') as HTMLButtonElement;
+  const cancelBtn = document.getElementById('cancelModal') as HTMLButtonElement;
+  const leaveForm = document.getElementById('leaveForm') as HTMLFormElement;
+  const leaveTypeSelect = document.getElementById('leaveType') as HTMLSelectElement;
+  const leaveHistoryTable = document.getElementById('leaveHistoryTable') as HTMLTableSectionElement;
+
+  requestBtn?.addEventListener('click', () => modal?.classList.remove('hidden'));
+  cancelBtn?.addEventListener('click', () => modal?.classList.add('hidden'));
+
+  let leaveTypes: any[] = [];
+
+  async function initLeavePage() {
+    try {
+      // 1. Fetch leave types to populate select dropdown
+      leaveTypes = await api.getLeaveTypes();
+      if (leaveTypeSelect) {
+        leaveTypeSelect.innerHTML = '<option value="">Select type</option>';
+        if (leaveTypes && leaveTypes.length > 0) {
+          leaveTypes.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = t.name;
+            leaveTypeSelect.appendChild(opt);
+          });
+        } else {
+          // Fallback: hardcoded leave types
+          const fallbackTypes = [
+            { id: 'casual', name: 'Casual Leave' },
+            { id: 'sick', name: 'Sick Leave' },
+            { id: 'annual', name: 'Annual Leave' },
+            { id: 'maternity', name: 'Maternity Leave' },
+            { id: 'paternity', name: 'Paternity Leave' },
+            { id: 'unpaid', name: 'Unpaid Leave' },
+          ];
+          fallbackTypes.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = t.name;
+            leaveTypeSelect.appendChild(opt);
+          });
+        }
+      }
+
+      // 2. Fetch and render balance & history
+      await loadLeaveData();
+    } catch (error) {
+      console.error('Failed to initialize leave page:', error);
+      // Fallback: populate leave types even if API fails
+      if (leaveTypeSelect && leaveTypeSelect.options.length <= 1) {
+        const fallbackTypes = [
+          { id: 'casual', name: 'Casual Leave' },
+          { id: 'sick', name: 'Sick Leave' },
+          { id: 'annual', name: 'Annual Leave' },
+          { id: 'maternity', name: 'Maternity Leave' },
+          { id: 'paternity', name: 'Paternity Leave' },
+          { id: 'unpaid', name: 'Unpaid Leave' },
+        ];
+        leaveTypeSelect.innerHTML = '<option value="">Select type</option>';
+        fallbackTypes.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = t.name;
+          leaveTypeSelect.appendChild(opt);
+        });
+      }
+    }
+  }
+
+  async function loadLeaveData() {
+    try {
+      // Fetch balances
+      const balances = await api.getLeaveBalance();
+      let usedTotal = 0;
+      
+      // Default to showing 0 if no records found
+      document.getElementById('balance-casual')!.textContent = '0';
+      document.getElementById('balance-sick')!.textContent = '0';
+      document.getElementById('balance-annual')!.textContent = '0';
+      document.getElementById('balance-used')!.textContent = '0';
+
+      if (balances && balances.length > 0) {
+        balances.forEach(b => {
+          const typeName = (b.leave_type_name || '').toLowerCase();
+          const availableId = typeName.includes('casual') ? 'balance-casual' :
+                              typeName.includes('sick') ? 'balance-sick' :
+                              typeName.includes('annual') ? 'balance-annual' : null;
+          if (availableId) {
+            const el = document.getElementById(availableId);
+            if (el) el.textContent = b.available_days.toString();
+          }
+          usedTotal += b.used_days || 0;
+        });
+      }
+      
+      const usedEl = document.getElementById('balance-used');
+      if (usedEl) usedEl.textContent = usedTotal.toString();
+
+      // Fetch history
+      const history = await api.getLeaveHistory();
+      if (leaveHistoryTable) {
+        if (!history || history.length === 0) {
+          leaveHistoryTable.innerHTML = `
+            <tr>
+              <td colspan="5" class="text-center py-8 text-slate-400">
+                No leave requests found
+              </td>
+            </tr>
+          `;
+        } else {
+          leaveHistoryTable.innerHTML = '';
+          history.forEach(req => {
+            const tr = document.createElement('tr');
+            
+            // Format status badge
+            const statusStr = (req.status?.value || req.status || 'pending').toLowerCase();
+            let badgeClass = 'badge-warning'; // pending/waiting_approval
+            if (statusStr === 'approved' || statusStr === 'completed') {
+              badgeClass = 'badge-success';
+            } else if (statusStr === 'rejected' || statusStr === 'failed') {
+              badgeClass = 'badge-error';
+            }
+            
+            tr.innerHTML = `
+              <td class="font-medium text-white">${req.leave_type?.name || 'Leave'}</td>
+              <td class="text-slate-300">${req.start_date}</td>
+              <td class="text-slate-300">${req.end_date}</td>
+              <td><span class="badge ${badgeClass}">${req.status}</span></td>
+              <td class="text-slate-400 text-sm">${req.reason || '-'}</td>
+            `;
+            leaveHistoryTable.appendChild(tr);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load leave data:', error);
+      // Show empty state
+      if (leaveHistoryTable) {
+        leaveHistoryTable.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center py-8 text-slate-400">
+              Unable to load leave data. Please check if the backend is running.
+            </td>
+          </tr>
+        `;
+      }
+    }
+  }
+
+  // Handle form submit
+  leaveForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const typeId = (document.getElementById('leaveType') as HTMLSelectElement).value;
+    const startDate = (document.getElementById('startDate') as HTMLInputElement).value;
+    const endDate = (document.getElementById('endDate') as HTMLInputElement).value;
+    const reason = (document.getElementById('reason') as HTMLTextAreaElement).value;
+
+    try {
+      await api.createLeaveRequest({
+        leave_type_id: typeId,
+        start_date: startDate,
+        end_date: endDate,
+        reason: reason,
+      });
+      modal?.classList.add('hidden');
+      leaveForm.reset();
+      await loadLeaveData();
+    } catch (err) {
+      console.error('Failed to create leave request:', err);
+      alert('Error creating leave request. Please check inputs and balance.');
+    }
+  });
+
+  // Start init
+  initLeavePage();
+</script>

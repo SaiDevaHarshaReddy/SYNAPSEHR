@@ -1,0 +1,151 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Admin" description="System administration panel">
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold text-white">Admin Panel</h1>
+      <p class="mt-1 text-sm text-slate-400">System configuration and administration</p>
+    </div>
+
+    <!-- Admin Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-400">Users</p>
+            <p id="admin-users" class="text-3xl font-bold text-white mt-1">-</p>
+          </div>
+          <div class="p-3 rounded-lg bg-indigo-500/10">
+            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-400">Documents</p>
+            <p id="admin-docs" class="text-3xl font-bold text-white mt-1">-</p>
+          </div>
+          <div class="p-3 rounded-lg bg-cyan-500/10">
+            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-400">KB Chunks</p>
+            <p id="admin-chunks" class="text-3xl font-bold text-white mt-1">-</p>
+          </div>
+          <div class="p-3 rounded-lg bg-emerald-500/10">
+            <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-400">Workflows</p>
+            <p id="admin-workflows" class="text-3xl font-bold text-white mt-1">-</p>
+          </div>
+          <div class="p-3 rounded-lg bg-amber-500/10">
+            <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Knowledge Base Management -->
+      <div class="card p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Knowledge Base</h3>
+        <p class="text-sm text-slate-400 mb-4">Upload and manage documents for AI-powered policy search.</p>
+        <div class="space-y-3">
+          <a href="/knowledge" class="btn btn-outline w-full justify-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+            Upload Documents
+          </a>
+          <button onclick="reindexKB()" class="btn btn-outline w-full justify-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            Re-index Knowledge Base
+          </button>
+        </div>
+      </div>
+
+      <!-- User Management -->
+      <div class="card p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">User Management</h3>
+        <p class="text-sm text-slate-400 mb-4">Manage user accounts, roles, and permissions.</p>
+        <div class="space-y-3">
+          <a href="/employees" class="btn btn-outline w-full justify-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            View All Users
+          </a>
+          <button class="btn btn-outline w-full justify-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+            Add User
+          </button>
+        </div>
+      </div>
+
+      <!-- System Configuration -->
+      <div class="card p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">System Configuration</h3>
+        <p class="text-sm text-slate-400 mb-4">Configure system settings and integrations.</p>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between py-2 border-b border-slate-700">
+            <span class="text-sm text-slate-300">AI Provider</span>
+            <span class="badge badge-info">OpenAI</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-700">
+            <span class="text-sm text-slate-300">Embedding Model</span>
+            <span class="badge badge-info">MiniLM-L6</span>
+          </div>
+          <div class="flex items-center justify-between py-2 border-b border-slate-700">
+            <span class="text-sm text-slate-300">Vector DB</span>
+            <span class="badge badge-success">ChromaDB</span>
+          </div>
+          <div class="flex items-center justify-between py-2">
+            <span class="text-sm text-slate-300">Max Upload Size</span>
+            <span class="badge badge-warning">25 MB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Log -->
+      <div class="card p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Audit Log</h3>
+        <p class="text-sm text-slate-400 mb-4">Recent system activity and changes.</p>
+        <div class="space-y-3" id="audit-log">
+          <div class="text-sm text-slate-400">No recent activity</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadAdminStats() {
+      try {
+        const { api } = await import('../../services/api');
+        const [usersRes, docsRes] = await Promise.all([
+          api.employees.list({ page: 1, limit: 1 }),
+          api.documents.list(),
+        ]);
+
+        document.getElementById('admin-users').textContent = (usersRes as any).total || '0';
+        document.getElementById('admin-docs').textContent = ((docsRes as any).data || []).length.toString();
+      } catch (e) {
+        console.error('Failed to load admin stats:', e);
+      }
+    }
+
+    function reindexKB() {
+      alert('Re-indexing knowledge base... This may take a few minutes.');
+    }
+
+    loadAdminStats();
+  </script>
+</DashboardLayout>

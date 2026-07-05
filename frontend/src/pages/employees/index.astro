@@ -1,0 +1,592 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Employees" description="Manage your organization's workforce">
+  <!-- Employee List View -->
+  <div id="employee-list-view" class="space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-white">Employees</h1>
+        <p class="mt-1 text-sm text-slate-400">Manage your organization's workforce</p>
+      </div>
+      <button id="add-employee-btn" class="btn btn-primary">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        Add Employee
+      </button>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="card p-4">
+      <div class="flex flex-wrap gap-3">
+        <div class="relative flex-1 min-w-[200px]">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input type="text" id="search" placeholder="Search by name, email, or code..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-700 bg-slate-800/60 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" />
+        </div>
+        <select id="dept-filter" class="px-3 py-2 rounded-lg border border-slate-700 bg-slate-800/60 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">All Departments</option>
+        </select>
+        <select id="status-filter" class="px-3 py-2 rounded-lg border border-slate-700 bg-slate-800/60 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Employee Table -->
+    <div class="card">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-slate-800">
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Employee</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Code</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Department</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Designation</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="employee-table" class="divide-y divide-slate-800">
+            <tr>
+              <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                <div class="flex flex-col items-center">
+                  <svg class="animate-spin h-8 w-8 text-indigo-400 mb-3" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  Loading employees...
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination -->
+      <div class="px-6 py-3 border-t border-slate-800 flex items-center justify-between">
+        <p id="page-info" class="text-sm text-slate-400">Loading...</p>
+        <div class="flex gap-2">
+          <button id="prev-page" class="px-3 py-1.5 text-sm font-medium text-slate-400 bg-slate-800 rounded-lg hover:bg-slate-700 disabled:opacity-50" disabled>Previous</button>
+          <button id="next-page" class="px-3 py-1.5 text-sm font-medium text-slate-400 bg-slate-800 rounded-lg hover:bg-slate-700 disabled:opacity-50" disabled>Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Employee Detail View -->
+  <div id="employee-detail-view" class="space-y-6 hidden">
+    <div class="flex items-center justify-between">
+      <button id="back-to-list-btn" class="btn btn-secondary flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        Back to Employees
+      </button>
+      <div class="flex gap-3">
+        <button id="contact-employee-btn" class="btn btn-secondary border-indigo-500/20 text-indigo-400 hover:bg-indigo-600/10">
+          Contact Employee
+        </button>
+        <button id="edit-employee-btn" class="btn btn-primary">
+          Edit Employee
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Profile Card -->
+      <div class="card p-6 flex flex-col items-center justify-center text-center">
+        <div class="w-24 h-24 rounded-full bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center text-3xl font-bold text-indigo-400 mb-4" id="detail-avatar">
+          -
+        </div>
+        <h2 class="text-xl font-bold text-white" id="detail-fullname">-</h2>
+        <p class="text-sm text-slate-400 mt-1" id="detail-designation-header">-</p>
+        <p class="text-xs text-indigo-400 font-medium mt-3 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20" id="detail-dept-badge">-</p>
+      </div>
+
+      <!-- Editable Form Details -->
+      <div class="card p-6 lg:col-span-2">
+        <h3 class="text-lg font-semibold text-white mb-6">Employee Details</h3>
+        <form id="edit-employee-form" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label">First Name</label>
+              <input type="text" id="edit-first-name" class="input" required disabled />
+            </div>
+            <div>
+              <label class="form-label">Last Name</label>
+              <input type="text" id="edit-last-name" class="input" required disabled />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label">Employee Code</label>
+              <input type="text" id="edit-code" class="input" disabled />
+            </div>
+            <div>
+              <label class="form-label">Designation</label>
+              <input type="text" id="edit-designation" class="input" required disabled />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label">Department</label>
+              <select id="edit-department" class="input" required disabled>
+                <!-- Populate dynamically -->
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Email</label>
+              <input type="email" id="edit-email" class="input" required disabled />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label">Phone Number</label>
+              <input type="text" id="edit-phone" class="input" disabled />
+            </div>
+            <div>
+              <label class="form-label">Joining Date</label>
+              <input type="date" id="edit-joining-date" class="input" required disabled />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label">Employment Type</label>
+              <select id="edit-employment-type" class="input" required disabled>
+                <option value="full_time">Full Time</option>
+                <option value="part_time">Part Time</option>
+                <option value="contract">Contract</option>
+                <option value="intern">Intern</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Workforce Status</label>
+              <select id="edit-status" class="input" required disabled>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 pt-4 hidden" id="edit-actions-row">
+            <button type="button" id="cancel-edit-btn" class="btn btn-secondary">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Modal -->
+  <div id="contactModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div class="card w-full max-w-md mx-4 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-white">Contact Employee</h3>
+        <button id="close-contact-btn" class="text-slate-400 hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <form id="contactForm" class="space-y-4">
+        <div>
+          <label class="form-label">Subject</label>
+          <input type="text" id="contact-subject" class="input" placeholder="e.g. Discussing leave application" required />
+        </div>
+        <div>
+          <label class="form-label">Message</label>
+          <textarea id="contact-message" class="input" rows="4" placeholder="Type your message..." required></textarea>
+        </div>
+        <div class="flex gap-3 justify-end pt-4">
+          <button type="button" id="cancel-contact-btn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Send Message</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Employee Modal (Custom modal triggered by 'Add Employee' button) -->
+  <div id="addEmployeeModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div class="card w-full max-w-md mx-4 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-white">Add New Employee</h3>
+        <button id="close-add-btn" class="text-slate-400 hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <form id="add-employee-form" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="form-label">First Name</label>
+            <input type="text" id="add-first-name" class="input" required />
+          </div>
+          <div>
+            <label class="form-label">Last Name</label>
+            <input type="text" id="add-last-name" class="input" required />
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Designation</label>
+          <input type="text" id="add-designation" class="input" required />
+        </div>
+        <div>
+          <label class="form-label">Department</label>
+          <select id="add-department" class="input" required></select>
+        </div>
+        <div>
+          <label class="form-label">Email</label>
+          <input type="email" id="add-email" class="input" required />
+        </div>
+        <div>
+          <label class="form-label">Employee Code</label>
+          <input type="text" id="add-code" class="input" placeholder="e.g. EMP004" required />
+        </div>
+        <div class="flex gap-3 justify-end pt-4">
+          <button type="button" id="cancel-add-btn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Employee</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+  import { api } from '../../services/api';
+
+  let currentPage = 1;
+  let employees: any[] = [];
+  let totalPages = 1;
+  let departments: any[] = [];
+  let currentEmployee: any = null;
+  let isEditing = false;
+
+  const listView = document.getElementById('employee-list-view') as HTMLDivElement;
+  const detailView = document.getElementById('employee-detail-view') as HTMLDivElement;
+  const searchInput = document.getElementById('search') as HTMLInputElement;
+  const deptFilter = document.getElementById('dept-filter') as HTMLSelectElement;
+  const statusFilter = document.getElementById('status-filter') as HTMLSelectElement;
+  const employeeTable = document.getElementById('employee-table') as HTMLTableSectionElement;
+  const pageInfo = document.getElementById('page-info') as HTMLParagraphElement;
+  const prevPageBtn = document.getElementById('prev-page') as HTMLButtonElement;
+  const nextPageBtn = document.getElementById('next-page') as HTMLButtonElement;
+
+  // Add employee triggers
+  const addModal = document.getElementById('addEmployeeModal') as HTMLDivElement;
+  const addBtn = document.getElementById('add-employee-btn') as HTMLButtonElement;
+  const cancelAddBtn = document.getElementById('cancel-add-btn') as HTMLButtonElement;
+  const closeAddBtn = document.getElementById('close-add-btn') as HTMLButtonElement;
+  const addEmployeeForm = document.getElementById('add-employee-form') as HTMLFormElement;
+  const addDeptSelect = document.getElementById('add-department') as HTMLSelectElement;
+
+  addBtn?.addEventListener('click', () => addModal?.classList.remove('hidden'));
+  cancelAddBtn?.addEventListener('click', () => addModal?.classList.add('hidden'));
+  closeAddBtn?.addEventListener('click', () => addModal?.classList.add('hidden'));
+
+  // Detail triggers
+  const backBtn = document.getElementById('back-to-list-btn') as HTMLButtonElement;
+  const editBtn = document.getElementById('edit-employee-btn') as HTMLButtonElement;
+  const cancelEditBtn = document.getElementById('cancel-edit-btn') as HTMLButtonElement;
+  const contactBtn = document.getElementById('contact-employee-btn') as HTMLButtonElement;
+  const editActionsRow = document.getElementById('edit-actions-row') as HTMLDivElement;
+  const editForm = document.getElementById('edit-employee-form') as HTMLFormElement;
+  const editDeptSelect = document.getElementById('edit-department') as HTMLSelectElement;
+
+  // Contact triggers
+  const contactModal = document.getElementById('contactModal') as HTMLDivElement;
+  const closeContactBtn = document.getElementById('close-contact-btn') as HTMLButtonElement;
+  const cancelContactBtn = document.getElementById('cancel-contact-btn') as HTMLButtonElement;
+  const contactForm = document.getElementById('contactForm') as HTMLFormElement;
+
+  contactBtn?.addEventListener('click', () => contactModal?.classList.remove('hidden'));
+  closeContactBtn?.addEventListener('click', () => contactModal?.classList.add('hidden'));
+  cancelContactBtn?.addEventListener('click', () => contactModal?.classList.add('hidden'));
+
+  backBtn?.addEventListener('click', () => {
+    window.history.pushState({}, '', '/employees');
+    checkUrlState();
+  });
+
+  editBtn?.addEventListener('click', () => toggleEditState(true));
+  cancelEditBtn?.addEventListener('click', () => {
+    toggleEditState(false);
+    populateEditForm();
+  });
+
+  async function checkUrlState() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    
+    // Make sure departments are loaded for lists/selects
+    if (departments.length === 0) {
+      await loadDepartmentsList();
+    }
+
+    if (id) {
+      listView?.classList.add('hidden');
+      detailView?.classList.remove('hidden');
+      await loadEmployeeDetail(id);
+    } else {
+      detailView?.classList.add('hidden');
+      listView?.classList.remove('hidden');
+      toggleEditState(false);
+      await loadEmployees(currentPage);
+    }
+  }
+
+  function getDeptName(deptId: string): string {
+    const dept = departments.find((d: any) => d.id === deptId);
+    return dept ? dept.name : 'Unknown';
+  }
+
+  async function loadDepartmentsList() {
+    try {
+      const response = await api.getDepartments();
+      departments = response.data || [];
+      
+      // Populate filters
+      if (deptFilter) {
+        deptFilter.innerHTML = '<option value="">All Departments</option>';
+        departments.forEach(d => {
+          deptFilter.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+        });
+      }
+
+      // Populate selects in add/edit modals
+      if (addDeptSelect) {
+        addDeptSelect.innerHTML = '';
+        departments.forEach(d => {
+          addDeptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+        });
+      }
+
+      if (editDeptSelect) {
+        editDeptSelect.innerHTML = '';
+        departments.forEach(d => {
+          editDeptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load departments:', err);
+    }
+  }
+
+  async function loadEmployees(page = 1) {
+    try {
+      const params: any = { page, limit: 10 };
+      const response = await api.getEmployees(params);
+      employees = (response as any).data || [];
+      totalPages = Math.ceil(((response as any).total || 0) / 10);
+      currentPage = page;
+      renderEmployees();
+      updatePagination();
+    } catch (error) {
+      console.error('Failed to load employees:', error);
+      if (employeeTable) {
+        employeeTable.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-red-400">Failed to load employees</td></tr>';
+      }
+    }
+  }
+
+  function renderEmployees() {
+    if (!employeeTable) return;
+    const search = searchInput?.value.toLowerCase() || '';
+    const deptId = deptFilter?.value || '';
+    const statusVal = statusFilter?.value || '';
+
+    let filtered = employees;
+    if (search) {
+      filtered = filtered.filter(e =>
+        `${e.first_name} ${e.last_name}`.toLowerCase().includes(search) ||
+        e.email?.toLowerCase().includes(search) ||
+        e.employee_code?.toLowerCase().includes(search)
+      );
+    }
+    if (deptId) {
+      filtered = filtered.filter(e => e.department_id === deptId);
+    }
+    if (statusVal) {
+      filtered = filtered.filter(e => e.status === statusVal);
+    }
+
+    if (filtered.length === 0) {
+      employeeTable.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No employees found</td></tr>';
+      return;
+    }
+
+    employeeTable.innerHTML = filtered.map(emp => `
+      <tr class="hover:bg-slate-800/40 transition-colors cursor-pointer" onclick="navigateToDetail('${emp.id}')">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-indigo-500/10 flex items-center justify-center text-sm font-medium text-indigo-400">
+              ${(emp.first_name?.[0] || '') + (emp.last_name?.[0] || '')}
+            </div>
+            <div>
+              <div class="text-sm font-medium text-white">${emp.first_name} ${emp.last_name}</div>
+              <div class="text-xs text-slate-400">${emp.email || ''}</div>
+            </div>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-800 border border-slate-700 text-slate-300">${emp.employee_code || '-'}</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">${getDeptName(emp.department_id)}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">${emp.designation || '-'}</td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="px-2.5 py-0.5 text-xs font-medium rounded-full ${emp.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
+            ${emp.status === 'active' ? 'Active' : 'Inactive'}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">
+          <button onclick="event.stopPropagation(); navigateToDetail('${emp.id}')" class="text-indigo-400 hover:text-indigo-300 font-semibold">View</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  window.navigateToDetail = function(id: string) {
+    window.history.pushState({}, '', `/employees?id=${id}`);
+    checkUrlState();
+  };
+
+  function updatePagination() {
+    if (!pageInfo) return;
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
+    if (prevPageBtn) prevPageBtn.disabled = currentPage <= 1;
+    if (nextPageBtn) nextPageBtn.disabled = currentPage >= totalPages;
+  }
+
+  async function loadEmployeeDetail(id: string) {
+    try {
+      currentEmployee = await api.getEmployee(id);
+      populateEditForm();
+    } catch (err) {
+      console.error('Failed to load employee details:', err);
+      alert('Error fetching employee information.');
+    }
+  }
+
+  function populateEditForm() {
+    if (!currentEmployee) return;
+    
+    // Top Profile Card details
+    document.getElementById('detail-avatar')!.textContent = (currentEmployee.first_name?.[0] || '') + (currentEmployee.last_name?.[0] || '');
+    document.getElementById('detail-fullname')!.textContent = `${currentEmployee.first_name} ${currentEmployee.last_name}`;
+    document.getElementById('detail-designation-header')!.textContent = currentEmployee.designation || 'Staff';
+    document.getElementById('detail-dept-badge')!.textContent = getDeptName(currentEmployee.department_id) || 'No Department';
+
+    // Form inputs
+    (document.getElementById('edit-first-name') as HTMLInputElement).value = currentEmployee.first_name || '';
+    (document.getElementById('edit-last-name') as HTMLInputElement).value = currentEmployee.last_name || '';
+    (document.getElementById('edit-code') as HTMLInputElement).value = currentEmployee.employee_code || '';
+    (document.getElementById('edit-designation') as HTMLInputElement).value = currentEmployee.designation || '';
+    (document.getElementById('edit-department') as HTMLSelectElement).value = currentEmployee.department_id || '';
+    (document.getElementById('edit-email') as HTMLInputElement).value = currentEmployee.email || '';
+    (document.getElementById('edit-phone') as HTMLInputElement).value = currentEmployee.phone || '';
+    (document.getElementById('edit-joining-date') as HTMLInputElement).value = currentEmployee.joining_date || '';
+    (document.getElementById('edit-employment-type') as HTMLSelectElement).value = currentEmployee.employment_type || 'full_time';
+    (document.getElementById('edit-status') as HTMLSelectElement).value = currentEmployee.status || 'active';
+  }
+
+  function toggleEditState(editable: boolean) {
+    isEditing = editable;
+    const formFields = editForm?.querySelectorAll('input, select');
+    formFields?.forEach(field => {
+      if (field.id !== 'edit-code') { // Code should remain disabled/read-only
+        (field as HTMLInputElement | HTMLSelectElement).disabled = !editable;
+      }
+    });
+
+    if (editable) {
+      editActionsRow?.classList.remove('hidden');
+      editBtn?.classList.add('hidden');
+    } else {
+      editActionsRow?.classList.add('hidden');
+      editBtn?.classList.remove('hidden');
+    }
+  }
+
+  // Handle save employee changes
+  editForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentEmployee) return;
+
+    const data = {
+      first_name: (document.getElementById('edit-first-name') as HTMLInputElement).value,
+      last_name: (document.getElementById('edit-last-name') as HTMLInputElement).value,
+      designation: (document.getElementById('edit-designation') as HTMLInputElement).value,
+      department_id: (document.getElementById('edit-department') as HTMLSelectElement).value,
+      email: (document.getElementById('edit-email') as HTMLInputElement).value,
+      phone: (document.getElementById('edit-phone') as HTMLInputElement).value,
+      joining_date: (document.getElementById('edit-joining-date') as HTMLInputElement).value,
+      employment_type: (document.getElementById('edit-employment-type') as HTMLSelectElement).value,
+      status: (document.getElementById('edit-status') as HTMLSelectElement).value,
+    };
+
+    try {
+      currentEmployee = await api.updateEmployee(currentEmployee.id, data);
+      alert('Employee changes saved successfully!');
+      toggleEditState(false);
+      populateEditForm();
+    } catch (err) {
+      console.error('Failed to update employee:', err);
+      alert('Error saving changes. Email must be unique.');
+    }
+  });
+
+  // Handle add new employee
+  addEmployeeForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      first_name: (document.getElementById('add-first-name') as HTMLInputElement).value,
+      last_name: (document.getElementById('add-last-name') as HTMLInputElement).value,
+      designation: (document.getElementById('add-designation') as HTMLInputElement).value,
+      department_id: (document.getElementById('add-department') as HTMLSelectElement).value,
+      email: (document.getElementById('add-email') as HTMLInputElement).value,
+      employee_code: (document.getElementById('add-code') as HTMLInputElement).value,
+      status: 'active',
+      employment_type: 'full_time',
+      joining_date: new Date().toISOString().split('T')[0],
+    };
+
+    try {
+      await api.createEmployee(data);
+      alert('Employee created successfully!');
+      addModal?.classList.add('hidden');
+      addEmployeeForm.reset();
+      await loadEmployees(currentPage);
+    } catch (err) {
+      console.error('Failed to create employee:', err);
+      alert('Error creating employee. Email/Code must be unique.');
+    }
+  });
+
+  // Handle contact messaging
+  contactForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const subject = (document.getElementById('contact-subject') as HTMLInputElement).value;
+    const body = (document.getElementById('contact-message') as HTMLTextAreaElement).value;
+
+    alert(`Message Sent to ${currentEmployee?.first_name} ${currentEmployee?.last_name}!\n\nSubject: ${subject}\nMessage: ${body}`);
+    contactModal?.classList.add('hidden');
+    contactForm.reset();
+  });
+
+  // List filter and pagination listeners
+  searchInput?.addEventListener('input', () => renderEmployees());
+  deptFilter?.addEventListener('change', () => renderEmployees());
+  statusFilter?.addEventListener('change', () => renderEmployees());
+  prevPageBtn?.addEventListener('click', () => loadEmployees(currentPage - 1));
+  nextPageBtn?.addEventListener('click', () => loadEmployees(currentPage + 1));
+
+  // Hook window state popstate events
+  window.addEventListener('popstate', checkUrlState);
+
+  // Initialize page
+  checkUrlState();
+</script>

@@ -1,0 +1,43 @@
+# Employee Leave Policy
+
+## Overview
+SynapseHR provides comprehensive leave benefits to support work-life balance for all employees.
+
+## Types of Leave
+
+### 1. Casual Leave
+- Employees are entitled to 12 casual leaves per year
+- Casual leaves can be taken in units of half-day or full-day
+- Prior approval from reporting manager is required
+- Casual leaves cannot be carried forward to the next year
+
+### 2. Sick Leave
+- Employees are entitled to 10 sick leaves per year
+- Medical certificate may be required for leaves exceeding 3 consecutive days
+- Sick leaves can be carried forward up to 5 days to the next year
+
+### 3. Annual Leave (Earned Leave)
+- Employees are entitled to 15 annual leaves per year
+- Annual leaves must be applied at least 7 days in advance
+- Maximum 5 annual leaves can be carried forward
+- encashment of up to 5 unused annual leaves is allowed
+
+### 4. Maternity Leave
+- Female employees are entitled to 26 weeks of maternity leave
+- Maternity leave is applicable for up to 2 surviving children
+- Full salary is paid during maternity leave
+
+### 5. Paternity Leave
+- Male employees are entitled to 10 days of paternity leave
+- Paternity leave must be availed within 15 days from the date of delivery
+
+## Leave Application Process
+1. Apply through the HR portal or AI assistant
+2. Select leave type, dates, and provide reason
+3. Approval from reporting manager
+4. Leave balance will be updated automatically
+
+## Important Notes
+- Leave balance is credited on January 1st of each year
+- Leaves cannot be applied retroactively for more than 7 days
+- Abandonment of employment without notice forfeits leave encashment

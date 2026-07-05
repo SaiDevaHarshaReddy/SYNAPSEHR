@@ -1,0 +1,153 @@
+---
+import PublicLayout from '../../layouts/PublicLayout.astro';
+---
+
+<PublicLayout title="Login - SynapseHR">
+  <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <!-- Background decorations -->
+    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5" aria-hidden="true"></div>
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" aria-hidden="true"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" aria-hidden="true"></div>
+    
+    <div class="w-full max-w-md relative animate-fade-in-up">
+      <!-- Logo -->
+      <div class="text-center mb-8">
+        <a href="/" class="inline-flex items-center gap-2.5 mb-6 group">
+          <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:shadow-indigo-500/40 transition-all duration-300 group-hover:scale-105">
+            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <span class="text-3xl font-bold text-white tracking-tight">Synapse<span class="text-indigo-400">HR</span></span>
+        </a>
+        <h1 class="text-lg text-slate-400 font-medium">AI-native HR Operations Platform</h1>
+      </div>
+
+      <!-- Login Card -->
+      <div class="card-static p-8">
+        <h2 class="text-xl font-semibold text-white mb-6">Welcome back</h2>
+
+        <form id="loginForm" class="space-y-5" novalidate>
+          <div class="space-y-1.5">
+            <label for="email" class="block text-sm font-medium text-slate-300">Email address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="input"
+              placeholder="you@company.com"
+              required
+              autocomplete="email"
+              aria-required="true"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="password" class="text-sm font-medium text-slate-300">Password</label>
+              <a href="/forgot-password" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors duration-200">Forgot password?</a>
+            </div>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="input"
+              placeholder="••••••••"
+              required
+              autocomplete="current-password"
+              aria-required="true"
+            />
+          </div>
+
+          <div id="error" class="hidden text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3" role="alert"></div>
+
+          <button type="submit" id="submitBtn" class="btn-primary w-full py-3 text-base">
+            <span id="btnText">Sign in</span>
+            <svg id="btnSpinner" class="hidden animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+        </form>
+
+        <div class="mt-6 pt-6 border-t border-slate-800/50">
+          <p class="text-sm text-slate-500 text-center mb-3 font-medium">Demo Accounts</p>
+          <div class="space-y-2">
+            <button onclick="fillDemo('admin@synapsehr.com', 'Admin@123')" class="w-full text-left text-xs text-slate-400 hover:text-slate-200 bg-slate-800/40 hover:bg-slate-800/60 rounded-xl px-3 py-2.5 transition-all duration-200 flex items-center justify-between group">
+              <span><span class="text-indigo-400 font-medium">Admin</span> — admin@synapsehr.com</span>
+              <svg class="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+            <button onclick="fillDemo('hr@synapsehr.com', 'HR@12345')" class="w-full text-left text-xs text-slate-400 hover:text-slate-200 bg-slate-800/40 hover:bg-slate-800/60 rounded-xl px-3 py-2.5 transition-all duration-200 flex items-center justify-between group">
+              <span><span class="text-emerald-400 font-medium">HR</span> — hr@synapsehr.com</span>
+              <svg class="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+            <button onclick="fillDemo('employee@synapsehr.com', 'Employee@123')" class="w-full text-left text-xs text-slate-400 hover:text-slate-200 bg-slate-800/40 hover:bg-slate-800/60 rounded-xl px-3 py-2.5 transition-all duration-200 flex items-center justify-between group">
+              <span><span class="text-amber-400 font-medium">Employee</span> — employee@synapsehr.com</span>
+              <svg class="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-center text-xs text-slate-500 mt-6">
+        Don't have an account? <a href="/forgot-password" class="text-indigo-400 hover:text-indigo-300 transition-colors">Contact admin</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function fillDemo(email: string, password: string) {
+      (document.getElementById('email') as HTMLInputElement).value = email;
+      (document.getElementById('password') as HTMLInputElement).value = password;
+    }
+    (window as any).fillDemo = fillDemo;
+
+    const form = document.getElementById('loginForm') as HTMLFormElement;
+    const errorDiv = document.getElementById('error') as HTMLDivElement;
+    const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+    const btnText = document.getElementById('btnText') as HTMLSpanElement;
+    const btnSpinner = document.getElementById('btnSpinner') as SVGElement;
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorDiv.classList.add('hidden');
+      
+      // Loading state
+      submitBtn.disabled = true;
+      btnText.textContent = 'Signing in...';
+      btnSpinner.classList.remove('hidden');
+
+      const email = (document.getElementById('email') as HTMLInputElement).value;
+      const password = (document.getElementById('password') as HTMLInputElement).value;
+
+      try {
+          const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
+          const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          localStorage.setItem('access_token', data.data.access_token);
+          localStorage.setItem('refresh_token', data.data.refresh_token);
+          window.location.href = '/dashboard';
+        } else {
+          errorDiv.textContent = data.error?.message || 'Login failed';
+          errorDiv.classList.remove('hidden');
+          submitBtn.disabled = false;
+          btnText.textContent = 'Sign in';
+          btnSpinner.classList.add('hidden');
+        }
+      } catch (error) {
+        errorDiv.textContent = 'Network error. Please try again.';
+        errorDiv.classList.remove('hidden');
+        submitBtn.disabled = false;
+        btnText.textContent = 'Sign in';
+        btnSpinner.classList.add('hidden');
+      }
+    });
+  </script>
+</PublicLayout>

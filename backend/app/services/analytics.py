@@ -1,0 +1,105 @@
+"""Analytics service."""
+
+from datetime import datetime, timedelta
+from uuid import UUID
+
+import structlog
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.department import Department
+from app.models.employee import Employee
+from app.models.leave_request import LeaveRequest
+from app.models.workflow import Workflow
+
+logger = structlog.get_logger()
+
+
+class AnalyticsService:
+    """Handle analytics and reporting operations."""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_dashboard_metrics(
+        self, organization_id: UUID
+    ) -> dict:
+        """Get dashboard KPI metrics."""
+        # Total employees
+        emp_query = select(func.count()).select_from(Employee).join(
+            Department, Employee.department_id == Department.id
+        ).where(
+            Department.organization_id == organization_id
+        )
+        total_employees = (await self.session.execute(emp_query)).scalar() or 0
+
+        # Pending leave requests
+        pending_query = select(func.count()).select_from(LeaveRequest).where(
+            LeaveRequest.status == "pending"
+        )
+        pending_approvals = (await self.session.execute(pending_query)).scalar() or 0
+
+        # Today's leave
+        today = datetime.now().date()
+        today_leave_query = select(func.count()).select_from(LeaveRequest).where(
+            LeaveRequest.start_date <= today,
+            LeaveRequest.end_date >= today,
+            LeaveRequest.status == "approved",
+        )
+        todays_leave = (await self.session.execute(today_leave_query)).scalar() or 0
+
+        # Workflows
+        workflow_query = select(func.count()).select_from(Workflow)
+        total_workflows = (await self.session.execute(workflow_query)).scalar() or 0
+
+        completed_query = select(func.count()).select_from(Workflow).where(
+            Workflow.status == "completed"
+        )
+        completed_workflows = (await self.session.execute(completed_query)).scalar() or 0
+
+        success_rate = (
+            (completed_workflows / total_workflows * 100)
+            if total_workflows > 0
+            else 0
+        )
+
+        return {
+            "total_employees": total_employees,
+            "pending_approvals": pending_approvals,
+            "todays_leave": todays_leave,
+            "total_workflows": total_workflows,
+            "completed_workflows": completed_workflows,
+            "workflow_success_rate": round(success_rate, 2),
+        }
+
+    async def get_leave_analytics(
+        self, organization_id: UUID
+    ) -> dict:
+        """Get leave analytics."""
+        # Leave requests by status
+        status_query = (
+            select(LeaveRequest.status, func.count())
+            .group_by(LeaveRequest.status)
+        )
+        status_result = await self.session.execute(status_query)
+        status_counts = dict(status_result.all())
+
+        return {
+            "pending": status_counts.get("pending", 0),
+            "approved": status_counts.get("approved", 0),
+            "rejected": status_counts.get("rejected", 0),
+            "cancelled": status_counts.get("cancelled", 0),
+        }
+
+    async def get_department_distribution(
+        self, organization_id: UUID
+    ) -> list[dict]:
+        """Get employee distribution by department."""
+        query = (
+            select(Department.name, func.count(Employee.id))
+            .join(Employee, Department.id == Employee.department_id)
+            .where(Department.organization_id == organization_id)
+            .group_by(Department.name)
+        )
+        result = await self.session.execute(query)
+        return [{"department": name, "count": count} for name, count in result.all()]

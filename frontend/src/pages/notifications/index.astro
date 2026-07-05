@@ -1,0 +1,244 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Notifications" description="Stay updated with important alerts">
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-white">Notifications</h1>
+        <p class="mt-1 text-sm text-slate-400">Stay updated with important alerts and updates</p>
+      </div>
+      <button id="mark-all-read" class="px-4 py-2 text-sm font-medium text-slate-300 border border-slate-600 rounded-lg hover:bg-slate-800 transition-colors">
+        Mark all as read
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-1 p-1 bg-slate-800 rounded-lg w-fit">
+      <button onclick="filterNotifications('all')" class="notif-tab px-4 py-2 text-sm font-medium rounded-md bg-indigo-600 text-white" data-filter="all">All</button>
+      <button onclick="filterNotifications('unread')" class="notif-tab px-4 py-2 text-sm font-medium rounded-md text-slate-400 hover:text-white" data-filter="unread">Unread</button>
+      <button onclick="filterNotifications('read')" class="notif-tab px-4 py-2 text-sm font-medium rounded-md text-slate-400 hover:text-white" data-filter="read">Read</button>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="card">
+      <div id="notif-list" class="divide-y divide-slate-700">
+        <div class="px-6 py-12 text-center text-slate-400">
+          <svg class="animate-spin h-8 w-8 text-indigo-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+          Loading notifications...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { api } from '../../services/api';
+    import { showToast } from '../../stores/index';
+
+    const API = 'http://localhost:8000';
+
+    let notifications: any[] = [];
+    let currentFilter = 'all';
+
+    // Sample notifications fallback
+    const sampleNotifications = [
+      {
+        id: 'n1', type: 'leave', title: 'Leave Request Pending',
+        message: 'Alex Williams has submitted a casual leave request from Jul 10–15 for a family vacation. Awaiting manager approval.',
+        is_read: false, created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'n2', type: 'document', title: 'Document Generated',
+        message: 'Experience letter for Sarah Johnson has been successfully generated and is ready for download.',
+        is_read: false, created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'n3', type: 'approval', title: 'Leave Approved',
+        message: 'Sick leave request for Jessica Taylor (Jul 1–2) has been approved by the department manager.',
+        is_read: true, created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'n4', type: 'recruitment', title: 'Candidate Hired',
+        message: 'Meera Krishnan has been hired as Senior Product Manager. Offer letter sent to meera.k@example.com.',
+        is_read: false, created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'n5', type: 'ai', title: 'AI Assistant Activity',
+        message: 'AI answered 12 policy questions from David Kim regarding remote work guidelines and benefits.',
+        is_read: true, created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'n6', type: 'leave', title: 'Leave Request Submitted',
+        message: 'Priscilla Moore has submitted an annual leave request for Dec 20–25. Pending HR review.',
+        is_read: false, created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'n7', type: 'document', title: 'Offer Letter Generated',
+        message: 'Offer letter for Karan Mehta (DevOps Engineer) has been generated. Please review before sending.',
+        is_read: true, created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'n8', type: 'approval', title: 'Promotion Approved',
+        message: 'David Kim has been promoted from Backend Engineer to Senior Backend Engineer. New designation effective Aug 1.',
+        is_read: false, created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'n9', type: 'recruitment', title: 'New Application Received',
+        message: 'Arjun Nair applied for Full Stack Engineer position. Resume has been parsed and scored (79% match).',
+        is_read: true, created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'n10', type: 'leave', title: 'Leave Balance Updated',
+        message: 'Annual leave balance for all employees has been carried forward. Check your updated balance in the leave portal.',
+        is_read: true, created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ];
+
+    async function loadNotifications() {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          const res = await fetch(`${API}/api/v1/notifications`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const json = await res.json();
+            notifications = json.data || [];
+          }
+        }
+        if (!notifications || notifications.length === 0) {
+          notifications = sampleNotifications;
+        }
+      } catch (error) {
+        console.error('Failed to load notifications:', error);
+        notifications = sampleNotifications;
+      }
+      renderNotifications();
+    }
+
+    function getNotifIcon(type: string): string {
+      const icons: Record<string, string> = {
+        leave: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+        approval: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+        document: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+        recruitment: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+        ai: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z',
+      };
+      return icons[type] || icons.leave;
+    }
+
+    function getNotifColor(type: string): string {
+      const colors: Record<string, string> = {
+        leave: 'bg-amber-500/10 text-amber-400',
+        approval: 'bg-emerald-500/10 text-emerald-400',
+        document: 'bg-indigo-500/10 text-indigo-400',
+        recruitment: 'bg-purple-500/10 text-purple-400',
+        ai: 'bg-cyan-500/10 text-cyan-400',
+      };
+      return colors[type] || 'bg-slate-700 text-slate-400';
+    }
+
+    function renderNotifications() {
+      const container = document.getElementById('notif-list')!;
+      let filtered = notifications;
+
+      if (currentFilter === 'unread') filtered = notifications.filter(n => !n.is_read);
+      if (currentFilter === 'read') filtered = notifications.filter(n => n.is_read);
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="px-6 py-12 text-center text-slate-400">No notifications to display</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(n => `
+        <div class="px-6 py-4 hover:bg-slate-700/30 transition-colors ${!n.is_read ? 'bg-slate-800/50 border-l-2 border-indigo-500' : ''}" id="notif-${n.id}">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${getNotifColor(n.type)}">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${getNotifIcon(n.type)}"></path>
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-semibold text-white">${n.title || 'Notification'}</p>
+                ${!n.is_read ? '<span class="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0"></span>' : ''}
+              </div>
+              <p class="text-sm text-slate-300 mt-1 leading-relaxed">${n.message || ''}</p>
+              <p class="text-xs text-slate-500 mt-2">${new Date(n.created_at).toLocaleString()}</p>
+            </div>
+            <div class="flex flex-col gap-2 flex-shrink-0">
+              ${!n.is_read ? `<button onclick="markRead('${n.id}')" class="px-3 py-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 rounded-lg hover:bg-indigo-500/20 transition-colors">Mark read</button>` : '<span class="px-3 py-1.5 text-xs font-medium text-slate-500 bg-slate-800 rounded-lg">Read</span>'}
+              <button onclick="deleteNotif('${n.id}')" class="px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 bg-red-500/10 rounded-lg hover:bg-red-500/20 transition-colors">Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    (window as any).filterNotifications = function(filter: string) {
+      currentFilter = filter;
+      document.querySelectorAll('.notif-tab').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('text-slate-400');
+      });
+      document.querySelector(`[data-filter="${filter}"]`)?.classList.add('bg-indigo-600', 'text-white');
+      document.querySelector(`[data-filter="${filter}"]`)?.classList.remove('text-slate-400');
+      renderNotifications();
+    };
+
+    (window as any).markRead = async function(id: string) {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          await fetch(`${API}/api/v1/notifications/${id}/read`, {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+        const n = notifications.find((n: any) => n.id === id);
+        if (n) n.is_read = true;
+        renderNotifications();
+        showToast('Notification marked as read', 'success');
+      } catch (error) {
+        showToast('Failed to mark as read', 'error');
+      }
+    };
+
+    (window as any).deleteNotif = async function(id: string) {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          await fetch(`${API}/api/v1/notifications/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+        notifications = notifications.filter((n: any) => n.id !== id);
+        renderNotifications();
+        showToast('Notification deleted', 'success');
+      } catch (error) {
+        showToast('Failed to delete', 'error');
+      }
+    };
+
+    document.getElementById('mark-all-read')?.addEventListener('click', async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          await fetch(`${API}/api/v1/notifications/read-all`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+        notifications.forEach((n: any) => n.is_read = true);
+        renderNotifications();
+        showToast('All notifications marked as read', 'success');
+      } catch (error) {
+        showToast('Failed to mark all as read', 'error');
+      }
+    });
+
+    loadNotifications();
+  </script>
+</DashboardLayout>

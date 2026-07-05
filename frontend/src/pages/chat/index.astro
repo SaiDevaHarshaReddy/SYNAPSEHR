@@ -1,0 +1,269 @@
+---
+// AI Chat page
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="AI Assistant - SynapseHR">
+  <div class="h-[calc(100vh-8rem)] flex flex-col">
+    <!-- Chat Container -->
+    <div class="flex-1 flex gap-4 overflow-hidden">
+      <!-- Conversation History Sidebar -->
+      <div class="hidden lg:flex flex-col w-72 bg-dark-900 rounded-xl border border-dark-700">
+        <div class="p-4 border-b border-dark-700">
+          <button class="btn btn-primary w-full">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            New Conversation
+          </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-2 space-y-1" id="conversationList">
+          <div class="p-3 rounded-lg bg-primary-600/20 text-primary-400 cursor-pointer">
+            <p class="text-sm font-medium truncate">Current Conversation</p>
+            <p class="text-xs text-dark-500 mt-1">Just now</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Area -->
+      <div class="flex-1 flex flex-col bg-dark-900 rounded-xl border border-dark-700">
+        <!-- Messages -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chatMessages">
+          <!-- Welcome message -->
+          <div class="flex gap-3">
+            <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div class="bg-dark-800 rounded-xl p-4 max-w-2xl">
+              <p class="text-dark-200">
+                Hello! I'm your AI HR assistant. I can help you with:
+              </p>
+              <ul class="mt-2 space-y-1 text-dark-300 text-sm">
+                <li>• Answering HR policy questions</li>
+                <li>• Checking your leave balance</li>
+                <li>• Applying for leave</li>
+                <li>• Generating HR documents</li>
+                <li>• Finding employee information</li>
+              </ul>
+              <p class="mt-2 text-dark-300 text-sm">
+                How can I assist you today?
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 border-t border-dark-700">
+          <form id="chatForm" class="flex gap-3">
+            <input
+              type="text"
+              id="chatInput"
+              class="input flex-1"
+              placeholder="Ask HR anything or automate a task..."
+              required
+            />
+            <button type="submit" class="btn btn-primary">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
+          </form>
+          <div class="flex flex-wrap gap-2 mt-3" id="quickActions">
+            <button type="button" data-msg="Generate experience letter" class="quick-action text-xs px-3 py-1.5 bg-dark-800 text-dark-300 rounded-full hover:bg-dark-700 cursor-pointer transition-colors">
+              Generate experience letter
+            </button>
+            <button type="button" data-msg="Apply for leave" class="quick-action text-xs px-3 py-1.5 bg-dark-800 text-dark-300 rounded-full hover:bg-dark-700 cursor-pointer transition-colors">
+              Apply for leave
+            </button>
+            <button type="button" data-msg="Show leave policy" class="quick-action text-xs px-3 py-1.5 bg-dark-800 text-dark-300 rounded-full hover:bg-dark-700 cursor-pointer transition-colors">
+              Show leave policy
+            </button>
+            <button type="button" data-msg="How many employees are in the company?" class="quick-action text-xs px-3 py-1.5 bg-dark-800 text-dark-300 rounded-full hover:bg-dark-700 cursor-pointer transition-colors">
+              Headcount query
+            </button>
+            <button type="button" data-msg="What is the leave policy?" class="quick-action text-xs px-3 py-1.5 bg-dark-800 text-dark-300 rounded-full hover:bg-dark-700 cursor-pointer transition-colors">
+              Leave policy
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel - Workflow Info -->
+      <div class="hidden xl:flex flex-col w-72 bg-dark-900 rounded-xl border border-dark-700 p-4">
+        <h3 class="text-sm font-semibold text-dark-300 mb-3">AI Activity</h3>
+        <div class="space-y-3" id="workflowTimeline">
+          <div class="text-xs text-dark-500">
+            No active workflow
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = (import.meta as any).env?.PUBLIC_API_URL || 'http://localhost:8000';
+    const form = document.getElementById('chatForm') as HTMLFormElement;
+    const input = document.getElementById('chatInput') as HTMLInputElement;
+    const messages = document.getElementById('chatMessages') as HTMLDivElement;
+
+    // Redirect to login if no token
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      window.location.href = '/login';
+    }
+
+    let conversationId: string | null = null;
+    let isProcessing = false;
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = input.value.trim();
+      if (!message || isProcessing) return;
+
+      isProcessing = true;
+      addUserMessage(message);
+      input.value = '';
+
+      const loadingId = addLoadingMessage();
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+        const response = await fetch(`${API}/api/v1/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ message, conversation_id: conversationId }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        removeLoadingMessage(loadingId);
+
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem('access_token');
+          window.location.href = '/login';
+          return;
+        }
+
+        if (!response.ok) {
+          const errText = await response.text().catch(() => '');
+          addAIMessage(`Sorry, the server returned an error (${response.status}). Please try again.`);
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          if (data.data.conversation_id) {
+            conversationId = data.data.conversation_id;
+          }
+          addAIMessage(data.data.response || 'I received your message but had no response.');
+        } else {
+          addAIMessage(data.error?.message || 'Sorry, I encountered an error. Please try again.');
+        }
+      } catch (error: any) {
+        removeLoadingMessage(loadingId);
+        if (error?.name === 'AbortError') {
+          addAIMessage('The request timed out. The AI service may be slow. Please try again.');
+        } else {
+          addAIMessage('Network error. Please check your connection and try again.');
+        }
+      } finally {
+        isProcessing = false;
+      }
+    });
+
+    // Quick action buttons
+    document.querySelectorAll('#quickActions .quick-action').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const msg = btn.getAttribute('data-msg');
+        if (msg && input) {
+          input.value = msg;
+          form?.requestSubmit();
+        }
+      });
+    });
+
+    function addUserMessage(text: string) {
+      const div = document.createElement('div');
+      div.className = 'flex gap-3 justify-end';
+      div.innerHTML = `
+        <div class="bg-primary-600 rounded-xl p-4 max-w-2xl">
+          <p class="text-white">${escapeHtml(text)}</p>
+        </div>
+        <div class="w-8 h-8 bg-dark-700 rounded-lg flex items-center justify-center flex-shrink-0">
+          <span class="text-dark-300 text-sm font-medium">U</span>
+        </div>
+      `;
+      messages?.appendChild(div);
+      messages?.scrollTo(0, messages.scrollHeight);
+    }
+
+    function addAIMessage(text: string) {
+      const div = document.createElement('div');
+      div.className = 'flex gap-3';
+      const rendered = simpleMarkdown(text);
+      div.innerHTML = `
+        <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-4 max-w-2xl">
+          <div class="text-dark-200 whitespace-pre-wrap leading-relaxed">${rendered}</div>
+        </div>
+      `;
+      messages?.appendChild(div);
+      messages?.scrollTo(0, messages.scrollHeight);
+    }
+
+    function addLoadingMessage(): string {
+      const id = 'loading-' + Date.now();
+      const div = document.createElement('div');
+      div.id = id;
+      div.className = 'flex gap-3';
+      div.innerHTML = `
+        <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div class="bg-dark-800 rounded-xl p-4">
+          <div class="flex space-x-2">
+            <div class="w-2 h-2 bg-dark-400 rounded-full animate-bounce"></div>
+            <div class="w-2 h-2 bg-dark-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+            <div class="w-2 h-2 bg-dark-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+          </div>
+        </div>
+      `;
+      messages?.appendChild(div);
+      messages?.scrollTo(0, messages.scrollHeight);
+      return id;
+    }
+
+    function removeLoadingMessage(id: string) {
+      document.getElementById(id)?.remove();
+    }
+
+    function escapeHtml(text: string): string {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function simpleMarkdown(text: string): string {
+      let html = escapeHtml(text);
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
+      html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      html = html.replace(/`(.+?)`/g, '<code class="bg-dark-700 px-1.5 py-0.5 rounded text-primary-300 text-sm">$1</code>');
+      html = html.replace(/\n/g, '<br>');
+      return html;
+    }
+  </script>
+</DashboardLayout>

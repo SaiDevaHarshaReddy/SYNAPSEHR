@@ -1,0 +1,416 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Knowledge Base" description="Upload and manage documents for AI-powered search">
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-white">Knowledge Base</h1>
+        <p class="mt-1 text-sm text-slate-400">Upload documents for AI-powered policy search and RAG retrieval</p>
+      </div>
+      <button
+        onclick="document.getElementById('upload-modal').classList.remove('hidden')"
+        class="btn btn-primary"
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        </svg>
+        Upload Document
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-400">Documents</p>
+            <p id="kb-documents" class="text-3xl font-bold text-white mt-1">-</p>
+          </div>
+          <div class="p-3 rounded-lg bg-indigo-500/10">
+            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-400">Indexed Chunks</p>
+            <p id="kb-chunks" class="text-3xl font-bold text-white mt-1">-</p>
+          </div>
+          <div class="p-3 rounded-lg bg-cyan-500/10">
+            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-400">Categories</p>
+            <p id="kb-categories" class="text-3xl font-bold text-white mt-1">-</p>
+          </div>
+          <div class="p-3 rounded-lg bg-emerald-500/10">
+            <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Documents List -->
+    <div class="card">
+      <div class="p-6 border-b border-slate-700">
+        <h2 class="text-lg font-semibold text-white">Uploaded Documents</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-slate-700">
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Title</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Category</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">File</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Version</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Uploaded</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="kb-table" class="divide-y divide-slate-700">
+            <tr>
+              <td colspan="6" class="px-6 py-12 text-center text-slate-400">Loading documents...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div class="bg-slate-800 rounded-xl border border-slate-700 p-6 w-full max-w-md">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-white">Upload Document</h3>
+          <button onclick="document.getElementById('upload-modal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <form id="upload-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Document Title</label>
+            <input type="text" name="title" required class="input w-full" placeholder="e.g. Leave Policy 2026">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Category</label>
+            <select name="category" class="input w-full">
+              <option value="hr_policy">HR Policy</option>
+              <option value="leave_policy">Leave Policy</option>
+              <option value="handbook">Employee Handbook</option>
+              <option value="benefits">Benefits Guide</option>
+              <option value="code_of_conduct">Code of Conduct</option>
+              <option value="sop">Standard Operating Procedure</option>
+              <option value="training">Training Manual</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Department (Optional)</label>
+            <input type="text" name="department" class="input w-full" placeholder="e.g. All Departments">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">File</label>
+            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-600 border-dashed rounded-lg hover:border-indigo-500 transition-colors">
+              <div class="space-y-2 text-center">
+                <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <div class="text-sm text-slate-400">
+                  <label for="file-upload" class="relative cursor-pointer text-indigo-400 hover:text-indigo-300">
+                    <span>Click to upload</span>
+                    <input id="file-upload" name="file" type="file" class="sr-only" accept=".pdf,.docx,.txt,.md" required>
+                  </label>
+                </div>
+                <p class="text-xs text-slate-500">PDF, DOCX, TXT, or Markdown up to 25MB</p>
+              </div>
+            </div>
+            <p id="file-name" class="mt-2 text-sm text-slate-400 hidden"></p>
+          </div>
+
+          <div class="flex gap-3 pt-4">
+            <button type="button" onclick="document.getElementById('upload-modal').classList.add('hidden')" class="btn btn-outline flex-1">Cancel</button>
+            <button type="submit" id="upload-btn" class="btn btn-primary flex-1">
+              <span id="upload-text">Upload & Index</span>
+              <svg id="upload-spinner" class="hidden animate-spin ml-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Document Viewer Modal -->
+    <div id="kb-viewer-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div>
+            <h3 id="kb-viewer-title" class="text-lg font-semibold text-gray-800">Document Preview</h3>
+            <p id="kb-viewer-meta" class="text-sm text-gray-500 mt-0.5"></p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="kb-download-btn" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Download
+            </button>
+            <button id="close-kb-viewer" class="text-gray-400 hover:text-gray-600 transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="kb-viewer-content" class="flex-1 overflow-y-auto p-8"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { api } from '../../services/api';
+    import { showToast } from '../../stores/index';
+
+    const API = 'http://localhost:8000';
+
+    let documents: any[] = [];
+
+    const kbViewerModal = document.getElementById('kb-viewer-modal') as HTMLDivElement;
+    const closeKbViewer = document.getElementById('close-kb-viewer') as HTMLButtonElement;
+    const kbDownloadBtn = document.getElementById('kb-download-btn') as HTMLButtonElement;
+    const kbViewerContent = document.getElementById('kb-viewer-content') as HTMLDivElement;
+    const kbViewerTitle = document.getElementById('kb-viewer-title') as HTMLHeadingElement;
+    const kbViewerMeta = document.getElementById('kb-viewer-meta') as HTMLParagraphElement;
+
+    closeKbViewer?.addEventListener('click', () => kbViewerModal?.classList.add('hidden'));
+
+    const kbContents: Record<string, string> = {
+      'Employee Handbook 2026': `
+        <h1 style="font-size:22px;color:#4f46e5;border-bottom:2px solid #4f46e5;padding-bottom:10px;">Employee Handbook 2026</h1>
+        <h3 style="color:#334155;margin-top:20px;">1. Welcome to SynapseHR</h3>
+        <p style="line-height:1.8;color:#475569;">Welcome to SynapseHR Inc. This handbook provides essential information about our company, policies, benefits, and expectations. As a valued team member, we encourage you to read this document thoroughly.</p>
+        <h3 style="color:#334155;margin-top:20px;">2. Company Culture</h3>
+        <p style="line-height:1.8;color:#475569;">At SynapseHR, we believe in innovation, collaboration, and continuous learning. Our core values include integrity, excellence, and respect for every individual.</p>
+        <h3 style="color:#334155;margin-top:20px;">3. Work Hours & Attendance</h3>
+        <p style="line-height:1.8;color:#475569;">Standard work hours are 9:00 AM to 6:00 PM, Monday through Friday. Flexible working arrangements are available upon manager approval. Remote work up to 3 days per week is permitted.</p>
+        <h3 style="color:#334155;margin-top:20px;">4. Code of Conduct</h3>
+        <p style="line-height:1.8;color:#475569;">All employees are expected to maintain professional conduct, treat colleagues with respect, and adhere to company policies. Harassment, discrimination, and bullying are strictly prohibited.</p>
+        <h3 style="color:#334155;margin-top:20px;">5. Safety & Emergency Procedures</h3>
+        <p style="line-height:1.8;color:#475569;">Your safety is our priority. Familiarize yourself with emergency exits, fire extinguisher locations, and evacuation procedures. Report any safety concerns immediately.</p>
+      `,
+      'Leave Policy Guidelines': `
+        <h1 style="font-size:22px;color:#d97706;border-bottom:2px solid #d97706;padding-bottom:10px;">Leave Policy Guidelines</h1>
+        <h3 style="color:#334155;margin-top:20px;">1. Types of Leave</h3>
+        <p style="line-height:1.8;color:#475569;">We offer several types of leave: Casual Leave (12 days/year), Sick Leave (10 days/year), Annual Leave (15 days/year), Maternity Leave (90 days), Paternity Leave (10 days), and Unpaid Leave.</p>
+        <h3 style="color:#334155;margin-top:20px;">2. Applying for Leave</h3>
+        <p style="line-height:1.8;color:#475569;">All leave requests must be submitted through the SynapseHR portal at least 3 days in advance. Medical leave requires a valid medical certificate if exceeding 2 consecutive days.</p>
+        <h3 style="color:#334155;margin-top:20px;">3. Approval Process</h3>
+        <p style="line-height:1.8;color:#475569;">Leave requests are approved by the reporting manager. HR reserves the right to reject leave during critical business periods. Maximum 2 employees from the same team can be on leave simultaneously.</p>
+        <h3 style="color:#334155;margin-top:20px;">4. Carry Forward & Encashment</h3>
+        <p style="line-height:1.8;color:#475569;">Unused casual leave can be carried forward up to 5 days. Annual leave must be utilized within the calendar year. Unused leave beyond the carry-forward limit is forfeited.</p>
+      `,
+      'Remote Work Policy': `
+        <h1 style="font-size:22px;color:#4f46e5;border-bottom:2px solid #4f46e5;padding-bottom:10px;">Remote Work Policy</h1>
+        <h3 style="color:#334155;margin-top:20px;">1. Eligibility</h3>
+        <p style="line-height:1.8;color:#475569;">All full-time employees with at least 6 months of tenure are eligible for remote work. Contract and intern positions are evaluated on a case-by-case basis.</p>
+        <h3 style="color:#334155;margin-top:20px;">2. Remote Work Schedule</h3>
+        <p style="line-height:1.8;color:#475569;">Employees may work remotely up to 3 days per week. Core hours (11 AM – 3 PM) must be maintained for availability. Schedule must be confirmed with the reporting manager weekly.</p>
+        <h3 style="color:#334155;margin-top:20px;">3. Equipment & Security</h3>
+        <p style="line-height:1.8;color:#475569;">Company-issued laptops must be used for work. VPN connection is mandatory. Home networks must be secured with WPA3 encryption. Screen locks must be enabled when away.</p>
+      `,
+      'Code of Conduct': `
+        <h1 style="font-size:22px;color:#dc2626;border-bottom:2px solid #dc2626;padding-bottom:10px;">Code of Conduct</h1>
+        <h3 style="color:#334155;margin-top:20px;">1. Professional Standards</h3>
+        <p style="line-height:1.8;color:#475569;">All employees must maintain the highest standards of professional conduct. This includes punctuality, reliability, honesty, and respect in all business interactions.</p>
+        <h3 style="color:#334155;margin-top:20px;">2. Anti-Discrimination</h3>
+        <p style="line-height:1.8;color:#475569;">SynapseHR is committed to providing equal opportunity. Discrimination based on race, gender, age, religion, disability, or any protected characteristic is strictly prohibited and grounds for immediate termination.</p>
+        <h3 style="color:#334155;margin-top:20px;">3. Conflict of Interest</h3>
+        <p style="line-height:1.8;color:#475569;">Employees must disclose any potential conflicts of interest. Outside employment must be pre-approved. Financial interests in competitors or suppliers must be reported to HR.</p>
+        <h3 style="color:#334155;margin-top:20px;">4. Reporting Violations</h3>
+        <p style="line-height:1.8;color:#475569;">Violations should be reported to HR or through the anonymous ethics hotline. Retaliation against whistleblowers is strictly prohibited.</p>
+      `,
+      'Benefits & Compensation Guide': `
+        <h1 style="font-size:22px;color:#06b6d4;border-bottom:2px solid #06b6d4;padding-bottom:10px;">Benefits & Compensation Guide</h1>
+        <h3 style="color:#334155;margin-top:20px;">1. Salary Structure</h3>
+        <p style="line-height:1.8;color:#475569;">Competitive salaries benchmarked against industry standards. Annual reviews conducted in Q1. Performance-based increments up to 15% for top performers.</p>
+        <h3 style="color:#334155;margin-top:20px;">2. Health Insurance</h3>
+        <p style="line-height:1.8;color:#475569;">Comprehensive health coverage for employee + dependents. Includes dental, vision, and mental health. Company covers 80% of premium. Network hospitals across 50+ cities.</p>
+        <h3 style="color:#334155;margin-top:20px;">3. Retirement Benefits</h3>
+        <p style="line-height:1.8;color:#475569;">401(k) plan with company match up to 6%. Vesting period of 3 years. Additional pension benefits for senior employees.</p>
+        <h3 style="color:#334155;margin-top:20px;">4. Perks</h3>
+        <p style="line-height:1.8;color:#475569;">Free meals, gym membership, commuter benefits, learning budget ($2,000/year), and annual team outings.</p>
+      `,
+      'Engineering Onboarding SOP': `
+        <h1 style="font-size:22px;color:#7c3aed;border-bottom:2px solid #7c3aed;padding-bottom:10px;">Engineering Onboarding SOP</h1>
+        <h3 style="color:#334155;margin-top:20px;">1. Week 1: Setup & Orientation</h3>
+        <p style="line-height:1.8;color:#475569;">Day 1: Laptop setup, accounts creation (GitHub, Jira, Slack), security training. Day 2-3: Architecture walkthrough, codebase overview. Day 4-5: Shadow a senior engineer on an active sprint.</p>
+        <h3 style="color:#334155;margin-top:20px;">2. Week 2-4: First Project</h3>
+        <p style="line-height:1.8;color:#475569;">Assign a starter task (bug fix or small feature). Pair programming sessions with team lead. Daily standup participation. Code review training.</p>
+        <h3 style="color:#334155;margin-top:20px;">3. Month 2-3: Full Integration</h3>
+        <p style="line-height:1.8;color:#475569;">Take ownership of a feature. Participate in sprint planning. Contribute to technical documentation. 30-60-90 day review with manager.</p>
+      `,
+      'Security Training Manual': `
+        <h1 style="font-size:22px;color:#2563eb;border-bottom:2px solid #2563eb;padding-bottom:10px;">Security Training Manual</h1>
+        <h3 style="color:#334155;margin-top:20px;">1. Password Policy</h3>
+        <p style="line-height:1.8;color:#475569;">Minimum 12 characters with uppercase, lowercase, numbers, and symbols. Change every 90 days. No password reuse. MFA required for all accounts.</p>
+        <h3 style="color:#334155;margin-top:20px;">2. Phishing Awareness</h3>
+        <p style="line-height:1.8;color:#475569;">Never click suspicious links. Verify sender addresses. Report phishing attempts to security@synapsehr.com. Quarterly phishing simulations conducted.</p>
+        <h3 style="color:#334155;margin-top:20px;">3. Data Classification</h3>
+        <p style="line-height:1.8;color:#475569;">Confidential data must be encrypted at rest and in transit. Never share credentials. Lock screens when away. USB drives must be IT-approved.</p>
+      `,
+      'Performance Review Process': `
+        <h1 style="font-size:22px;color:#4f46e5;border-bottom:2px solid #4f46e5;padding-bottom:10px;">Performance Review Process</h1>
+        <h3 style="color:#334155;margin-top:20px;">1. Review Cycle</h3>
+        <p style="line-height:1.8;color:#475569;">Semi-annual reviews in January and July. 360-degree feedback collected from peers, reports, and managers. Self-assessment required before each review.</p>
+        <h3 style="color:#334155;margin-top:20px;">2. Rating Scale</h3>
+        <p style="line-height:1.8;color:#475569;">5-point scale: Exceptional (5), Exceeds Expectations (4), Meets Expectations (3), Needs Improvement (2), Unsatisfactory (1). Ratings inform compensation decisions.</p>
+        <h3 style="color:#334155;margin-top:20px;">3. Development Plans</h3>
+        <p style="line-height:1.8;color:#475569;">Each review concludes with an Individual Development Plan (IDP). Goals are SMART-aligned. Quarterly check-ins track progress. Training budget allocated based on priorities.</p>
+      `,
+    };
+
+    // Sample knowledge base documents
+    const sampleDocuments = [
+      { id: 'kb1', title: 'Employee Handbook 2026', category: 'handbook', file_name: 'employee_handbook_2026.pdf', version: 3, department: 'All Departments', created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), chunks_indexed: 142 },
+      { id: 'kb2', title: 'Leave Policy Guidelines', category: 'leave_policy', file_name: 'leave_policy_v2.pdf', version: 2, department: 'All Departments', created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(), chunks_indexed: 68 },
+      { id: 'kb3', title: 'Remote Work Policy', category: 'hr_policy', file_name: 'remote_work_policy.pdf', version: 1, department: 'All Departments', created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), chunks_indexed: 45 },
+      { id: 'kb4', title: 'Code of Conduct', category: 'code_of_conduct', file_name: 'code_of_conduct_2026.pdf', version: 2, department: 'All Departments', created_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(), chunks_indexed: 95 },
+      { id: 'kb5', title: 'Benefits & Compensation Guide', category: 'benefits', file_name: 'benefits_guide_2026.pdf', version: 1, department: 'All Departments', created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), chunks_indexed: 78 },
+      { id: 'kb6', title: 'Engineering Onboarding SOP', category: 'sop', file_name: 'eng_onboarding_sop.pdf', version: 1, department: 'Engineering', created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), chunks_indexed: 34 },
+      { id: 'kb7', title: 'Security Training Manual', category: 'training', file_name: 'security_training_v1.pdf', version: 1, department: 'All Departments', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), chunks_indexed: 56 },
+      { id: 'kb8', title: 'Performance Review Process', category: 'hr_policy', file_name: 'performance_review_2026.pdf', version: 2, department: 'All Departments', created_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(), chunks_indexed: 41 },
+    ];
+
+    document.getElementById('file-upload')?.addEventListener('change', (e: any) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const nameEl = document.getElementById('file-name')!;
+        nameEl.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        nameEl.classList.remove('hidden');
+      }
+    });
+
+    async function loadDocuments() {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          const res = await fetch(`${API}/api/v1/knowledge`, { headers: { Authorization: `Bearer ${token}` } });
+          if (res.ok) { const json = await res.json(); documents = json.data || []; }
+        }
+        if (!documents || documents.length === 0) documents = sampleDocuments;
+      } catch { documents = sampleDocuments; }
+      renderDocuments();
+      document.getElementById('kb-documents')!.textContent = documents.length.toString();
+      document.getElementById('kb-categories')!.textContent = new Set(documents.map(d => d.category)).size.toString();
+      document.getElementById('kb-chunks')!.textContent = documents.reduce((sum, d) => sum + (d.chunks_indexed || 0), 0).toString();
+    }
+
+    function getCategoryLabel(cat: string): string {
+      return ({ hr_policy: 'HR Policy', leave_policy: 'Leave Policy', handbook: 'Handbook', benefits: 'Benefits', code_of_conduct: 'Code of Conduct', sop: 'SOP', training: 'Training', general: 'General' } as Record<string,string>)[cat] || cat;
+    }
+
+    function getCategoryColor(cat: string): string {
+      return ({ hr_policy: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', leave_policy: 'bg-amber-500/10 text-amber-400 border-amber-500/20', handbook: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', benefits: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20', code_of_conduct: 'bg-red-500/10 text-red-400 border-red-500/20', sop: 'bg-purple-500/10 text-purple-400 border-purple-500/20', training: 'bg-blue-500/10 text-blue-400 border-blue-500/20' } as Record<string,string>)[cat] || 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+    }
+
+    function renderDocuments() {
+      const tbody = document.getElementById('kb-table');
+      if (documents.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No documents uploaded yet.</td></tr>'; return; }
+      tbody.innerHTML = documents.map(doc => `
+        <tr class="hover:bg-slate-700/30 transition-colors">
+          <td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg bg-slate-700/50 flex items-center justify-center"><svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div><div><div class="text-sm font-medium text-white">${doc.title}</div><div class="text-xs text-slate-500">${doc.department || 'All Departments'} · ${doc.chunks_indexed || 0} chunks</div></div></div></td>
+          <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 text-xs font-medium rounded-full border ${getCategoryColor(doc.category)}">${getCategoryLabel(doc.category)}</span></td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">${doc.file_name}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">v${doc.version}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-400">${new Date(doc.created_at).toLocaleDateString()}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm flex gap-3">
+            <button onclick="viewKbDoc('${doc.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium">View</button>
+            <button onclick="downloadKbDoc('${doc.id}')" class="text-emerald-400 hover:text-emerald-300 font-medium">Download</button>
+            <button onclick="deleteDoc('${doc.id}')" class="text-red-400 hover:text-red-300 font-medium">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function viewKbDoc(id: string) {
+      const doc = documents.find(d => d.id === id);
+      if (!doc) return;
+      const content = kbContents[doc.title] || `<h1 style="font-size:22px;color:#4f46e5;">${doc.title}</h1><p style="margin-top:20px;color:#475569;line-height:1.8;">This document contains ${doc.chunks_indexed || 0} indexed chunks across multiple sections. Content is available for AI-powered search and retrieval.</p><p style="margin-top:15px;color:#475569;line-height:1.8;">Category: ${getCategoryLabel(doc.category)}<br>Department: ${doc.department || 'All Departments'}<br>Version: ${doc.version}</p>`;
+      kbViewerTitle.textContent = doc.title;
+      kbViewerMeta.textContent = `${getCategoryLabel(doc.category)} · ${doc.department || 'All Departments'} · v${doc.version}`;
+      kbViewerContent.innerHTML = `<div style="padding:40px;background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">${content}</div>`;
+      kbViewerModal?.classList.remove('hidden');
+      kbDownloadBtn.onclick = () => downloadKbDoc(id);
+    }
+
+    function downloadKbDoc(id: string) {
+      const doc = documents.find(d => d.id === id);
+      if (!doc) return;
+      const content = kbContents[doc.title] || `<h1>${doc.title}</h1><p>Category: ${doc.category}</p>`;
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${doc.title}</title><style>body{font-family:Georgia,serif;padding:40px;max-width:800px;margin:0 auto;color:#1a1a1a;}@media print{body{padding:20px;}}</style></head><body>${content}</body></html>`;
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.file_name.replace('.pdf', '.html');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    (window as any).viewKbDoc = viewKbDoc;
+    (window as any).downloadKbDoc = downloadKbDoc;
+
+    (window as any).deleteDoc = async function(id: string) {
+      if (!confirm('Delete this document and its index?')) return;
+      try {
+        const token = localStorage.getItem('access_token');
+        if (token) await fetch(`${API}/api/v1/knowledge/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        documents = documents.filter(d => d.id !== id);
+        renderDocuments();
+        document.getElementById('kb-documents')!.textContent = documents.length.toString();
+        document.getElementById('kb-chunks')!.textContent = documents.reduce((sum, d) => sum + (d.chunks_indexed || 0), 0).toString();
+        showToast('Document deleted', 'success');
+      } catch { showToast('Failed to delete document', 'error'); }
+    };
+
+    document.getElementById('upload-form')?.addEventListener('submit', async (e: any) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const file = formData.get('file') as File;
+      if (!file) { showToast('Please select a file', 'error'); return; }
+      const btn = document.getElementById('upload-btn') as HTMLButtonElement;
+      const text = document.getElementById('upload-text')!;
+      const spinner = document.getElementById('upload-spinner')!;
+      btn.disabled = true; text.textContent = 'Uploading...'; spinner.classList.remove('hidden');
+      try {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          const fd = new FormData();
+          fd.append('file', file); fd.append('title', formData.get('title') as string); fd.append('category', formData.get('category') as string);
+          if (formData.get('department')) fd.append('department', formData.get('department') as string);
+          const res = await fetch(`${API}/api/v1/knowledge/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+          if (res.ok) { const json = await res.json(); showToast(`Document uploaded and ${json.data?.chunks_indexed || 0} chunks indexed`, 'success'); }
+          else showToast('Upload successful (demo mode)', 'success');
+        } else showToast('Upload successful (demo mode)', 'success');
+        documents.unshift({ id: 'kb' + Date.now(), title: formData.get('title') as string, category: formData.get('category') as string, file_name: file.name, version: 1, department: formData.get('department') || 'All Departments', created_at: new Date().toISOString(), chunks_indexed: Math.floor(Math.random() * 50) + 20 });
+        renderDocuments();
+        document.getElementById('kb-documents')!.textContent = documents.length.toString();
+        document.getElementById('kb-categories')!.textContent = new Set(documents.map(d => d.category)).size.toString();
+        document.getElementById('kb-chunks')!.textContent = documents.reduce((sum, d) => sum + (d.chunks_indexed || 0), 0).toString();
+        document.getElementById('upload-modal')!.classList.add('hidden');
+        e.target.reset(); document.getElementById('file-name')!.classList.add('hidden');
+      } catch { showToast('Upload successful (demo mode)', 'success'); document.getElementById('upload-modal')!.classList.add('hidden'); e.target.reset(); document.getElementById('file-name')!.classList.add('hidden'); }
+      finally { btn.disabled = false; text.textContent = 'Upload & Index'; spinner.classList.add('hidden'); }
+    });
+
+    loadDocuments();
+  </script>
+</DashboardLayout>

@@ -1,0 +1,56 @@
+---
+const actions = [
+  { label: 'Generate Document', href: '/documents', icon: 'document', gradient: 'from-indigo-500/20 to-indigo-600/10', text: 'text-indigo-400', border: 'border-indigo-500/20' },
+  { label: 'Request Leave', href: '/leave', icon: 'leave', gradient: 'from-emerald-500/20 to-emerald-600/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  { label: 'Search Policy', href: '/chat', icon: 'search', gradient: 'from-amber-500/20 to-amber-600/10', text: 'text-amber-400', border: 'border-amber-500/20' },
+  { label: 'Ask AI Assistant', href: '/chat', icon: 'ai', gradient: 'from-purple-500/20 to-purple-600/10', text: 'text-purple-400', border: 'border-purple-500/20' },
+];
+---
+
+<div class="card-static">
+  <div class="flex items-center justify-between mb-5">
+    <h2 class="text-lg font-semibold text-white">Quick Actions</h2>
+  </div>
+  <div class="grid grid-cols-2 gap-3">
+    {actions.map((action, i) => (
+      <a
+        href={action.href}
+        class:list={[
+          'flex items-center gap-3 p-3.5 rounded-xl border transition-all duration-300 group',
+          'hover:scale-[1.02] active:scale-[0.98]',
+          action.gradient, action.border,
+          'hover:shadow-lg',
+        ]}
+        style={`animation-delay: ${i * 0.05}s`}
+      >
+        <div class:list={[
+          'w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-300',
+          'bg-gradient-to-br', action.gradient, action.border,
+          'group-hover:scale-110',
+        ]}>
+          {action.icon === 'document' && (
+            <svg class:list={['w-5 h-5', action.text]} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          )}
+          {action.icon === 'leave' && (
+            <svg class:list={['w-5 h-5', action.text]} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          )}
+          {action.icon === 'search' && (
+            <svg class:list={['w-5 h-5', action.text]} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          )}
+          {action.icon === 'ai' && (
+            <svg class:list={['w-5 h-5', action.text]} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          )}
+        </div>
+        <span class="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">{action.label}</span>
+      </a>
+    ))}
+  </div>
+</div>

@@ -1,0 +1,1 @@
+"""SynapseHR Backend Application."""

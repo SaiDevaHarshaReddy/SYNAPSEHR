@@ -1,0 +1,37 @@
+# Work From Home (WFH) Policy
+
+## Eligibility
+- All full-time employees are eligible for remote work arrangements
+- Manager approval is required for regular WFH arrangements
+- Hybrid work model: minimum 3 days in office per week
+
+## Guidelines
+
+### Equipment and Setup
+- Company will provide laptop and necessary software licenses
+- Employees must ensure stable internet connectivity (minimum 50 Mbps recommended)
+- Use of VPN is mandatory for accessing company resources
+- Dedicated workspace with ergonomic setup is recommended
+
+### Working Hours
+- Core working hours: 10:00 AM to 4:00 PM (local time)
+- Flexible hours outside core hours with manager agreement
+- Must be available on Slack/Teams during core hours
+
+### Communication
+- Daily standup meetings are mandatory (virtual or in-person)
+- Weekly team sync meetings
+- Monthly one-on-one with reporting manager
+- Keep calendar updated with availability
+
+### Security
+- Never share login credentials or VPN access
+- Lock screen when stepping away from workstation
+- Use only approved cloud storage for work files
+- Report security incidents immediately
+
+## Approval Process
+1. Discuss with reporting manager
+2. Submit WFH request through HR portal
+3. Manager approves/rejects within 2 business days
+4. Approved arrangement is reviewed quarterly

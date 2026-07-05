@@ -1,0 +1,49 @@
+---
+interface Props {
+  name?: string;
+  label?: string;
+  options: Array<{ value: string; label: string }>;
+  value?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  class?: string;
+}
+
+const {
+  name,
+  label,
+  options,
+  value,
+  placeholder = 'Select...',
+  required = false,
+  disabled = false,
+  class: className = '',
+} = Astro.props;
+---
+
+<div class:list={['space-y-1', className]}>
+  {label && (
+    <label for={name} class="block text-sm font-medium text-slate-300">
+      {label}
+      {required && <span class="text-red-400 ml-0.5">*</span>}
+    </label>
+  )}
+  <select
+    name={name}
+    id={name}
+    required={required}
+    disabled={disabled}
+    class:list={[
+      'w-full px-3 py-2 rounded-lg border bg-slate-800 text-white transition-colors',
+      'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
+      'disabled:opacity-50 disabled:cursor-not-allowed',
+      'border-slate-600 hover:border-slate-500',
+    ]}
+  >
+    <option value="">{placeholder}</option>
+    {options.map((opt) => (
+      <option value={opt.value} selected={opt.value === value}>{opt.label}</option>
+    ))}
+  </select>
+</div>

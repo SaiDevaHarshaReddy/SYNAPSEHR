@@ -1,0 +1,51 @@
+# Employee Onboarding Process
+
+## Before First Day (Pre-boarding)
+- Welcome email with first-day instructions
+- Equipment setup (laptop, access cards, etc.)
+- IT account creation (email, Slack, HR portal)
+- Buddy assignment
+
+## Day 1: Welcome and Orientation
+- Welcome meeting with HR
+- Company overview and culture introduction
+- Office tour and introductions
+- Equipment handover and setup verification
+- Complete paperwork (employment contract, tax forms, etc.)
+
+## Week 1: Foundation
+- Role-specific training schedule
+- Meet key stakeholders and team members
+- Access to required tools and systems
+- Review of company policies and procedures
+- First meeting with reporting manager
+
+## Month 1: Integration
+- Daily check-ins with buddy
+- Complete mandatory training modules
+- First project assignment
+- 30-day review with manager
+- Feedback collection
+
+## Month 3: Establishment
+- 90-day review with manager
+- Goal setting for first year
+- Full integration into team processes
+- Performance expectations clarification
+
+## Onboarding Checklist
+- [ ] Welcome kit received
+- [ ] IT accounts activated
+- [ ] Employment contract signed
+- [ ] Benefits enrollment completed
+- [ ] Mandatory training completed
+- [ ] Team introductions done
+- [ ] First project assigned
+- [ ] 30-day review completed
+- [ ] 90-day review completed
+
+## Key Contacts During Onboarding
+- HR Point of Contact: [Assigned HR]
+- IT Support: itsupport@synapsehr.com
+- Buddy: [Assigned Buddy]
+- Manager: [Reporting Manager]
