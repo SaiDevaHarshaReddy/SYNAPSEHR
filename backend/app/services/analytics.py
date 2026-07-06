@@ -62,7 +62,7 @@ class AnalyticsService:
         if organization_id:
             workflow_query = workflow_query.where(
                 Workflow.employee_id.in_(
-                    select(Employee.id).join(Department).where(Department.organization_id == organization_id)
+                    select(Employee.id).join(Department, Employee.department_id == Department.id).where(Department.organization_id == organization_id)
                 )
             )
         total_workflows = (await self.session.execute(workflow_query)).scalar() or 0
@@ -73,7 +73,7 @@ class AnalyticsService:
         if organization_id:
             completed_query = completed_query.where(
                 Workflow.employee_id.in_(
-                    select(Employee.id).join(Department).where(Department.organization_id == organization_id)
+                    select(Employee.id).join(Department, Employee.department_id == Department.id).where(Department.organization_id == organization_id)
                 )
             )
         completed_workflows = (await self.session.execute(completed_query)).scalar() or 0
