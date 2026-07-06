@@ -70,22 +70,13 @@ def create_app() -> FastAPI:
     app.add_middleware(RequestIDMiddleware)
 
     # CORS
-    print("TYPE =", type(settings.CORS_ORIGINS))
-    print("VALUE =", settings.CORS_ORIGINS)
-    #app.add_middleware(
-       # CORSMiddleware,
-       # allow_origins=settings.CORS_ORIGINS,
-       # allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
-       # allow_methods=["*"],
-       # allow_headers=["*"],
-    #)
     app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     # Register exception handlers
     register_exception_handlers(app)

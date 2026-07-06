@@ -20,7 +20,9 @@ async def get_dashboard_metrics(
 ):
     """Get dashboard KPI metrics."""
     service = AnalyticsService(db)
-    metrics = await service.get_dashboard_metrics(UUID(current_user["organization_id"]))
+    org_id = current_user.get("organization_id")
+    org_uuid = UUID(org_id) if org_id else None
+    metrics = await service.get_dashboard_metrics(org_uuid)
 
     return SuccessResponse(
         message="Dashboard metrics retrieved",
@@ -35,7 +37,9 @@ async def get_leave_analytics(
 ):
     """Get leave analytics."""
     service = AnalyticsService(db)
-    analytics = await service.get_leave_analytics(UUID(current_user["organization_id"]))
+    org_id = current_user.get("organization_id")
+    org_uuid = UUID(org_id) if org_id else None
+    analytics = await service.get_leave_analytics(org_uuid)
 
     return SuccessResponse(
         message="Leave analytics retrieved",
@@ -50,9 +54,9 @@ async def get_department_distribution(
 ):
     """Get employee distribution by department."""
     service = AnalyticsService(db)
-    distribution = await service.get_department_distribution(
-        UUID(current_user["organization_id"])
-    )
+    org_id = current_user.get("organization_id")
+    org_uuid = UUID(org_id) if org_id else None
+    distribution = await service.get_department_distribution(org_uuid)
 
     return SuccessResponse(
         message="Department distribution retrieved",

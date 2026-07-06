@@ -72,8 +72,15 @@ async def upload_resume(
         resume_text = content.decode("utf-8", errors="replace")
 
     service = CandidateService(db)
+    org_id_str = current_user.get("organization_id")
+    org_uuid = UUID(org_id_str) if org_id_str else None
+    
+    if not org_uuid:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="User must belong to an organization to upload a resume")
+
     candidate = await service.parse_and_create_candidate(
-        organization_id=UUID(current_user["organization_id"]),
+        organization_id=org_uuid,
         resume_text=resume_text,
         filename=file.filename or "resume",
         job_title=job_title,
@@ -93,8 +100,10 @@ async def list_candidates(
 ):
     """List candidates with optional filters."""
     service = CandidateService(db)
+    org_id = current_user.get("organization_id")
+    org_uuid = UUID(org_id) if org_id else None
     candidates = await service.list_candidates(
-        organization_id=UUID(current_user["organization_id"]),
+        organization_id=org_uuid,
         search=search,
         stage=stage,
         min_score=min_score,
@@ -181,48 +190,41 @@ async def get_recruitment_stats(
     from sqlalchemy import func, select
     from app.models.candidate import Candidate
 
-    org_id = UUID(current_user["organization_id"])
+    org_id_str = current_user.get("organization_id")
+    org_id = UUID(org_id_str) if org_id_str else None
 
-    total = (await db.execute(
-        select(func.count()).select_from(Candidate).where(Candidate.organization_id == org_id)
-    )).scalar() or 0
+    total_query = select(func.count()).select_from(Candidate)
+    if org_id:
+        total_query = total_query.where(Candidate.organization_id == org_id)
+    total = (await db.execute(total_query)).scalar() or 0
 
-    shortlisted = (await db.execute(
-        select(func.count()).select_from(Candidate).where(
-            Candidate.organization_id == org_id,
-            Candidate.stage == "shortlisted"
-        )
-    )).scalar() or 0
+    shortlisted_query = select(func.count()).select_from(Candidate).where(Candidate.stage == "shortlisted")
+    if org_id:
+        shortlisted_query = shortlisted_query.where(Candidate.organization_id == org_id)
+    shortlisted = (await db.execute(shortlisted_query)).scalar() or 0
 
-    interviews = (await db.execute(
-        select(func.count()).select_from(Candidate).where(
-            Candidate.organization_id == org_id,
-            Candidate.stage == "interview_scheduled"
-        )
-    )).scalar() or 0
+    interviews_query = select(func.count()).select_from(Candidate).where(Candidate.stage == "interview_scheduled")
+    if org_id:
+        interviews_query = interviews_query.where(Candidate.organization_id == org_id)
+    interviews = (await db.execute(interviews_query)).scalar() or 0
 
-    hired = (await db.execute(
-        select(func.count()).select_from(Candidate).where(
-            Candidate.organization_id == org_id,
-            Candidate.stage == "hired"
-        )
-    )).scalar() or 0
+    hired_query = select(func.count()).select_from(Candidate).where(Candidate.stage == "hired")
+    if org_id:
+        hired_query = hired_query.where(Candidate.organization_id == org_id)
+    hired = (await db.execute(hired_query)).scalar() or 0
 
     # Stage distribution
-    stage_result = await db.execute(
-        select(Candidate.stage, func.count()).where(
-            Candidate.organization_id == org_id
-        ).group_by(Candidate.stage)
-    )
+    stage_query = select(Candidate.stage, func.count()).group_by(Candidate.stage)
+    if org_id:
+        stage_query = stage_query.where(Candidate.organization_id == org_id)
+    stage_result = await db.execute(stage_query)
     stage_counts = dict(stage_result.all())
 
     # Average score
-    avg_score_result = await db.execute(
-        select(func.avg(Candidate.overall_score)).where(
-            Candidate.organization_id == org_id,
-            Candidate.overall_score.isnot(None)
-        )
-    )
+    avg_score_query = select(func.avg(Candidate.overall_score)).where(Candidate.overall_score.isnot(None))
+    if org_id:
+        avg_score_query = avg_score_query.where(Candidate.organization_id == org_id)
+    avg_score_result = await db.execute(avg_score_query)
     avg_score = round(avg_score_result.scalar() or 0, 1)
 
     return SuccessResponse(

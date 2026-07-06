@@ -203,9 +203,7 @@ class ApiService {
     formData.append('category', category);
     if (department) formData.append('department', department);
 
-    const response = await this.client.post<ApiResponse<any>>('/api/v1/knowledge/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await this.client.post<ApiResponse<any>>('/api/v1/knowledge/upload', formData);
     return response.data.data!;
   }
 
@@ -286,9 +284,7 @@ class ApiService {
   }
 
   async postForm(url: string, formData: FormData): Promise<any> {
-    const response = await this.client.post(url, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await this.client.post(url, formData);
     return response.data;
   }
 

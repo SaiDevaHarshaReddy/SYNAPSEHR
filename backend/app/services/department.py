@@ -43,7 +43,7 @@ class DepartmentService:
 
     async def list_departments(
         self,
-        organization_id: UUID,
+        organization_id: Optional[UUID],
         pagination: PaginationParams,
     ) -> tuple[list[DepartmentResponse], int]:
         """List departments for an organization."""

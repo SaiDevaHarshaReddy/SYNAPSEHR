@@ -26,10 +26,11 @@ async def list_departments(
     """List departments."""
     service = DepartmentService(db)
     pagination = PaginationParams(page=page, limit=limit)
+    
+    org_id_str = current_user.get("organization_id")
+    org_uuid = UUID(org_id_str) if org_id_str else None
 
-    departments, total = await service.list_departments(
-        UUID(current_user["organization_id"]), pagination
-    )
+    departments, total = await service.list_departments(org_uuid, pagination)
 
     return PaginatedResponse(
         data=departments,
@@ -68,9 +69,14 @@ async def create_department(
 ):
     """Create a new department."""
     service = DepartmentService(db)
-    department = await service.create_department(
-        UUID(current_user["organization_id"]), data
-    )
+    org_id_str = current_user.get("organization_id")
+    org_uuid = UUID(org_id_str) if org_id_str else None
+    
+    if not org_uuid:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="User must belong to an organization to create a department")
+
+    department = await service.create_department(org_uuid, data)
 
     return SuccessResponse(
         message="Department created",

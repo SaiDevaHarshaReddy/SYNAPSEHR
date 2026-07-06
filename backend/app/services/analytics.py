@@ -22,21 +22,26 @@ class AnalyticsService:
         self.session = session
 
     async def get_dashboard_metrics(
-        self, organization_id: UUID
+        self, organization_id: Optional[UUID] = None
     ) -> dict:
         """Get dashboard KPI metrics."""
         # Total employees
         emp_query = select(func.count()).select_from(Employee).join(
             Department, Employee.department_id == Department.id
-        ).where(
-            Department.organization_id == organization_id
         )
+        if organization_id:
+            emp_query = emp_query.where(Department.organization_id == organization_id)
+            
         total_employees = (await self.session.execute(emp_query)).scalar() or 0
 
         # Pending leave requests
         pending_query = select(func.count()).select_from(LeaveRequest).where(
             LeaveRequest.status == "pending"
         )
+        if organization_id:
+            pending_query = pending_query.join(Employee).join(Department).where(
+                Department.organization_id == organization_id
+            )
         pending_approvals = (await self.session.execute(pending_query)).scalar() or 0
 
         # Today's leave
@@ -46,15 +51,31 @@ class AnalyticsService:
             LeaveRequest.end_date >= today,
             LeaveRequest.status == "approved",
         )
+        if organization_id:
+            today_leave_query = today_leave_query.join(Employee).join(Department).where(
+                Department.organization_id == organization_id
+            )
         todays_leave = (await self.session.execute(today_leave_query)).scalar() or 0
 
         # Workflows
         workflow_query = select(func.count()).select_from(Workflow)
+        if organization_id:
+            workflow_query = workflow_query.where(
+                Workflow.employee_id.in_(
+                    select(Employee.id).join(Department).where(Department.organization_id == organization_id)
+                )
+            )
         total_workflows = (await self.session.execute(workflow_query)).scalar() or 0
 
         completed_query = select(func.count()).select_from(Workflow).where(
             Workflow.status == "completed"
         )
+        if organization_id:
+            completed_query = completed_query.where(
+                Workflow.employee_id.in_(
+                    select(Employee.id).join(Department).where(Department.organization_id == organization_id)
+                )
+            )
         completed_workflows = (await self.session.execute(completed_query)).scalar() or 0
 
         success_rate = (
@@ -73,14 +94,18 @@ class AnalyticsService:
         }
 
     async def get_leave_analytics(
-        self, organization_id: UUID
+        self, organization_id: Optional[UUID] = None
     ) -> dict:
         """Get leave analytics."""
         # Leave requests by status
-        status_query = (
-            select(LeaveRequest.status, func.count())
-            .group_by(LeaveRequest.status)
-        )
+        status_query = select(LeaveRequest.status, func.count())
+        
+        if organization_id:
+            status_query = status_query.join(Employee).join(Department).where(
+                Department.organization_id == organization_id
+            )
+            
+        status_query = status_query.group_by(LeaveRequest.status)
         status_result = await self.session.execute(status_query)
         status_counts = dict(status_result.all())
 
@@ -92,14 +117,16 @@ class AnalyticsService:
         }
 
     async def get_department_distribution(
-        self, organization_id: UUID
+        self, organization_id: Optional[UUID] = None
     ) -> list[dict]:
         """Get employee distribution by department."""
         query = (
             select(Department.name, func.count(Employee.id))
             .join(Employee, Department.id == Employee.department_id)
-            .where(Department.organization_id == organization_id)
-            .group_by(Department.name)
         )
+        if organization_id:
+            query = query.where(Department.organization_id == organization_id)
+            
+        query = query.group_by(Department.name)
         result = await self.session.execute(query)
         return [{"department": name, "count": count} for name, count in result.all()]

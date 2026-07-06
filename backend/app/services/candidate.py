@@ -187,13 +187,15 @@ class CandidateService:
 
     async def list_candidates(
         self,
-        organization_id: UUID,
+        organization_id: Optional[UUID] = None,
         search: Optional[str] = None,
         stage: Optional[str] = None,
         min_score: Optional[float] = None,
     ) -> list[CandidateListResponse]:
         """List candidates with optional filters."""
-        query = select(Candidate).where(Candidate.organization_id == organization_id)
+        query = select(Candidate)
+        if organization_id:
+            query = query.where(Candidate.organization_id == organization_id)
 
         if stage:
             query = query.where(Candidate.stage == stage)
