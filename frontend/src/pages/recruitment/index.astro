@@ -625,16 +625,31 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     dropZone.classList.remove("border-indigo-500", "bg-indigo-500/5");
     const files = (e as DragEvent).dataTransfer?.files;
     if (files?.length) {
+      const file = files[0];
+      const validExtensions = ['.pdf', '.docx', '.txt'];
+      const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+      if (!validExtensions.includes(ext)) {
+        alert("Invalid file type. Please upload a PDF, DOCX, or TXT file.");
+        return;
+      }
+      
       const dt = new DataTransfer();
-      dt.items.add(files[0]);
+      dt.items.add(file);
       resumeFileInput.files = dt.files;
-      fileSelectedLabel.textContent = `📄 ${files[0].name}`;
+      fileSelectedLabel.textContent = `📄 ${file.name}`;
       fileSelectedLabel.classList.remove("hidden");
     }
   });
   resumeFileInput.addEventListener("change", () => {
     const f = resumeFileInput.files?.[0];
     if (f) {
+      const validExtensions = ['.pdf', '.docx', '.txt'];
+      const ext = f.name.substring(f.name.lastIndexOf('.')).toLowerCase();
+      if (!validExtensions.includes(ext)) {
+        alert("Invalid file type. Please upload a PDF, DOCX, or TXT file.");
+        resumeFileInput.value = "";
+        return;
+      }
       fileSelectedLabel.textContent = `📄 ${f.name}`;
       fileSelectedLabel.classList.remove("hidden");
     }
