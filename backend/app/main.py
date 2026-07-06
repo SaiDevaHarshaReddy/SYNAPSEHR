@@ -70,8 +70,8 @@ def create_app() -> FastAPI:
     #app.add_middleware(RequestIDMiddleware)
 
     # CORS
-    print("CORS ORIGINS =", settings.CORS_ORIGINS)
     print("TYPE =", type(settings.CORS_ORIGINS))
+    print("VALUE =", settings.CORS_ORIGINS)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
