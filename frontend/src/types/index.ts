@@ -58,12 +58,14 @@ export interface LeaveBalance {
 export interface LeaveRequest {
   id: string;
   employee_id: string;
+  employee_name?: string;
   leave_type_id: string;
   leave_type_name?: string;
   start_date: string;
   end_date: string;
   reason?: string;
   status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  is_read?: boolean;
   approved_by?: string;
   approved_at?: string;
   created_at: string;

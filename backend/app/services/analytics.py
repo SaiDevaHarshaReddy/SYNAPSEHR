@@ -46,7 +46,7 @@ class AnalyticsService:
 
         # Today's leave
         today = datetime.now().date()
-        today_leave_query = select(func.count()).select_from(LeaveRequest).where(
+        today_leave_query = select(func.count(func.distinct(LeaveRequest.employee_id))).select_from(LeaveRequest).where(
             LeaveRequest.start_date <= today,
             LeaveRequest.end_date >= today,
             LeaveRequest.status == "approved",

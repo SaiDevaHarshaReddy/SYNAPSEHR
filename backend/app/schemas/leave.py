@@ -45,12 +45,14 @@ class LeaveRequestResponse(BaseSchema):
 
     id: UUID
     employee_id: UUID
+    employee_name: Optional[str] = None
     leave_type_id: UUID
     leave_type_name: Optional[str] = None
     start_date: date
     end_date: date
     reason: Optional[str] = None
     status: str
+    is_read: bool = False
     approved_by: Optional[UUID] = None
     approved_at: Optional[datetime] = None
     created_at: datetime

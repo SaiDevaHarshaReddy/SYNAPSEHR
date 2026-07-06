@@ -29,6 +29,7 @@ class LeaveRequest(BaseModel):
         UUID(as_uuid=True), ForeignKey("employees.id"), nullable=True
     )
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_read: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     # Relationships
     employee = relationship("Employee", foreign_keys=[employee_id], back_populates="leave_requests", lazy="selectin")

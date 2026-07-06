@@ -72,20 +72,40 @@ async def get_leave_history(
     """Get leave history."""
     service = LeaveService(db)
 
-    if employee_id is None:
-        from app.repositories.employee import EmployeeRepository
-        emp_repo = EmployeeRepository(db)
-        from uuid import UUID as UUIDType
-        employee = await emp_repo.get_by_user_id(UUIDType(current_user["user_id"]))
-        if employee is None:
-            return SuccessResponse(message="Employee not found", data=[])
-        employee_id = employee.id
+    # If the user is admin/hr/manager and no employee_id is specified, return organization history
+    if employee_id is None and current_user.get("role") in ["admin", "hr", "manager"]:
+        history = await service.get_organization_leave_history(UUID(current_user["organization_id"]))
+    else:
+        if employee_id is None:
+            from app.repositories.employee import EmployeeRepository
+            emp_repo = EmployeeRepository(db)
+            from uuid import UUID as UUIDType
+            employee = await emp_repo.get_by_user_id(UUIDType(current_user["user_id"]))
+            if employee is None:
+                return SuccessResponse(message="Employee not found", data=[])
+            employee_id = employee.id
 
-    history = await service.get_employee_leave_history(employee_id)
+        history = await service.get_employee_leave_history(employee_id)
 
     return SuccessResponse(
         message="Leave history retrieved",
         data=history,
+    )
+
+@router.patch("/{request_id}/read", response_model=SuccessResponse[LeaveRequestResponse])
+async def mark_leave_read(
+    request_id: UUID,
+    is_read: bool = Query(True),
+    current_user: dict = Depends(require_role("manager")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Mark a leave request as read."""
+    service = LeaveService(db)
+    result = await service.mark_as_read(request_id, is_read)
+
+    return SuccessResponse(
+        message="Leave request marked as read",
+        data=result,
     )
 
 
@@ -116,11 +136,11 @@ async def create_leave_request(
 @router.post("/{request_id}/approve", response_model=SuccessResponse[LeaveRequestResponse])
 async def approve_leave(
     request_id: UUID,
-    approved: bool = Query(True),
+    status: str = Query("approved"),
     current_user: dict = Depends(require_role("manager")),
     db: AsyncSession = Depends(get_db),
 ):
-    """Approve or reject a leave request."""
+    """Approve, reject or reset a leave request."""
     from app.repositories.employee import EmployeeRepository
     emp_repo = EmployeeRepository(db)
     from uuid import UUID as UUIDType
@@ -130,10 +150,10 @@ async def approve_leave(
         raise NotFoundException("Employee profile")
 
     service = LeaveService(db)
-    result = await service.approve_leave(request_id, employee.id, approved)
+    result = await service.approve_leave(request_id, employee.id, status)
 
     return SuccessResponse(
-        message=f"Leave request {'approved' if approved else 'rejected'}",
+        message=f"Leave request status updated to {status}",
         data=result,
     )
 

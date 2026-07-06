@@ -112,8 +112,13 @@ class ApiService {
     return response.data.data!;
   }
 
-  async approveLeave(requestId: string, approved: boolean): Promise<LeaveRequest> {
-    const response = await this.client.post<ApiResponse<LeaveRequest>>(`/api/v1/leave/${requestId}/approve?approved=${approved}`);
+  async approveLeave(requestId: string, status: string): Promise<LeaveRequest> {
+    const response = await this.client.post<ApiResponse<LeaveRequest>>(`/api/v1/leave/${requestId}/approve?status=${status}`);
+    return response.data.data!;
+  }
+
+  async markLeaveAsRead(requestId: string, isRead: boolean = true): Promise<LeaveRequest> {
+    const response = await this.client.patch<ApiResponse<LeaveRequest>>(`/api/v1/leave/${requestId}/read?is_read=${isRead}`);
     return response.data.data!;
   }
 

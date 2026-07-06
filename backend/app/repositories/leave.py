@@ -84,3 +84,18 @@ class LeaveRequestRepository(BaseRepository[LeaveRequest]):
             .order_by(LeaveRequest.created_at.desc())
         )
         return list(result.scalars().all())
+
+    async def get_all_by_organization(self, organization_id: UUID) -> list[LeaveRequest]:
+        """Get all leave requests for an organization."""
+        from app.models.employee import Employee
+        result = await self.session.execute(
+            select(LeaveRequest)
+            .join(Employee, LeaveRequest.employee_id == Employee.id)
+            .where(Employee.organization_id == organization_id)
+            .order_by(LeaveRequest.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def update_read_status(self, request_id: UUID, is_read: bool) -> Optional[LeaveRequest]:
+        """Update read status of a leave request."""
+        return await self.update(request_id, is_read=is_read)

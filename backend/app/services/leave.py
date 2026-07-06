@@ -133,46 +133,71 @@ class LeaveService:
         self,
         request_id: UUID,
         approver_id: UUID,
-        approved: bool,
+        new_status: str,
         reason: Optional[str] = None,
     ) -> LeaveRequestResponse:
-        """Approve or reject a leave request."""
+        """Approve, reject, or reset a leave request."""
         request = await self.leave_request_repo.get_by_id(request_id)
         if request is None:
             raise NotFoundException("Leave request", str(request_id))
 
-        if request.status != "pending":
-            raise BusinessRuleException("Leave request is not pending")
-
-        new_status = "approved" if approved else "rejected"
+        if new_status not in ["approved", "rejected", "pending"]:
+            raise BusinessRuleException("Invalid status")
+            
+        old_status = request.status
+        if old_status == new_status:
+            return LeaveRequestResponse(
+                id=request.id,
+                employee_id=request.employee_id,
+                employee_name=f"{request.employee.first_name} {request.employee.last_name}" if getattr(request, "employee", None) else None,
+                leave_type_id=request.leave_type_id,
+                leave_type_name=request.leave_type.name if getattr(request, "leave_type", None) else None,
+                start_date=request.start_date,
+                end_date=request.end_date,
+                reason=request.reason,
+                status=request.status,
+                is_read=request.is_read,
+                approved_by=request.approved_by,
+                approved_at=request.approved_at,
+                created_at=request.created_at,
+                updated_at=request.updated_at,
+            )
 
         # Update request
         updated = await self.leave_request_repo.update(
             request_id,
             status=new_status,
-            approved_by=approver_id,
-            approved_at=datetime.now(timezone.utc),
+            approved_by=approver_id if new_status != "pending" else None,
+            approved_at=datetime.now(timezone.utc) if new_status != "pending" else None,
         )
 
-        # If approved, update leave balance
-        if approved:
-            year = request.start_date.year
-            balance = await self.leave_balance_repo.get_by_employee_and_type(
-                request.employee_id, request.leave_type_id, year
-            )
-            if balance:
-                leave_days = self._calculate_leave_days(
-                    request.start_date, request.end_date
-                )
+        # Handle leave balance changes
+        leave_days = self._calculate_leave_days(request.start_date, request.end_date)
+        year = request.start_date.year
+        balance = await self.leave_balance_repo.get_by_employee_and_type(
+            request.employee_id, request.leave_type_id, year
+        )
+        
+        if balance:
+            # If changing TO approved
+            if new_status == "approved" and old_status != "approved":
                 await self.leave_balance_repo.update(
                     balance.id,
                     available_days=balance.available_days - leave_days,
                     used_days=balance.used_days + leave_days,
                 )
+            # If changing FROM approved (reverting)
+            elif old_status == "approved" and new_status != "approved":
+                await self.leave_balance_repo.update(
+                    balance.id,
+                    available_days=balance.available_days + leave_days,
+                    used_days=balance.used_days - leave_days,
+                )
 
         logger.info(
-            "leave_request_" + new_status,
+            "leave_request_status_change",
             request_id=str(request_id),
+            new_status=new_status,
             approver_id=str(approver_id),
         )
 
@@ -231,11 +256,14 @@ class LeaveService:
             LeaveRequestResponse(
                 id=r.id,
                 employee_id=r.employee_id,
+                employee_name=f"{r.employee.first_name} {r.employee.last_name}" if getattr(r, "employee", None) else None,
                 leave_type_id=r.leave_type_id,
+                leave_type_name=r.leave_type.name if getattr(r, "leave_type", None) else None,
                 start_date=r.start_date,
                 end_date=r.end_date,
                 reason=r.reason,
                 status=r.status,
+                is_read=r.is_read,
                 approved_by=r.approved_by,
                 approved_at=r.approved_at,
                 created_at=r.created_at,
@@ -243,6 +271,58 @@ class LeaveService:
             )
             for r in requests
         ]
+
+    async def get_organization_leave_history(
+        self, organization_id: UUID
+    ) -> list[LeaveRequestResponse]:
+        """Get all leave history for an organization."""
+        requests = await self.leave_request_repo.get_all_by_organization(organization_id)
+        return [
+            LeaveRequestResponse(
+                id=r.id,
+                employee_id=r.employee_id,
+                employee_name=f"{r.employee.first_name} {r.employee.last_name}" if getattr(r, "employee", None) else None,
+                leave_type_id=r.leave_type_id,
+                leave_type_name=r.leave_type.name if getattr(r, "leave_type", None) else None,
+                start_date=r.start_date,
+                end_date=r.end_date,
+                reason=r.reason,
+                status=r.status,
+                is_read=r.is_read,
+                approved_by=r.approved_by,
+                approved_at=r.approved_at,
+                created_at=r.created_at,
+                updated_at=r.updated_at,
+            )
+            for r in requests
+        ]
+
+    async def mark_as_read(
+        self, request_id: UUID, is_read: bool = True
+    ) -> LeaveRequestResponse:
+        """Mark a leave request as read."""
+        request = await self.leave_request_repo.get_by_id(request_id)
+        if request is None:
+            raise NotFoundException("Leave request", str(request_id))
+            
+        updated = await self.leave_request_repo.update_read_status(request_id, is_read)
+        
+        return LeaveRequestResponse(
+            id=updated.id,
+            employee_id=updated.employee_id,
+            employee_name=f"{updated.employee.first_name} {updated.employee.last_name}" if getattr(updated, "employee", None) else None,
+            leave_type_id=updated.leave_type_id,
+            leave_type_name=updated.leave_type.name if getattr(updated, "leave_type", None) else None,
+            start_date=updated.start_date,
+            end_date=updated.end_date,
+            reason=updated.reason,
+            status=updated.status,
+            is_read=updated.is_read,
+            approved_by=updated.approved_by,
+            approved_at=updated.approved_at,
+            created_at=updated.created_at,
+            updated_at=updated.updated_at,
+        )
 
     def _calculate_leave_days(self, start: date, end: date) -> int:
         """Calculate business days between two dates (excluding weekends)."""

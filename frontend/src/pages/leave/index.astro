@@ -48,16 +48,18 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       <table class="table">
         <thead>
           <tr>
+            <th>Employee</th>
             <th>Type</th>
             <th>Start Date</th>
             <th>End Date</th>
             <th>Status</th>
             <th>Reason</th>
+            <th id="actions-header" class="hidden">Actions</th>
           </tr>
         </thead>
         <tbody id="leaveHistoryTable">
           <tr>
-            <td colspan="5" class="text-center py-8 text-slate-400">
+            <td colspan="7" class="text-center py-8 text-slate-400">
               Loading leave requests...
             </td>
           </tr>
@@ -174,6 +176,13 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
   async function loadLeaveData() {
     try {
+      const user = await api.getCurrentUser();
+      const isManager = user && ['admin', 'hr', 'manager'].includes(user.role);
+
+      if (isManager) {
+        document.getElementById('actions-header')?.classList.remove('hidden');
+      }
+
       // Fetch balances
       const balances = await api.getLeaveBalance();
       let usedTotal = 0;
@@ -207,7 +216,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         if (!history || history.length === 0) {
           leaveHistoryTable.innerHTML = `
             <tr>
-              <td colspan="5" class="text-center py-8 text-slate-400">
+              <td colspan="7" class="text-center py-8 text-slate-400">
                 No leave requests found
               </td>
             </tr>
@@ -216,6 +225,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
           leaveHistoryTable.innerHTML = '';
           history.forEach(req => {
             const tr = document.createElement('tr');
+            if (req.is_read === false && isManager) {
+              tr.classList.add('bg-indigo-500/10');
+            }
             
             // Format status badge
             const statusStr = (req.status || 'pending').toLowerCase();
@@ -226,12 +238,38 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
               badgeClass = 'badge-error';
             }
             
+            let statusHtml = ``;
+            if (isManager) {
+               statusHtml = `
+                <select class="input py-1 px-2 text-xs" onchange="window.updateLeaveStatus('${req.id}', this.value)">
+                  <option value="pending" ${statusStr === 'pending' ? 'selected' : ''}>Pending</option>
+                  <option value="approved" ${statusStr === 'approved' ? 'selected' : ''}>Approved</option>
+                  <option value="rejected" ${statusStr === 'rejected' ? 'selected' : ''}>Rejected</option>
+                </select>
+               `;
+            } else {
+               statusHtml = `<span class="badge ${badgeClass}">${req.status}</span>`;
+            }
+            
+            let actionsHtml = ``;
+            if (isManager) {
+              actionsHtml = `
+                <td class="flex gap-2">
+                  ${req.is_read === false ? `<button onclick="window.markLeaveRead('${req.id}')" class="btn btn-secondary py-1 px-2 text-xs">Mark Read</button>` : `<span class="text-xs text-slate-500">Read</span>`}
+                </td>
+              `;
+            } else {
+              actionsHtml = `<td class="hidden"></td>`;
+            }
+            
             tr.innerHTML = `
-              <td class="font-medium text-white">${(req as any).leave_type?.name || 'Leave'}</td>
+              <td class="font-medium text-white">${req.employee_name || 'Me'}</td>
+              <td class="font-medium text-white">${(req as any).leave_type?.name || req.leave_type_name || 'Leave'}</td>
               <td class="text-slate-300">${req.start_date}</td>
               <td class="text-slate-300">${req.end_date}</td>
-              <td><span class="badge ${badgeClass}">${req.status}</span></td>
+              <td>${statusHtml}</td>
               <td class="text-slate-400 text-sm">${req.reason || '-'}</td>
+              ${actionsHtml}
             `;
             leaveHistoryTable.appendChild(tr);
           });
@@ -243,9 +281,10 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       if (leaveHistoryTable) {
         leaveHistoryTable.innerHTML = `
           <tr>
-            <td colspan="5" class="text-center py-8 text-slate-400">
+            <td colspan="7" class="text-center py-8 text-slate-400">
               Unable to load leave data. Please check if the backend is running.
             </td>
+
           </tr>
         `;
       }
@@ -289,4 +328,24 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   setInterval(() => {
     loadLeaveData();
   }, 30000);
+
+  // Global functions for inline HTML event handlers
+  (window as any).updateLeaveStatus = async function(requestId: string, status: string) {
+    try {
+      await api.approveLeave(requestId, status);
+      await loadLeaveData();
+    } catch (err) {
+      console.error('Failed to update status', err);
+      alert('Failed to update leave status. Please try again.');
+    }
+  };
+
+  (window as any).markLeaveRead = async function(requestId: string) {
+    try {
+      await api.markLeaveAsRead(requestId);
+      await loadLeaveData();
+    } catch (err) {
+      console.error('Failed to mark as read', err);
+    }
+  };
 </script>
