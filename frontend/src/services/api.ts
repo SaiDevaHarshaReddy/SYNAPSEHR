@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { AxiosInstance, AxiosError } from 'axios';
 import type { ApiResponse, User, TokenResponse, Employee, Department, LeaveType, LeaveBalance, LeaveRequest, Notification, ChatResponse, Conversation, Message, Document, Workflow, DashboardMetrics, PaginatedResponse, PaginationParams } from '../types';
 
-export const API_BASE_URL = import.meta.env.PUBLIC_API_URL || "https://synapsehr-production.up.railway.app";
+export const API_BASE_URL = import.meta.env.PUBLIC_API_URL || "https://synapsehr-6qwi.onrender.com";
 console.log("API_BASE_URL =", API_BASE_URL);
 
 class ApiService {
