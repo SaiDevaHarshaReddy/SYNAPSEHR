@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from uuid import UUID
-
+from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
