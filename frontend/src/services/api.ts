@@ -2,7 +2,9 @@ import axios from 'axios';
 import type { AxiosInstance, AxiosError } from 'axios';
 import type { ApiResponse, User, TokenResponse, Employee, Department, LeaveType, LeaveBalance, LeaveRequest, Notification, ChatResponse, Conversation, Message, Document, Workflow, DashboardMetrics, PaginatedResponse, PaginationParams } from '../types';
 
-const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = "https://synapsehr-6qwi.onrender.com";
+console.log("API_BASE_URL =", API_BASE_URL);
+console.log("PUBLIC_API_URL =", import.meta.env.PUBLIC_API_URL);
 
 class ApiService {
   private client: AxiosInstance;
