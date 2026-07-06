@@ -2,9 +2,8 @@ import axios from 'axios';
 import type { AxiosInstance, AxiosError } from 'axios';
 import type { ApiResponse, User, TokenResponse, Employee, Department, LeaveType, LeaveBalance, LeaveRequest, Notification, ChatResponse, Conversation, Message, Document, Workflow, DashboardMetrics, PaginatedResponse, PaginationParams } from '../types';
 
-const API_BASE_URL = "https://synapsehr-6qwi.onrender.com";
+export const API_BASE_URL = import.meta.env.PUBLIC_API_URL || "https://synapsehr-6qwi.onrender.com";
 console.log("API_BASE_URL =", API_BASE_URL);
-console.log("PUBLIC_API_URL =", import.meta.env.PUBLIC_API_URL);
 
 class ApiService {
   private client: AxiosInstance;
@@ -271,13 +270,25 @@ class ApiService {
   }
 
   // Generic helpers for untyped endpoints
-  async post(url: string, data: any): Promise<any> {
-    const response = await this.client.post(url, data);
+  async post(url: string, data: any, config?: any): Promise<any> {
+    const response = await this.client.post(url, data, config);
     return response.data;
   }
 
   async get(url: string): Promise<any> {
     const response = await this.client.get(url);
+    return response.data;
+  }
+
+  async patch(url: string, data: any): Promise<any> {
+    const response = await this.client.patch(url, data);
+    return response.data;
+  }
+
+  async postForm(url: string, formData: FormData): Promise<any> {
+    const response = await this.client.post(url, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   }
 

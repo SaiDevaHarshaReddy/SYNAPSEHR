@@ -282,8 +282,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
   <script>
     import Chart from "chart.js/auto";
-
-    const API = import.meta.env.PUBLIC_API_URL;
+    import { api } from "../../services/api";
 
     const CHART_COLORS = {
       indigo: "#6366f1",
@@ -296,19 +295,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     };
 
     async function loadAnalytics() {
-      const token = localStorage.getItem("access_token");
-      const headers: Record<string, string> = token
-        ? { Authorization: `Bearer ${token}` }
-        : {};
-
       try {
         // Dashboard metrics
-        const metricsRes = await fetch(`${API}/api/v1/analytics/dashboard`, {
-          headers,
-        });
-        if (metricsRes.ok) {
-          const metricsJson = await metricsRes.json();
-          const metrics = metricsJson.data || {};
+        const metrics = await api.getDashboardMetrics();
+        if (metrics) {
           document.getElementById("kpi-employees")!.textContent =
             metrics.total_employees ?? "0";
           document.getElementById("kpi-pending")!.textContent =
@@ -328,38 +318,26 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
         // Leave analytics
         try {
-          const leaveRes = await fetch(`${API}/api/v1/analytics/leave`, {
-            headers,
-          });
-          if (leaveRes.ok) {
-            const leaveJson = await leaveRes.json();
-            const leaveData = leaveJson.data || {};
+          const leaveData = await api.getLeaveAnalytics();
+          if (leaveData) {
             const hasLeaveData = Object.values(leaveData).some(
               (v: any) => v > 0,
             );
             if (hasLeaveData) {
               renderLeaveChart(leaveData);
             } else {
-              document
-                .getElementById("leave-empty")!
-                .classList.remove("hidden");
+              document.getElementById("leave-empty")!.classList.remove("hidden");
             }
           }
         } catch {}
 
         // Department distribution
         try {
-          const deptRes = await fetch(`${API}/api/v1/analytics/departments`, {
-            headers,
-          });
-          if (deptRes.ok) {
-            const deptJson = await deptRes.json();
-            const deptData = deptJson.data || [];
-            if (deptData.length > 0) {
-              renderDepartmentChart(deptData);
-            } else {
-              document.getElementById("dept-empty")!.classList.remove("hidden");
-            }
+          const deptData = await api.getDepartmentDistribution();
+          if (deptData && deptData.length > 0) {
+            renderDepartmentChart(deptData);
+          } else {
+            document.getElementById("dept-empty")!.classList.remove("hidden");
           }
         } catch {
           document.getElementById("dept-empty")!.classList.remove("hidden");
@@ -367,12 +345,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
         // Recruitment stats
         try {
-          const recRes = await fetch(`${API}/api/v1/recruitment/stats`, {
-            headers,
-          });
-          if (recRes.ok) {
-            const recJson = await recRes.json();
-            const recData = recJson.data || {};
+          const recData = await api.get("/api/v1/recruitment/stats").then((r: any) => r.data || {});
+          if (recData) {
             document.getElementById("kpi-candidates")!.textContent =
               recData.total_candidates ?? "0";
             document.getElementById("kpi-avg-score")!.textContent =

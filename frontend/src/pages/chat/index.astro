@@ -113,7 +113,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   </div>
 
   <script>
-    const API = (import.meta as any).env?.PUBLIC_API_URL || 'http://localhost:8000';
+    import { api } from "../../services/api";
+
     const form = document.getElementById('chatForm') as HTMLFormElement;
     const input = document.getElementById('chatInput') as HTMLInputElement;
     const messages = document.getElementById('chatMessages') as HTMLDivElement;
@@ -149,12 +150,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     // Load conversation history
     async function loadConversationHistory() {
       try {
-        const response = await fetch(`${API}/api/v1/chat/history`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.data && data.data.length > 0) {
+        const data = await api.get("/api/v1/chat/history");
+        if (data.success && data.data && data.data.length > 0) {
             const convList = document.getElementById('conversationList');
             if (convList) {
               convList.innerHTML = '';
@@ -178,12 +175,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
     async function loadConversation(convId: string) {
       try {
-        const response = await fetch(`${API}/api/v1/chat/${convId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.data && data.data.messages) {
+        const data = await api.get(`/api/v1/chat/${convId}`);
+        if (data.success && data.data && data.data.messages) {
             conversationId = convId;
             // Clear current messages
             if (messages) {
@@ -222,32 +215,14 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 120000);
 
-        const response = await fetch(`${API}/api/v1/chat`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ message, conversation_id: conversationId }),
-          signal: controller.signal,
-        });
+        const data = await api.post(
+          "/api/v1/chat",
+          { message, conversation_id: conversationId },
+          { signal: controller.signal }
+        );
 
         clearTimeout(timeoutId);
         removeLoadingMessage(loadingId);
-
-        if (response.status === 401 || response.status === 403) {
-          localStorage.removeItem('access_token');
-          window.location.href = '/login';
-          return;
-        }
-
-        if (!response.ok) {
-          const errText = await response.text().catch(() => '');
-          addAIMessage(`Sorry, the server returned an error (${response.status}). Please try again.`);
-          return;
-        }
-
-        const data = await response.json();
 
         if (data.success && data.data) {
           if (data.data.conversation_id) {

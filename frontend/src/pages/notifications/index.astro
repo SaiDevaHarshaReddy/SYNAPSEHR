@@ -70,7 +70,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     import { api } from "../../services/api";
     import { showToast } from "../../stores/index";
 
-    const API = import.meta.env.PUBLIC_API_URL;
+    const API = import.meta.env.PUBLIC_API_URL; // keeping this if used anywhere else
 
     let notifications: any[] = [];
     let currentFilter = "all";
@@ -185,16 +185,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     async function loadNotifications() {
       try {
-        const token = localStorage.getItem("access_token");
-        if (token) {
-          const res = await fetch(`${API}/api/v1/notifications`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (res.ok) {
-            const json = await res.json();
-            notifications = json.data || [];
-          }
-        }
+        const res = await api.get("/api/v1/notifications");
+        notifications = res.data || [];
         if (!notifications || notifications.length === 0) {
           notifications = sampleNotifications;
         }
@@ -291,13 +283,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     (window as any).markRead = async function (id: string) {
       try {
-        const token = localStorage.getItem("access_token");
-        if (token) {
-          await fetch(`${API}/api/v1/notifications/${id}/read`, {
-            method: "PATCH",
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
+        await api.patch(`/api/v1/notifications/${id}/read`, {});
         const n = notifications.find((n: any) => n.id === id);
         if (n) n.is_read = true;
         renderNotifications();
@@ -309,13 +295,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     (window as any).deleteNotif = async function (id: string) {
       try {
-        const token = localStorage.getItem("access_token");
-        if (token) {
-          await fetch(`${API}/api/v1/notifications/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
+        await api.delete(`/api/v1/notifications/${id}`);
         notifications = notifications.filter((n: any) => n.id !== id);
         renderNotifications();
         showToast("Notification deleted", "success");
@@ -328,13 +308,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       .getElementById("mark-all-read")
       ?.addEventListener("click", async () => {
         try {
-          const token = localStorage.getItem("access_token");
-          if (token) {
-            await fetch(`${API}/api/v1/notifications/read-all`, {
-              method: "POST",
-              headers: { Authorization: `Bearer ${token}` },
-            });
-          }
+          await api.post("/api/v1/notifications/read-all", {});
           notifications.forEach((n: any) => (n.is_read = true));
           renderNotifications();
           showToast("All notifications marked as read", "success");

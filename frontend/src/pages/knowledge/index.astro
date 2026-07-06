@@ -372,7 +372,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     import { api } from "../../services/api";
     import { showToast } from "../../stores/index";
 
-    const API = import.meta.env.PUBLIC_API_URL;
+    const API = import.meta.env.PUBLIC_API_URL; // keeping this if used anywhere else
 
     let documents: any[] = [];
 
@@ -597,16 +597,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     async function loadDocuments() {
       try {
-        const token = localStorage.getItem("access_token");
-        if (token) {
-          const res = await fetch(`${API}/api/v1/knowledge`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (res.ok) {
-            const json = await res.json();
-            documents = json.data || [];
-          }
-        }
+        const res = await api.get("/api/v1/knowledge");
+        documents = res.data || [];
         if (!documents || documents.length === 0) documents = sampleDocuments;
       } catch {
         documents = sampleDocuments;
@@ -720,12 +712,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     (window as any).deleteDoc = async function (id: string) {
       if (!confirm("Delete this document and its index?")) return;
       try {
-        const token = localStorage.getItem("access_token");
-        if (token)
-          await fetch(`${API}/api/v1/knowledge/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-          });
+        await api.delete(`/api/v1/knowledge/${id}`);
         documents = documents.filter((d) => d.id !== id);
         renderDocuments();
         document.getElementById("kb-documents")!.textContent =
@@ -756,27 +743,18 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         text.textContent = "Uploading...";
         spinner.classList.remove("hidden");
         try {
-          const token = localStorage.getItem("access_token");
-          if (token) {
-            const fd = new FormData();
-            fd.append("file", file);
-            fd.append("title", formData.get("title") as string);
-            fd.append("category", formData.get("category") as string);
-            if (formData.get("department"))
-              fd.append("department", formData.get("department") as string);
-            const res = await fetch(`${API}/api/v1/knowledge/upload`, {
-              method: "POST",
-              headers: { Authorization: `Bearer ${token}` },
-              body: fd,
-            });
-            if (res.ok) {
-              const json = await res.json();
-              showToast(
-                `Document uploaded and ${json.data?.chunks_indexed || 0} chunks indexed`,
-                "success",
-              );
-            } else showToast("Upload successful (demo mode)", "success");
-          } else showToast("Upload successful (demo mode)", "success");
+          const fd = new FormData();
+          fd.append("file", file);
+          fd.append("title", formData.get("title") as string);
+          fd.append("category", formData.get("category") as string);
+          if (formData.get("department"))
+            fd.append("department", formData.get("department") as string);
+
+          const json = await api.postForm("/api/v1/knowledge/upload", fd);
+          showToast(
+            `Document uploaded and ${json.data?.chunks_indexed || 0} chunks indexed`,
+            "success",
+          );
           documents.unshift({
             id: "kb" + Date.now(),
             title: formData.get("title") as string,

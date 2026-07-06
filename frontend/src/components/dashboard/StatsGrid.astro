@@ -167,26 +167,16 @@
 </div>
 
 <script>
-  const API = import.meta.env.PUBLIC_API_URL;
+  import { api } from "../../services/api";
 
   async function loadDashboardStats() {
     const token = localStorage.getItem("access_token");
     if (!token) return;
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${token}`,
-    };
 
     // Dashboard metrics (employees, pending, today's leave)
     try {
-      const res = await fetch(`${API}/api/v1/analytics/dashboard`, { headers });
-      if (res.status === 401) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login";
-        return;
-      }
-      if (res.ok) {
-        const json = await res.json();
-        const m = json.data || {};
+      const m = await api.getDashboardMetrics();
+      if (m) {
         document.getElementById("stat-employees")!.textContent = String(
           m.total_employees ?? 0,
         );
@@ -197,16 +187,18 @@
           m.todays_leave ?? 0,
         );
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        // api.ts handles redirecting to login on 401 already
+        return;
+      }
       console.warn("Dashboard metrics failed:", err);
     }
 
     // Recruitment stats (candidates)
     try {
-      const res = await fetch(`${API}/api/v1/recruitment/stats`, { headers });
-      if (res.ok) {
-        const json = await res.json();
-        const d = json.data || {};
+      const d = await api.get("/api/v1/recruitment/stats").then((r: any) => r.data || {});
+      if (d) {
         document.getElementById("stat-candidates")!.textContent = String(
           d.total_candidates ?? 0,
         );
@@ -225,17 +217,14 @@
 
     // Load department count for context
     try {
-      const res = await fetch(`${API}/api/v1/departments`, { headers });
-      if (res.ok) {
-        const json = await res.json();
-        const deptCount = (json.data || []).length;
-        if (deptCount > 0) {
-          document
-            .getElementById("stat-employees-depts")!
-            .classList.remove("hidden");
-          document.getElementById("stat-dept-count")!.textContent =
-            String(deptCount);
-        }
+      const response = await api.getDepartments();
+      const deptCount = (response.data || []).length;
+      if (deptCount > 0) {
+        document
+          .getElementById("stat-employees-depts")!
+          .classList.remove("hidden");
+        document.getElementById("stat-dept-count")!.textContent =
+          String(deptCount);
       }
     } catch {
       /* non-critical */

@@ -96,6 +96,8 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
   </div>
 
   <script>
+    import { api } from "../../services/api";
+
     function fillDemo(email: string, password: string) {
       (document.getElementById('email') as HTMLInputElement).value = email;
       (document.getElementById('password') as HTMLInputElement).value = password;
@@ -121,28 +123,15 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
       const password = (document.getElementById('password') as HTMLInputElement).value;
 
       try {
-          const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
-          const response = await fetch(`${API_URL}/api/v1/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          localStorage.setItem('access_token', data.data.access_token);
-          localStorage.setItem('refresh_token', data.data.refresh_token);
-          window.location.href = '/dashboard';
-        } else {
-          errorDiv.textContent = data.error?.message || 'Login failed';
-          errorDiv.classList.remove('hidden');
-          submitBtn.disabled = false;
-          btnText.textContent = 'Sign in';
-          btnSpinner.classList.add('hidden');
+        const data = await api.login(email, password);
+        
+        localStorage.setItem('access_token', data.access_token);
+        if (data.refresh_token) {
+          localStorage.setItem('refresh_token', data.refresh_token);
         }
-      } catch (error) {
-        errorDiv.textContent = 'Network error. Please try again.';
+        window.location.href = '/dashboard';
+      } catch (error: any) {
+        errorDiv.textContent = error.response?.data?.error?.message || error.response?.data?.detail || 'Login failed or network error. Please try again.';
         errorDiv.classList.remove('hidden');
         submitBtn.disabled = false;
         btnText.textContent = 'Sign in';

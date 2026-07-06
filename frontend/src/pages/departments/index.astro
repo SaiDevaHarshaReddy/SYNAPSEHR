@@ -246,7 +246,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     import { api } from "../../services/api";
     import { showToast } from "../../stores/index";
 
-    const API = import.meta.env.PUBLIC_API_URL;
+    const API = import.meta.env.PUBLIC_API_URL; // keeping this if used anywhere else
 
     let departments: any[] = [];
     let employees: any[] = [];
@@ -277,17 +277,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
         // Load employees to compute counts
         try {
-          const token = localStorage.getItem("access_token");
-          const headers: Record<string, string> = token
-            ? { Authorization: `Bearer ${token}` }
-            : {};
-          const empRes = await fetch(`${API}/api/v1/employees?limit=100`, {
-            headers,
-          });
-          if (empRes.ok) {
-            const empJson = await empRes.json();
-            employees = empJson.data || [];
-          }
+          const empRes = await api.getEmployees({ limit: 100 });
+          employees = empRes.data || [];
         } catch {}
 
         renderDepartments();

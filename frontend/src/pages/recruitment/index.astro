@@ -574,9 +574,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 <script>
   import { api } from "../../services/api";
 
-  // ALL API calls must hit the backend (port 8000), NOT Astro (port 4321)
-  const API = import.meta.env.PUBLIC_API_URL;
-
   let allCandidates: any[] = [];
   let currentCandidateId: string | null = null;
 
@@ -685,18 +682,11 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         if (jobTitle) formData.append("job_title", jobTitle);
         if (jobDescription) formData.append("job_description", jobDescription);
 
-        const token = localStorage.getItem("access_token");
-        const response = await fetch(`${API}/api/v1/recruitment/upload`, {
-          method: "POST",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: formData,
-        });
+        const response = await api.postForm("/api/v1/recruitment/upload", formData);
 
         clearInterval(stepInterval);
         progressBar.style.width = "100%";
         statusText.textContent = "✅ Done!";
-
-        if (!response.ok) throw new Error(await response.text());
 
         setTimeout(() => {
           uploadModal.classList.add("hidden");
@@ -836,11 +826,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     currentCandidateId = id;
     detailModal.classList.remove("hidden");
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${API}/api/v1/recruitment/candidates/${id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      const json = await res.json();
+      const json = await api.get(`/api/v1/recruitment/candidates/${id}`);
       const c = json.data;
       renderDetailModal(c);
     } catch (err) {
@@ -998,19 +984,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       btn.setAttribute("disabled", "true");
 
       try {
-        const token = localStorage.getItem("access_token");
-        const res = await fetch(
-          `${API}/api/v1/recruitment/candidates/${currentCandidateId}/interview-questions`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify({}),
-          },
+        const json = await api.post(
+          `/api/v1/recruitment/candidates/${currentCandidateId}/interview-questions`,
+          {}
         );
-        const json = await res.json();
         renderInterviewQuestions(json.data?.interview_questions || []);
       } catch (err) {
         console.error("Failed to generate questions", err);
@@ -1037,22 +1014,13 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     btn.setAttribute("disabled", "true");
 
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(
-        `${API}/api/v1/recruitment/candidates/${currentCandidateId}/score`,
+      const json = await api.post(
+        `/api/v1/recruitment/candidates/${currentCandidateId}/score`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            job_title: jt || "Position",
-            job_description: jd,
-          }),
-        },
+          job_title: jt || "Position",
+          job_description: jd,
+        }
       );
-      const json = await res.json();
       renderDetailModal(json.data);
       await loadCandidates();
     } catch (err) {
@@ -1072,17 +1040,9 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         document.getElementById("d-stage-select") as HTMLSelectElement
       ).value;
       try {
-        const token = localStorage.getItem("access_token");
-        await fetch(
-          `${API}/api/v1/recruitment/candidates/${currentCandidateId}/stage`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify({ stage }),
-          },
+        await api.patch(
+          `/api/v1/recruitment/candidates/${currentCandidateId}/stage`,
+          { stage }
         );
         await loadCandidates();
         // Update badge in modal
@@ -1097,12 +1057,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
   async function loadStats() {
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${API}/api/v1/recruitment/stats`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      const json = await res.json();
-      const d = json.data;
+      const json = await api.get("/api/v1/recruitment/stats");
+      const d = json.data || {};
       document.getElementById("stat-total")!.textContent =
         d.total_candidates ?? "0";
       document.getElementById("stat-shortlisted")!.textContent =
@@ -1117,11 +1073,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
   async function loadCandidates() {
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`${API}/api/v1/recruitment/candidates`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      const json = await res.json();
+      const json = await api.get("/api/v1/recruitment/candidates");
       allCandidates = json.data || [];
       renderCandidates(allCandidates);
       document.getElementById("candidate-count")!.textContent =
