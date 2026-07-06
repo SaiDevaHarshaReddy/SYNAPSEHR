@@ -61,24 +61,31 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json" if settings.is_development else None,
     )
 
-    # Register middleware (order matters - last registered = first executed)
-    #app.add_middleware(SecurityHeadersMiddleware)
-    #app.add_middleware(PerformanceMiddleware)
-    #app.add_middleware(AIRateLimitMiddleware)
-    #app.add_middleware(RateLimitMiddleware, requests_per_minute=settings.RATE_LIMIT_PER_MINUTE)
-    #app.add_middleware(LoggingMiddleware)
-    #app.add_middleware(RequestIDMiddleware)
+     #Register middleware (order matters - last registered = first executed)
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(PerformanceMiddleware)
+    app.add_middleware(AIRateLimitMiddleware)
+    app.add_middleware(RateLimitMiddleware, requests_per_minute=settings.RATE_LIMIT_PER_MINUTE)
+    app.add_middleware(LoggingMiddleware)
+    app.add_middleware(RequestIDMiddleware)
 
     # CORS
     print("TYPE =", type(settings.CORS_ORIGINS))
     print("VALUE =", settings.CORS_ORIGINS)
+    #app.add_middleware(
+       # CORSMiddleware,
+       # allow_origins=settings.CORS_ORIGINS,
+       # allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+       # allow_methods=["*"],
+       # allow_headers=["*"],
+    #)
     app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
-        allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
     # Register exception handlers
     register_exception_handlers(app)
