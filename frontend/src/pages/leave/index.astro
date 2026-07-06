@@ -218,7 +218,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             const tr = document.createElement('tr');
             
             // Format status badge
-            const statusStr = (req.status?.value || req.status || 'pending').toLowerCase();
+            const statusStr = (req.status || 'pending').toLowerCase();
             let badgeClass = 'badge-warning'; // pending/waiting_approval
             if (statusStr === 'approved' || statusStr === 'completed') {
               badgeClass = 'badge-success';
@@ -227,7 +227,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             }
             
             tr.innerHTML = `
-              <td class="font-medium text-white">${req.leave_type?.name || 'Leave'}</td>
+              <td class="font-medium text-white">${(req as any).leave_type?.name || 'Leave'}</td>
               <td class="text-slate-300">${req.start_date}</td>
               <td class="text-slate-300">${req.end_date}</td>
               <td><span class="badge ${badgeClass}">${req.status}</span></td>

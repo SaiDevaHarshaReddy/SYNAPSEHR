@@ -116,7 +116,7 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
 
       // Load employees for employment type chart and recent hires
       try {
-        const response = await api.getEmployees({ limit: 100 });
+        const response = await api.getEmployees({ page: 1, limit: 100 });
         const employees = response.data || [];
         if (employees.length > 0) {
           renderEmploymentChart(employees);

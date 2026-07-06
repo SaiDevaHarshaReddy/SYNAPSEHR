@@ -277,7 +277,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
         // Load employees to compute counts
         try {
-          const empRes = await api.getEmployees({ limit: 100 });
+          const empRes = await api.getEmployees({ page: 1, limit: 100 });
           employees = empRes.data || [];
         } catch {}
 
@@ -285,7 +285,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         updateStats();
       } catch (error) {
         console.error("Failed to load departments:", error);
-        document.getElementById("departments-table").innerHTML = `
+        document.getElementById("departments-table")!.innerHTML = `
           <tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">Failed to load departments</td></tr>
         `;
       }
@@ -308,6 +308,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     function renderDepartments() {
       const tbody = document.getElementById("departments-table");
+      if (!tbody) return;
       if (departments.length === 0) {
         tbody.innerHTML =
           '<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">No departments found</td></tr>';
@@ -374,17 +375,17 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     }
 
     function updateStats() {
-      document.getElementById("total-departments").textContent =
-        departments.length;
+      document.getElementById("total-departments")!.textContent =
+        String(departments.length);
       const totalEmp =
         employees.length ||
         departments.reduce((sum, d) => sum + getDeptEmployeeCount(d.id), 0);
-      document.getElementById("total-employees").textContent = totalEmp;
-      document.getElementById("avg-employees").textContent =
-        departments.length > 0 ? Math.round(totalEmp / departments.length) : 0;
+      document.getElementById("total-employees")!.textContent = String(totalEmp);
+      document.getElementById("avg-employees")!.textContent =
+        String(departments.length > 0 ? Math.round(totalEmp / departments.length) : 0);
     }
 
-    window.deleteDepartment = async function (id) {
+    (window as any).deleteDepartment = async function (id: string) {
       if (confirm("Are you sure you want to delete this department?")) {
         try {
           await api.delete("/api/v1/departments/" + id);
@@ -397,10 +398,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     };
 
     document
-      .getElementById("department-form")
+      .getElementById("department-form")!
       .addEventListener("submit", async (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
+        const formData = new FormData(e.target as HTMLFormElement);
         try {
           await api.post("/api/v1/departments", {
             name: formData.get("name"),
@@ -408,9 +409,9 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
           });
           showToast("Department created successfully", "success");
           document
-            .getElementById("add-department-modal")
+            .getElementById("add-department-modal")!
             .classList.add("hidden");
-          e.target.reset();
+          (e.target as HTMLFormElement).reset();
           loadDepartments();
         } catch (error) {
           showToast("Failed to create department", "error");

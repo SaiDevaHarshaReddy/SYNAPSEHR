@@ -108,7 +108,7 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
     const errorDiv = document.getElementById('error') as HTMLDivElement;
     const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
     const btnText = document.getElementById('btnText') as HTMLSpanElement;
-    const btnSpinner = document.getElementById('btnSpinner') as SVGElement;
+    const btnSpinner = document.getElementById('btnSpinner') as unknown as SVGElement;
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
