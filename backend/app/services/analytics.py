@@ -39,7 +39,7 @@ class AnalyticsService:
             LeaveRequest.status == "pending"
         )
         if organization_id:
-            pending_query = pending_query.join(Employee, LeaveRequest.employee_id == Employee.id).join(Department).where(
+            pending_query = pending_query.join(Employee, LeaveRequest.employee_id == Employee.id).join(Department, Employee.department_id == Department.id).where(
                 Department.organization_id == organization_id
             )
         pending_approvals = (await self.session.execute(pending_query)).scalar() or 0
@@ -52,7 +52,7 @@ class AnalyticsService:
             LeaveRequest.status == "approved",
         )
         if organization_id:
-            today_leave_query = today_leave_query.join(Employee, LeaveRequest.employee_id == Employee.id).join(Department).where(
+            today_leave_query = today_leave_query.join(Employee, LeaveRequest.employee_id == Employee.id).join(Department, Employee.department_id == Department.id).where(
                 Department.organization_id == organization_id
             )
         todays_leave = (await self.session.execute(today_leave_query)).scalar() or 0
@@ -101,7 +101,7 @@ class AnalyticsService:
         status_query = select(LeaveRequest.status, func.count())
         
         if organization_id:
-            status_query = status_query.join(Employee, LeaveRequest.employee_id == Employee.id).join(Department).where(
+            status_query = status_query.join(Employee, LeaveRequest.employee_id == Employee.id).join(Department, Employee.department_id == Department.id).where(
                 Department.organization_id == organization_id
             )
             
