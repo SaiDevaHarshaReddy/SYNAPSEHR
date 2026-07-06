@@ -1,5 +1,5 @@
 """Analytics service."""
-
+from typing import Optional
 from datetime import datetime, timedelta
 from uuid import UUID
 
