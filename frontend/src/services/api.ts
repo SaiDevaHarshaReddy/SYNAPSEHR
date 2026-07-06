@@ -174,18 +174,21 @@ class ApiService {
   }
 
   // Analytics
-  async getDashboardMetrics(): Promise<DashboardMetrics> {
-    const response = await this.client.get<ApiResponse<DashboardMetrics>>('/api/v1/analytics/dashboard');
+  async getDashboardMetrics(filters?: { start_date?: string; end_date?: string; department_id?: string }): Promise<DashboardMetrics> {
+    const params = new URLSearchParams(filters as any).toString();
+    const response = await this.client.get<ApiResponse<DashboardMetrics>>(`/api/v1/analytics/dashboard${params ? '?' + params : ''}`);
     return response.data.data!;
   }
 
-  async getLeaveAnalytics(): Promise<Record<string, number>> {
-    const response = await this.client.get<ApiResponse<Record<string, number>>>('/api/v1/analytics/leave');
+  async getLeaveAnalytics(filters?: { start_date?: string; end_date?: string; department_id?: string }): Promise<Record<string, number>> {
+    const params = new URLSearchParams(filters as any).toString();
+    const response = await this.client.get<ApiResponse<Record<string, number>>>(`/api/v1/analytics/leave${params ? '?' + params : ''}`);
     return response.data.data!;
   }
 
-  async getDepartmentDistribution(): Promise<Array<{ department: string; count: number }>> {
-    const response = await this.client.get<ApiResponse<Array<{ department: string; count: number }>>>('/api/v1/analytics/departments');
+  async getDepartmentDistribution(filters?: { start_date?: string; end_date?: string; department_id?: string }): Promise<Array<{ department: string; count: number }>> {
+    const params = new URLSearchParams(filters as any).toString();
+    const response = await this.client.get<ApiResponse<Array<{ department: string; count: number }>>>(`/api/v1/analytics/departments${params ? '?' + params : ''}`);
     return response.data.data!;
   }
 
@@ -291,6 +294,12 @@ class ApiService {
   async postForm(url: string, formData: FormData): Promise<any> {
     const response = await this.client.post(url, formData);
     return response.data;
+  }
+
+  async getRecruitmentStats(filters?: { start_date?: string; end_date?: string }): Promise<any> {
+    const params = new URLSearchParams(filters as any).toString();
+    const response = await this.client.get(`/api/v1/recruitment/stats${params ? '?' + params : ''}`);
+    return response.data.data!;
   }
 
   async delete(url: string): Promise<void> {

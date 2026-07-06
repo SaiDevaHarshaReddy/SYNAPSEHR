@@ -11,6 +11,17 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
           HR insights, recruitment performance & operational metrics
         </p>
       </div>
+      <div class="flex items-center gap-4">
+        <select id="filter-department" class="input w-48 py-1.5 text-sm" onchange="window.reloadAnalytics()">
+          <option value="">All Departments</option>
+        </select>
+        <select id="filter-date" class="input w-40 py-1.5 text-sm" onchange="window.reloadAnalytics()">
+          <option value="">All Time</option>
+          <option value="30">Last 30 Days</option>
+          <option value="90">Last 90 Days</option>
+          <option value="365">This Year</option>
+        </select>
+      </div>
     </div>
 
     <!-- KPI Cards -->
@@ -294,10 +305,45 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       slate: "#64748b",
     };
 
+    let leaveChartInstance: any = null;
+    let deptChartInstance: any = null;
+    let scoreChartInstance: any = null;
+
+    async function loadDepartments() {
+      try {
+        const select = document.getElementById("filter-department") as HTMLSelectElement;
+        if (!select) return;
+        const res = await api.get("/api/v1/departments");
+        const depts = res.data.data;
+        if (depts) {
+          depts.forEach((d: any) => {
+            const opt = document.createElement("option");
+            opt.value = d.id;
+            opt.textContent = d.name;
+            select.appendChild(opt);
+          });
+        }
+      } catch (e) {
+        console.error("Failed to load departments", e);
+      }
+    }
+
     async function loadAnalytics() {
       try {
+        const deptId = (document.getElementById("filter-department") as HTMLSelectElement)?.value;
+        const dateRange = (document.getElementById("filter-date") as HTMLSelectElement)?.value;
+        
+        const filters: any = {};
+        if (deptId) filters.department_id = deptId;
+        if (dateRange) {
+          const now = new Date();
+          now.setDate(now.getDate() - parseInt(dateRange));
+          filters.start_date = now.toISOString();
+          filters.end_date = new Date().toISOString();
+        }
+
         // Dashboard metrics
-        const metrics = await api.getDashboardMetrics();
+        const metrics = await api.getDashboardMetrics(filters);
         if (metrics) {
           document.getElementById("kpi-employees")!.textContent =
             metrics.total_employees ?? "0";
@@ -318,7 +364,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
         // Leave analytics
         try {
-          const leaveData = await api.getLeaveAnalytics();
+          const leaveData = await api.getLeaveAnalytics(filters);
           if (leaveData) {
             const hasLeaveData = Object.values(leaveData).some(
               (v: any) => v > 0,
@@ -333,7 +379,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
         // Department distribution
         try {
-          const deptData = await api.getDepartmentDistribution();
+          const deptData = await api.getDepartmentDistribution(filters);
           if (deptData && deptData.length > 0) {
             renderDepartmentChart(deptData);
           } else {
@@ -345,7 +391,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
         // Recruitment stats
         try {
-          const recData = await api.get("/api/v1/recruitment/stats").then((r: any) => r.data || {});
+          const recData = await api.getRecruitmentStats(filters);
           if (recData) {
             document.getElementById("kpi-candidates")!.textContent =
               recData.total_candidates ?? "0";
@@ -375,8 +421,9 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     function renderLeaveChart(data: Record<string, number>) {
       const ctx = document.getElementById("leave-chart") as HTMLCanvasElement;
       if (!ctx) return;
+      if (leaveChartInstance) leaveChartInstance.destroy();
 
-      new Chart(ctx, {
+      leaveChartInstance = new Chart(ctx, {
         type: "doughnut",
         data: {
           labels: ["Pending", "Approved", "Rejected", "Cancelled"],
@@ -429,7 +476,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         CHART_COLORS.emerald,
       ];
 
-      new Chart(ctx, {
+      if (deptChartInstance) deptChartInstance.destroy();
+      deptChartInstance = new Chart(ctx, {
         type: "bar",
         data: {
           labels: data.map((d) => d.department),
@@ -507,7 +555,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       const avg = recData.average_score || 75;
       const total = recData.total_candidates || 5;
 
-      new Chart(ctx, {
+      if (scoreChartInstance) scoreChartInstance.destroy();
+      scoreChartInstance = new Chart(ctx, {
         type: "bar",
         data: {
           labels: ["< 50%", "50–65%", "65–80%", "80–90%", "90–100%"],
@@ -556,6 +605,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       });
     }
 
-    loadAnalytics();
+    (window as any).reloadAnalytics = loadAnalytics;
+
+    Promise.all([loadDepartments(), loadAnalytics()]);
   </script>
 </DashboardLayout>

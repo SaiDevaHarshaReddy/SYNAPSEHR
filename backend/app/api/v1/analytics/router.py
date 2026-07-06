@@ -1,8 +1,9 @@
 """Analytics API routes."""
 
+from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user, require_role, require_roles
@@ -15,6 +16,9 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 @router.get("/dashboard")
 async def get_dashboard_metrics(
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    department_id: Optional[UUID] = Query(None),
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -23,7 +27,7 @@ async def get_dashboard_metrics(
     org_id = current_user.get("organization_id")
     org_uuid = UUID(org_id) if org_id else None
     try:
-        metrics = await service.get_dashboard_metrics(org_uuid)
+        metrics = await service.get_dashboard_metrics(org_uuid, start_date, end_date, department_id)
         return SuccessResponse(
             message="Dashboard metrics retrieved",
             data=metrics,
@@ -38,6 +42,9 @@ async def get_dashboard_metrics(
 
 @router.get("/leave")
 async def get_leave_analytics(
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    department_id: Optional[UUID] = Query(None),
     current_user: dict = Depends(require_role("hr")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -45,7 +52,7 @@ async def get_leave_analytics(
     service = AnalyticsService(db)
     org_id = current_user.get("organization_id")
     org_uuid = UUID(org_id) if org_id else None
-    analytics = await service.get_leave_analytics(org_uuid)
+    analytics = await service.get_leave_analytics(org_uuid, start_date, end_date, department_id)
 
     return SuccessResponse(
         message="Leave analytics retrieved",
@@ -55,6 +62,9 @@ async def get_leave_analytics(
 
 @router.get("/departments")
 async def get_department_distribution(
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    department_id: Optional[UUID] = Query(None),
     current_user: dict = Depends(require_role("hr")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -62,7 +72,7 @@ async def get_department_distribution(
     service = AnalyticsService(db)
     org_id = current_user.get("organization_id")
     org_uuid = UUID(org_id) if org_id else None
-    distribution = await service.get_department_distribution(org_uuid)
+    distribution = await service.get_department_distribution(org_uuid, start_date, end_date, department_id)
 
     return SuccessResponse(
         message="Department distribution retrieved",

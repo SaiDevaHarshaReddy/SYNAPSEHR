@@ -16,6 +16,7 @@ from app.models.workflow import Workflow, WorkflowStep  # noqa: F401
 from app.models.generated_document import GeneratedDocument  # noqa: F401
 from app.models.notification import Notification  # noqa: F401
 from app.models.audit_log import AuditLog  # noqa: F401
+from app.models.candidate import Candidate  # noqa: F401
 
 __all__ = [
     "BaseModel",
@@ -35,4 +36,5 @@ __all__ = [
     "GeneratedDocument",
     "Notification",
     "AuditLog",
+    "Candidate",
 ]

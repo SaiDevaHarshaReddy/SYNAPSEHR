@@ -1,6 +1,7 @@
 """Recruitment API routes – resume upload, candidate management, scoring and interview questions."""
 
 import io
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -183,6 +184,8 @@ async def delete_candidate(
 
 @router.get("/stats", response_model=SuccessResponse[dict])
 async def get_recruitment_stats(
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -193,37 +196,34 @@ async def get_recruitment_stats(
     org_id_str = current_user.get("organization_id")
     org_id = UUID(org_id_str) if org_id_str else None
 
-    total_query = select(func.count()).select_from(Candidate)
-    if org_id:
-        total_query = total_query.where(Candidate.organization_id == org_id)
+    def apply_filters(q):
+        if org_id:
+            q = q.where(Candidate.organization_id == org_id)
+        if start_date:
+            q = q.where(Candidate.created_at >= start_date)
+        if end_date:
+            q = q.where(Candidate.created_at <= end_date)
+        return q
+
+    total_query = apply_filters(select(func.count()).select_from(Candidate))
     total = (await db.execute(total_query)).scalar() or 0
 
-    shortlisted_query = select(func.count()).select_from(Candidate).where(Candidate.stage == "shortlisted")
-    if org_id:
-        shortlisted_query = shortlisted_query.where(Candidate.organization_id == org_id)
+    shortlisted_query = apply_filters(select(func.count()).select_from(Candidate).where(Candidate.stage == "shortlisted"))
     shortlisted = (await db.execute(shortlisted_query)).scalar() or 0
 
-    interviews_query = select(func.count()).select_from(Candidate).where(Candidate.stage == "interview_scheduled")
-    if org_id:
-        interviews_query = interviews_query.where(Candidate.organization_id == org_id)
+    interviews_query = apply_filters(select(func.count()).select_from(Candidate).where(Candidate.stage == "interview_scheduled"))
     interviews = (await db.execute(interviews_query)).scalar() or 0
 
-    hired_query = select(func.count()).select_from(Candidate).where(Candidate.stage == "hired")
-    if org_id:
-        hired_query = hired_query.where(Candidate.organization_id == org_id)
+    hired_query = apply_filters(select(func.count()).select_from(Candidate).where(Candidate.stage == "hired"))
     hired = (await db.execute(hired_query)).scalar() or 0
 
     # Stage distribution
-    stage_query = select(Candidate.stage, func.count()).group_by(Candidate.stage)
-    if org_id:
-        stage_query = stage_query.where(Candidate.organization_id == org_id)
+    stage_query = apply_filters(select(Candidate.stage, func.count()).group_by(Candidate.stage))
     stage_result = await db.execute(stage_query)
     stage_counts = dict(stage_result.all())
 
     # Average score
-    avg_score_query = select(func.avg(Candidate.overall_score)).where(Candidate.overall_score.isnot(None))
-    if org_id:
-        avg_score_query = avg_score_query.where(Candidate.organization_id == org_id)
+    avg_score_query = apply_filters(select(func.avg(Candidate.overall_score)).where(Candidate.overall_score.isnot(None)))
     avg_score_result = await db.execute(avg_score_query)
     avg_score = round(avg_score_result.scalar() or 0, 1)
 

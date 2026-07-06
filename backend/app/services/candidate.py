@@ -240,6 +240,58 @@ class CandidateService:
             raise NotFoundException("Candidate", str(candidate_id))
 
         candidate.stage = stage
+
+        # If hired, create an employee record
+        if stage == "hired":
+            from app.models.employee import Employee
+            from app.models.user import User
+            from app.models.role import Role
+            from app.core.security import get_password_hash
+            import random
+            import string
+
+            # Check if employee already exists with this email
+            if candidate.email:
+                existing_user = await self.session.execute(
+                    select(User).where(User.email == candidate.email)
+                )
+                if existing_user.scalar_one_or_none() is None:
+                    # Get basic employee role
+                    role_result = await self.session.execute(
+                        select(Role).where(Role.name == "employee", Role.organization_id == candidate.organization_id)
+                    )
+                    emp_role = role_result.scalar_one_or_none()
+                    
+                    if not emp_role:
+                        emp_role = Role(name="employee", description="Employee", organization_id=candidate.organization_id)
+                        self.session.add(emp_role)
+                        await self.session.flush()
+
+                    temp_password = "".join(random.choices(string.ascii_letters + string.digits, k=12))
+                    hashed_pw = get_password_hash(temp_password)
+                    
+                    new_user = User(
+                        email=candidate.email,
+                        hashed_password=hashed_pw,
+                        first_name=candidate.full_name.split()[0] if candidate.full_name else "New",
+                        last_name=" ".join(candidate.full_name.split()[1:]) if candidate.full_name and len(candidate.full_name.split()) > 1 else "Employee",
+                        role_id=emp_role.id,
+                        organization_id=candidate.organization_id,
+                        is_active=True
+                    )
+                    self.session.add(new_user)
+                    await self.session.flush()
+
+                    new_emp = Employee(
+                        user_id=new_user.id,
+                        department_id=None,
+                        manager_id=None,
+                        hire_date=candidate.created_at.date() if candidate.created_at else None,
+                        title=candidate.job_title or candidate.current_role or "Employee",
+                        status="active"
+                    )
+                    self.session.add(new_emp)
+
         await self.session.commit()
         await self.session.refresh(candidate)
         return _to_response(candidate)

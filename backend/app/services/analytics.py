@@ -22,7 +22,10 @@ class AnalyticsService:
         self.session = session
 
     async def get_dashboard_metrics(
-        self, organization_id: Optional[UUID] = None
+        self, organization_id: Optional[UUID] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        department_id: Optional[UUID] = None
     ) -> dict:
         """Get dashboard KPI metrics."""
         # Total employees
@@ -31,6 +34,12 @@ class AnalyticsService:
         )
         if organization_id:
             emp_query = emp_query.where(Department.organization_id == organization_id)
+        if department_id:
+            emp_query = emp_query.where(Employee.department_id == department_id)
+        if start_date:
+            emp_query = emp_query.where(Employee.hire_date >= start_date.date())
+        if end_date:
+            emp_query = emp_query.where(Employee.hire_date <= end_date.date())
             
         total_employees = (await self.session.execute(emp_query)).scalar() or 0
 
@@ -38,10 +47,18 @@ class AnalyticsService:
         pending_query = select(func.count()).select_from(LeaveRequest).where(
             LeaveRequest.status == "pending"
         )
+        pending_query = pending_query.join(Employee, LeaveRequest.employee_id == Employee.id).join(Department, Employee.department_id == Department.id)
         if organization_id:
-            pending_query = pending_query.join(Employee, LeaveRequest.employee_id == Employee.id).join(Department, Employee.department_id == Department.id).where(
+            pending_query = pending_query.where(
                 Department.organization_id == organization_id
             )
+        if department_id:
+            pending_query = pending_query.where(Employee.department_id == department_id)
+        if start_date:
+            pending_query = pending_query.where(LeaveRequest.created_at >= start_date)
+        if end_date:
+            pending_query = pending_query.where(LeaveRequest.created_at <= end_date)
+            
         pending_approvals = (await self.session.execute(pending_query)).scalar() or 0
 
         # Today's leave
@@ -51,31 +68,45 @@ class AnalyticsService:
             LeaveRequest.end_date >= today,
             LeaveRequest.status == "approved",
         )
+        today_leave_query = today_leave_query.join(Employee, LeaveRequest.employee_id == Employee.id).join(Department, Employee.department_id == Department.id)
         if organization_id:
-            today_leave_query = today_leave_query.join(Employee, LeaveRequest.employee_id == Employee.id).join(Department, Employee.department_id == Department.id).where(
+            today_leave_query = today_leave_query.where(
                 Department.organization_id == organization_id
             )
+        if department_id:
+            today_leave_query = today_leave_query.where(Employee.department_id == department_id)
+            
         todays_leave = (await self.session.execute(today_leave_query)).scalar() or 0
 
         # Workflows
-        workflow_query = select(func.count()).select_from(Workflow)
+        workflow_query = select(func.count()).select_from(Workflow).join(Employee, Workflow.employee_id == Employee.id).join(Department, Employee.department_id == Department.id)
         if organization_id:
             workflow_query = workflow_query.where(
-                Workflow.employee_id.in_(
-                    select(Employee.id).join(Department, Employee.department_id == Department.id).where(Department.organization_id == organization_id)
-                )
+                Department.organization_id == organization_id
             )
+        if department_id:
+            workflow_query = workflow_query.where(Employee.department_id == department_id)
+        if start_date:
+            workflow_query = workflow_query.where(Workflow.created_at >= start_date)
+        if end_date:
+            workflow_query = workflow_query.where(Workflow.created_at <= end_date)
+            
         total_workflows = (await self.session.execute(workflow_query)).scalar() or 0
 
         completed_query = select(func.count()).select_from(Workflow).where(
             Workflow.status == "completed"
-        )
+        ).join(Employee, Workflow.employee_id == Employee.id).join(Department, Employee.department_id == Department.id)
         if organization_id:
             completed_query = completed_query.where(
-                Workflow.employee_id.in_(
-                    select(Employee.id).join(Department, Employee.department_id == Department.id).where(Department.organization_id == organization_id)
-                )
+                Department.organization_id == organization_id
             )
+        if department_id:
+            completed_query = completed_query.where(Employee.department_id == department_id)
+        if start_date:
+            completed_query = completed_query.where(Workflow.created_at >= start_date)
+        if end_date:
+            completed_query = completed_query.where(Workflow.created_at <= end_date)
+            
         completed_workflows = (await self.session.execute(completed_query)).scalar() or 0
 
         success_rate = (
@@ -94,16 +125,25 @@ class AnalyticsService:
         }
 
     async def get_leave_analytics(
-        self, organization_id: Optional[UUID] = None
+        self, organization_id: Optional[UUID] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        department_id: Optional[UUID] = None
     ) -> dict:
         """Get leave analytics."""
         # Leave requests by status
-        status_query = select(LeaveRequest.status, func.count())
+        status_query = select(LeaveRequest.status, func.count()).join(Employee, LeaveRequest.employee_id == Employee.id).join(Department, Employee.department_id == Department.id)
         
         if organization_id:
-            status_query = status_query.join(Employee, LeaveRequest.employee_id == Employee.id).join(Department, Employee.department_id == Department.id).where(
+            status_query = status_query.where(
                 Department.organization_id == organization_id
             )
+        if department_id:
+            status_query = status_query.where(Employee.department_id == department_id)
+        if start_date:
+            status_query = status_query.where(LeaveRequest.created_at >= start_date)
+        if end_date:
+            status_query = status_query.where(LeaveRequest.created_at <= end_date)
             
         status_query = status_query.group_by(LeaveRequest.status)
         status_result = await self.session.execute(status_query)
@@ -117,7 +157,10 @@ class AnalyticsService:
         }
 
     async def get_department_distribution(
-        self, organization_id: Optional[UUID] = None
+        self, organization_id: Optional[UUID] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        department_id: Optional[UUID] = None
     ) -> list[dict]:
         """Get employee distribution by department."""
         query = (
@@ -126,6 +169,12 @@ class AnalyticsService:
         )
         if organization_id:
             query = query.where(Department.organization_id == organization_id)
+        if department_id:
+            query = query.where(Employee.department_id == department_id)
+        if start_date:
+            query = query.where(Employee.hire_date >= start_date.date())
+        if end_date:
+            query = query.where(Employee.hire_date <= end_date.date())
             
         query = query.group_by(Department.name)
         result = await self.session.execute(query)
