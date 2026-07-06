@@ -22,12 +22,18 @@ async def get_dashboard_metrics(
     service = AnalyticsService(db)
     org_id = current_user.get("organization_id")
     org_uuid = UUID(org_id) if org_id else None
-    metrics = await service.get_dashboard_metrics(org_uuid)
-
-    return SuccessResponse(
-        message="Dashboard metrics retrieved",
-        data=metrics,
-    )
+    try:
+        metrics = await service.get_dashboard_metrics(org_uuid)
+        return SuccessResponse(
+            message="Dashboard metrics retrieved",
+            data=metrics,
+        )
+    except Exception as e:
+        import traceback
+        return SuccessResponse(
+            message=f"Error: {str(e)} | Trace: {traceback.format_exc()}",
+            data={}
+        )
 
 
 @router.get("/leave")
