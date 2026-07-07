@@ -83,5 +83,25 @@ const { title = 'SynapseHR', description } = Astro.props;
 
       (window as any).showToast = showToast;
     </script>
+    <script>
+      import { api } from '../services/api';
+      import { authStore, setUser } from '../stores/index';
+
+      async function initAuth() {
+        if (!localStorage.getItem('access_token')) return;
+        
+        const state = authStore.get();
+        if (!state.user) {
+          try {
+            const user = await api.getCurrentUser();
+            setUser(user);
+          } catch (err) {
+            console.error('Failed to load user session', err);
+          }
+        }
+      }
+      
+      initAuth();
+    </script>
   </body>
 </html>
