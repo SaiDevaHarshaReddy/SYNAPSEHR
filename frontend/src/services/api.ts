@@ -259,6 +259,10 @@ class ApiService {
     await this.client.post('/api/v1/auth/reset-password', { token, new_password: newPassword });
   }
 
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await this.client.post('/api/v1/auth/change-password', { current_password: currentPassword, new_password: newPassword });
+  }
+
   // Admin
   async getAuditLogs(): Promise<any[]> {
     const response = await this.client.get<ApiResponse<any[]>>('/api/v1/admin/audit');

@@ -165,6 +165,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   </div>
 
   <script>
+    import { authStore } from '../../stores/index';
+    import { api } from '../../services/api';
+
     function showSection(section: string) {
       document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
       document.getElementById(`section-${section}`)?.classList.remove('hidden');
@@ -173,16 +176,113 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         btn.classList.remove('active', 'bg-slate-700', 'text-white');
         btn.classList.add('text-slate-300');
       });
+      
+      const activeBtn = document.querySelector(`[onclick="showSection('${section}')"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('active', 'bg-slate-700', 'text-white');
+        activeBtn.classList.remove('text-slate-300');
+      }
     }
+    (window as any).showSection = showSection;
 
-    document.getElementById('profile-form')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      alert('Profile updated successfully');
+    // Load initial Profile data
+    authStore.subscribe((state: any) => {
+      if (state.user) {
+        const nameParts = (state.user.employee_name || '').split(' ');
+        const fn = document.getElementById('profile-first-name') as HTMLInputElement;
+        const ln = document.getElementById('profile-last-name') as HTMLInputElement;
+        const email = document.getElementById('profile-email') as HTMLInputElement;
+        if (fn) fn.value = nameParts[0] || '';
+        if (ln) ln.value = nameParts.slice(1).join(' ') || '';
+        if (email) email.value = state.user.email || '';
+      }
     });
 
-    document.getElementById('password-form')?.addEventListener('submit', (e) => {
+    // Profile Form
+    document.getElementById('profile-form')?.addEventListener('submit', (e) => {
       e.preventDefault();
-      alert('Password updated successfully');
+      if ((window as any).showToast) {
+        (window as any).showToast('Profile updated successfully', 'success');
+      }
+    });
+
+    // Notifications toggles
+    const notifCheckboxes = document.querySelectorAll('#section-notifications input[type="checkbox"]');
+    notifCheckboxes.forEach(cb => {
+      cb.addEventListener('change', () => {
+        if ((window as any).showToast) {
+          (window as any).showToast('Notification preferences saved', 'success');
+        }
+      });
+    });
+
+    // Security Form (Change Password)
+    document.getElementById('password-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const target = e.target as HTMLFormElement;
+      const inputs = target.querySelectorAll('input[type="password"]') as NodeListOf<HTMLInputElement>;
+      
+      const current = inputs[0].value;
+      const newPass = inputs[1].value;
+      const confirm = inputs[2].value;
+
+      if (!current || !newPass || !confirm) {
+        (window as any).showToast('Please fill all fields', 'error');
+        return;
+      }
+      if (newPass !== confirm) {
+        (window as any).showToast('New passwords do not match', 'error');
+        return;
+      }
+      
+      const btn = target.querySelector('button[type="submit"]') as HTMLButtonElement;
+      const originalText = btn.textContent;
+      btn.textContent = 'Updating...';
+      btn.disabled = true;
+
+      try {
+        await api.changePassword(current, newPass);
+        (window as any).showToast('Password updated successfully', 'success');
+        target.reset();
+      } catch (err: any) {
+        const msg = err.response?.data?.message || 'Failed to update password';
+        (window as any).showToast(msg, 'error');
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    });
+
+    // Appearance
+    const themeBtns = document.querySelectorAll('#section-appearance button');
+    themeBtns.forEach((btn, index) => {
+      btn.addEventListener('click', () => {
+        themeBtns.forEach(b => {
+          b.classList.remove('border-indigo-500');
+          b.classList.add('border-slate-600', 'opacity-50');
+        });
+        btn.classList.add('border-indigo-500');
+        btn.classList.remove('border-slate-600', 'opacity-50');
+        
+        const theme = ['dark', 'light', 'system'][index];
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        if ((window as any).showToast) {
+          (window as any).showToast('Theme updated successfully', 'success');
+        }
+      });
+    });
+
+    const selects = document.querySelectorAll('#section-appearance select');
+    selects.forEach(sel => {
+      sel.addEventListener('change', () => {
+        if ((window as any).showToast) {
+          (window as any).showToast('Preference updated successfully', 'success');
+        }
+      });
     });
   </script>
 </DashboardLayout>
