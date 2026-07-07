@@ -12,14 +12,11 @@
   </head>
   <body>
     <script>
-      // Check if user is authenticated
+      // Always start fresh from login page when accessing root
       if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-          window.location.href = '/dashboard';
-        } else {
-          window.location.href = '/login';
-        }
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
       }
     </script>
   </body>
