@@ -39,7 +39,8 @@ const currentPath = Astro.url.pathname;
           href={item.href}
           data-nav-item={item.label.toLowerCase()}
           class:list={[
-            'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative group',
+            'items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative group',
+            item.label.toLowerCase() === 'admin' ? 'hidden' : 'flex',
             isActive
               ? 'bg-indigo-500/10 text-indigo-400'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60',
@@ -78,13 +79,15 @@ const currentPath = Astro.url.pathname;
   function updateUser(user: any) {
     if (!user) return;
     
-    // Hide Admin tab if not admin
+    // Unhide Admin tab if admin
     const adminLink = document.querySelector('[data-nav-item="admin"]') as HTMLElement;
     if (adminLink) {
-      if (user.role !== 'admin') {
-        adminLink.style.display = 'none';
+      if (user.role === 'admin') {
+        adminLink.classList.remove('hidden');
+        adminLink.classList.add('flex');
       } else {
-        adminLink.style.display = 'flex';
+        adminLink.classList.add('hidden');
+        adminLink.classList.remove('flex');
       }
     }
   }
