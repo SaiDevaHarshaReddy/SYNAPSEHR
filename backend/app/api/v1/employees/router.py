@@ -25,7 +25,7 @@ async def list_employees(
     search: Optional[str] = Query(None),
     department_id: Optional[UUID] = Query(None),
     status: Optional[str] = Query(None),
-    current_user: dict = Depends(require_role("hr")),
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """List employees with pagination and filters."""

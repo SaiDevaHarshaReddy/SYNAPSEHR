@@ -45,7 +45,7 @@ async def get_leave_analytics(
     start_date: Optional[datetime] = Query(None),
     end_date: Optional[datetime] = Query(None),
     department_id: Optional[UUID] = Query(None),
-    current_user: dict = Depends(require_role("hr")),
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get leave analytics."""
@@ -65,7 +65,7 @@ async def get_department_distribution(
     start_date: Optional[datetime] = Query(None),
     end_date: Optional[datetime] = Query(None),
     department_id: Optional[UUID] = Query(None),
-    current_user: dict = Depends(require_role("hr")),
+    current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get employee distribution by department."""
