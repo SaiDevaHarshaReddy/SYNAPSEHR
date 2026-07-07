@@ -37,6 +37,7 @@ const currentPath = Astro.url.pathname;
       return (
         <a
           href={item.href}
+          data-nav-item={item.label.toLowerCase()}
           class:list={[
             'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative group',
             isActive
@@ -76,14 +77,16 @@ const currentPath = Astro.url.pathname;
 
   function updateUser(user: any) {
     if (!user) return;
-    const roleName = user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'User';
-    const name = user.employee_name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || roleName;
-    const avatarEl = document.getElementById('sidebar-avatar');
-    const nameEl = document.getElementById('sidebar-name');
-    const emailEl = document.getElementById('sidebar-email');
-    if (avatarEl) avatarEl.textContent = name[0]?.toUpperCase() || 'U';
-    if (nameEl) nameEl.textContent = name;
-    if (emailEl) emailEl.textContent = user.email || '';
+    
+    // Hide Admin tab if not admin
+    const adminLink = document.querySelector('[data-nav-item="admin"]') as HTMLElement;
+    if (adminLink) {
+      if (user.role !== 'admin') {
+        adminLink.style.display = 'none';
+      } else {
+        adminLink.style.display = 'flex';
+      }
+    }
   }
 
   authStore.subscribe((state: any) => updateUser(state.user));
