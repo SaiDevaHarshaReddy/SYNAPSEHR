@@ -255,6 +255,23 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
     // Appearance
     const themeBtns = document.querySelectorAll('#section-appearance button');
+    
+    // Initialize active theme button
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    let initIndex = 0;
+    if (currentTheme === 'light') initIndex = 1;
+    if (currentTheme === 'system') initIndex = 2;
+    
+    themeBtns.forEach((b, i) => {
+      if (i === initIndex) {
+        b.classList.add('border-indigo-500');
+        b.classList.remove('border-slate-600', 'opacity-50');
+      } else {
+        b.classList.remove('border-indigo-500');
+        b.classList.add('border-slate-600', 'opacity-50');
+      }
+    });
+
     themeBtns.forEach((btn, index) => {
       btn.addEventListener('click', () => {
         themeBtns.forEach(b => {
@@ -265,11 +282,21 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         btn.classList.remove('border-slate-600', 'opacity-50');
         
         const theme = ['dark', 'light', 'system'][index];
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', theme);
+        
+        let applyTheme = theme;
+        if (theme === 'system') {
+          applyTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
         }
+        
+        if (applyTheme === 'light') {
+          document.documentElement.classList.add('light');
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        }
+
         if ((window as any).showToast) {
           (window as any).showToast('Theme updated successfully', 'success');
         }

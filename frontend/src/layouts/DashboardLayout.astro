@@ -23,6 +23,16 @@ const { title = 'SynapseHR', description } = Astro.props;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <title>{title}</title>
+    <script is:inline>
+      const theme = localStorage.getItem('theme') || 'dark';
+      if (theme === 'light') {
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+      }
+    </script>
   </head>
   <body class="bg-slate-950 text-white font-sans antialiased min-h-screen">
     <!-- Toast Container -->
