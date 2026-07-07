@@ -822,7 +822,14 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         <td>${score}</td>
         <td>${stageLabel(c.stage)}</td>
         <td>
-          <button class="btn btn-secondary py-1 px-2.5 text-xs view-candidate" data-id="${c.id}">View</button>
+          <div class="flex items-center gap-2">
+            <select class="input py-1 text-xs w-28 bg-slate-800 border-slate-700" onclick="event.stopPropagation()" onchange="window.updateCandidateStage('${c.id}', this.value)">
+              <option value="new" ${['new', 'shortlisted', 'interview_scheduled', 'offer_sent'].includes(c.stage) ? 'selected' : ''}>Pending</option>
+              <option value="hired" ${c.stage === 'hired' ? 'selected' : ''}>Accepted</option>
+              <option value="rejected" ${c.stage === 'rejected' ? 'selected' : ''}>Rejected</option>
+            </select>
+            <button class="btn btn-secondary py-1 px-2.5 text-xs view-candidate" data-id="${c.id}">View</button>
+          </div>
         </td>
       </tr>`;
       })
@@ -1101,4 +1108,15 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
   // Init
   loadCandidates();
+
+  (window as any).updateCandidateStage = async (id: string, stage: string) => {
+    try {
+      await api.patch(`/api/v1/recruitment/candidates/${id}/stage`, { stage });
+      await loadCandidates();
+    } catch (err) {
+      console.error("Failed to update candidate stage:", err);
+      alert("Failed to update candidate stage. Please try again.");
+      await loadCandidates(); // Revert dropdown
+    }
+  };
 </script>

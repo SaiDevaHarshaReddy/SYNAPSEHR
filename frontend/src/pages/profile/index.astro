@@ -93,8 +93,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     function updateProfileUI(user: any) {
       if (!user) return;
 
-      const name = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User';
-      document.getElementById('profile-avatar')!.textContent = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+      const roleName = user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'User';
+      const name = user.employee_name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || roleName;
+      document.getElementById('profile-avatar')!.textContent = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
       document.getElementById('profile-name')!.textContent = name;
       document.getElementById('profile-designation')!.textContent = user.designation || 'Employee';
       document.getElementById('profile-department')!.textContent = user.department || '';

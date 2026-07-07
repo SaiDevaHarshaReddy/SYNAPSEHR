@@ -292,7 +292,11 @@ class ApiService {
   }
 
   async postForm(url: string, formData: FormData): Promise<any> {
-    const response = await this.client.post(url, formData);
+    const response = await this.client.post(url, formData, {
+      headers: {
+        'Content-Type': undefined,
+      },
+    });
     return response.data;
   }
 

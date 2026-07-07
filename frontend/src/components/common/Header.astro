@@ -53,7 +53,8 @@
 
   function updateUser(user: any) {
     if (!user) return;
-    const name = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Admin';
+    const roleName = user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'Admin';
+    const name = user.employee_name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || roleName;
     const avatarEl = document.getElementById('header-avatar');
     const nameEl = document.getElementById('header-name');
     if (avatarEl) avatarEl.textContent = name[0]?.toUpperCase() || 'A';
