@@ -121,7 +121,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     const workflowTimeline = document.getElementById('workflowTimeline') as HTMLDivElement;
 
     // Redirect to login if no token
-    const token = localStorage.getItem('access_token');
+    const token = sessionStorage.getItem('access_token');
     if (!token) {
       window.location.href = '/login';
     }
@@ -248,7 +248,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             data.data.response.includes('leave request') ||
             data.data.response.includes('submitted')
           )) {
-            localStorage.setItem('leave_applied', 'true');
+            sessionStorage.setItem('leave_applied', 'true');
           }
 
           // Refresh conversation history in sidebar

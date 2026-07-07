@@ -19,7 +19,7 @@ class ApiService {
     // Request interceptor to add auth token
     this.client.interceptors.request.use((config) => {
       if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('access_token');
+        const token = sessionStorage.getItem('access_token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -33,8 +33,8 @@ class ApiService {
       async (error: AxiosError) => {
         if (error.response?.status === 401) {
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
+            sessionStorage.removeItem('access_token');
+            sessionStorage.removeItem('refresh_token');
             window.location.href = '/login';
           }
         }
@@ -247,8 +247,8 @@ class ApiService {
   // Auth
   async logout(): Promise<void> {
     await this.client.post('/api/v1/auth/logout');
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    sessionStorage.removeItem('access_token');
+    sessionStorage.removeItem('refresh_token');
   }
 
   async forgotPassword(email: string): Promise<void> {

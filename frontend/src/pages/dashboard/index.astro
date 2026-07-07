@@ -81,7 +81,7 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
     };
 
     async function loadDashboardCharts() {
-      const token = localStorage.getItem("access_token");
+      const token = sessionStorage.getItem("access_token");
       if (!token) return;
       const headers: Record<string, string> = {
         Authorization: `Bearer ${token}`,

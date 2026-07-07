@@ -125,9 +125,9 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
       try {
         const data = await api.login(email, password);
         
-        localStorage.setItem('access_token', data.access_token);
+        sessionStorage.setItem('access_token', data.access_token);
         if (data.refresh_token) {
-          localStorage.setItem('refresh_token', data.refresh_token);
+          sessionStorage.setItem('refresh_token', data.refresh_token);
         }
         window.location.href = '/dashboard';
       } catch (error: any) {

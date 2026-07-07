@@ -74,7 +74,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     // ── Role guard ──────────────────────────────────────────────────────────
     function getRoleFromToken(): string {
-      const token = localStorage.getItem("access_token");
+      const token = sessionStorage.getItem("access_token");
       if (!token) return "";
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));

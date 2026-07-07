@@ -14,8 +14,8 @@
     <script>
       // Always start fresh from login page when accessing root
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('access_token');
+        sessionStorage.removeItem('refresh_token');
         window.location.href = '/login';
       }
     </script>

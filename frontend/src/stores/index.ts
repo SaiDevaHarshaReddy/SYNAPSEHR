@@ -12,17 +12,17 @@ interface AuthState {
 
 export const authStore = atom<AuthState>({
   user: null,
-  token: typeof window !== 'undefined' ? localStorage.getItem('access_token') : null,
-  refreshToken: typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null,
-  isAuthenticated: typeof window !== 'undefined' ? !!localStorage.getItem('access_token') : false,
+  token: typeof window !== 'undefined' ? sessionStorage.getItem('access_token') : null,
+  refreshToken: typeof window !== 'undefined' ? sessionStorage.getItem('refresh_token') : null,
+  isAuthenticated: typeof window !== 'undefined' ? !!sessionStorage.getItem('access_token') : false,
   isLoading: false,
 });
 
 export const isAuthenticated = computed(authStore, (state) => state.isAuthenticated);
 
 export function setAuth(user: User, token: string, refreshToken: string) {
-  localStorage.setItem('access_token', token);
-  localStorage.setItem('refresh_token', refreshToken);
+  sessionStorage.setItem('access_token', token);
+  sessionStorage.setItem('refresh_token', refreshToken);
   authStore.set({
     user,
     token,
@@ -33,8 +33,8 @@ export function setAuth(user: User, token: string, refreshToken: string) {
 }
 
 export function clearAuth() {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refresh_token');
+  sessionStorage.removeItem('access_token');
+  sessionStorage.removeItem('refresh_token');
   authStore.set({
     user: null,
     token: null,

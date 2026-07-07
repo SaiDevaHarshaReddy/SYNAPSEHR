@@ -319,8 +319,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   initLeavePage();
 
   // Check if a leave was applied via chat and refresh immediately
-  if (localStorage.getItem('leave_applied') === 'true') {
-    localStorage.removeItem('leave_applied');
+  if (sessionStorage.getItem('leave_applied') === 'true') {
+    sessionStorage.removeItem('leave_applied');
     loadLeaveData();
   }
 

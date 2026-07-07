@@ -88,7 +88,7 @@ const { title = 'SynapseHR', description } = Astro.props;
       import { authStore, setUser } from '../stores/index';
 
       async function initAuth() {
-        if (!localStorage.getItem('access_token')) return;
+        if (!sessionStorage.getItem('access_token')) return;
         
         const state = authStore.get();
         if (!state.user) {

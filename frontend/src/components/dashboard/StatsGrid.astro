@@ -170,7 +170,7 @@
   import { api } from "../../services/api";
 
   async function loadDashboardStats() {
-    const token = localStorage.getItem("access_token");
+    const token = sessionStorage.getItem("access_token");
     if (!token) return;
 
     // Dashboard metrics (employees, pending, today's leave)
