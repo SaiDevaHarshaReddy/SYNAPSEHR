@@ -115,11 +115,11 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="form-label">First Name</label>
-              <input type="text" id="edit-first-name" class="input" required disabled />
+              <input type="text" id="edit-first-name" class="input" disabled />
             </div>
             <div>
               <label class="form-label">Last Name</label>
-              <input type="text" id="edit-last-name" class="input" required disabled />
+              <input type="text" id="edit-last-name" class="input" disabled />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -129,19 +129,19 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             </div>
             <div>
               <label class="form-label">Designation</label>
-              <input type="text" id="edit-designation" class="input" required disabled />
+              <input type="text" id="edit-designation" class="input" disabled />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="form-label">Department</label>
-              <select id="edit-department" class="input" required disabled>
+              <select id="edit-department" class="input" disabled>
                 <!-- Populate dynamically -->
               </select>
             </div>
             <div>
               <label class="form-label">Email</label>
-              <input type="email" id="edit-email" class="input" required disabled />
+              <input type="email" id="edit-email" class="input" disabled />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -151,13 +151,13 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             </div>
             <div>
               <label class="form-label">Joining Date</label>
-              <input type="date" id="edit-joining-date" class="input" required disabled />
+              <input type="date" id="edit-joining-date" class="input" disabled />
             </div>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="form-label">Employment Type</label>
-              <select id="edit-employment-type" class="input" required disabled>
+              <select id="edit-employment-type" class="input" disabled>
                 <option value="full_time">Full Time</option>
                 <option value="part_time">Part Time</option>
                 <option value="contract">Contract</option>
@@ -166,7 +166,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             </div>
             <div>
               <label class="form-label">Workforce Status</label>
-              <select id="edit-status" class="input" required disabled>
+              <select id="edit-status" class="input" disabled>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
@@ -224,28 +224,28 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="form-label">First Name</label>
-            <input type="text" id="add-first-name" class="input" required />
+            <input type="text" id="add-first-name" class="input" />
           </div>
           <div>
             <label class="form-label">Last Name</label>
-            <input type="text" id="add-last-name" class="input" required />
+            <input type="text" id="add-last-name" class="input" />
           </div>
         </div>
         <div>
           <label class="form-label">Designation</label>
-          <input type="text" id="add-designation" class="input" required />
+          <input type="text" id="add-designation" class="input" />
         </div>
         <div>
           <label class="form-label">Department</label>
-          <select id="add-department" class="input" required></select>
+          <select id="add-department" class="input"></select>
         </div>
         <div>
           <label class="form-label">Email</label>
-          <input type="email" id="add-email" class="input" required />
+          <input type="email" id="add-email" class="input" />
         </div>
         <div>
           <label class="form-label">Employee Code</label>
-          <input type="text" id="add-code" class="input" placeholder="e.g. EMP004" required />
+          <input type="text" id="add-code" class="input" placeholder="e.g. EMP004" />
         </div>
         <div class="flex gap-3 justify-end pt-4">
           <button type="button" id="cancel-add-btn" class="btn btn-secondary">Cancel</button>
