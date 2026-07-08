@@ -13,7 +13,7 @@ class EmployeeBase(BaseSchema):
     """Base employee schema."""
 
     first_name: str = Field(..., min_length=1, max_length=100)
-    last_name: str = Field(..., min_length=1, max_length=100)
+    last_name: str = Field(..., max_length=100)
     employee_code: str = Field(..., min_length=1, max_length=50)
     designation: Optional[str] = Field(None, max_length=100)
     phone: Optional[str] = Field(None, max_length=50)
@@ -37,7 +37,7 @@ class EmployeeUpdate(BaseSchema):
     """Update employee request."""
 
     first_name: Optional[str] = Field(None, min_length=1, max_length=100)
-    last_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    last_name: Optional[str] = Field(None, max_length=100)
     designation: Optional[str] = Field(None, max_length=100)
     phone: Optional[str] = Field(None, max_length=50)
     address: Optional[str] = Field(None, max_length=500)
