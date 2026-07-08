@@ -76,13 +76,27 @@ class AuthenticationService:
             is_active=True
         )
 
+        from app.models.department import Department
+        import uuid
+        
+        # Get default department
+        dept_result = await self.session.execute(select(Department).where(Department.organization_id == org.id))
+        dept = dept_result.scalars().first()
+        if not dept:
+            raise ValidationException("No department found to assign user to")
+
+        name_parts = data.full_name.strip().split(" ", 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
+
         # Create employee record
         new_employee = await self.employee_repo.create(
             user_id=new_user.id,
-            organization_id=org.id,
-            full_name=data.full_name,
-            email=data.email,
-            job_title="Employee",
+            department_id=dept.id,
+            employee_code=f"EMP-{uuid.uuid4().hex[:6].upper()}",
+            first_name=first_name,
+            last_name=last_name,
+            designation="Employee",
             status="active"
         )
         
