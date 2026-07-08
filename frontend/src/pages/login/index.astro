@@ -27,6 +27,15 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
       <div class="card-static p-8">
         <h2 class="text-xl font-semibold text-white mb-6">Welcome back</h2>
 
+        <div class="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3" role="alert">
+          <svg class="w-5 h-5 text-amber-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-sm text-amber-200/90 leading-relaxed">
+            <span class="font-semibold text-amber-400">Note:</span> First time login takes up to 30-60 seconds.
+          </p>
+        </div>
+
         <form id="loginForm" class="space-y-5" novalidate>
           <div class="space-y-1.5">
             <label for="email" class="block text-sm font-medium text-slate-300">Email address</label>
