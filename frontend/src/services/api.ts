@@ -49,6 +49,11 @@ class ApiService {
     return response.data.data!;
   }
 
+  async register(full_name: string, email: string, password: string): Promise<TokenResponse> {
+    const response = await this.client.post<ApiResponse<TokenResponse>>('/api/v1/auth/register', { full_name, email, password });
+    return response.data.data!;
+  }
+
   async refreshToken(refreshToken: string): Promise<TokenResponse> {
     const response = await this.client.post<ApiResponse<TokenResponse>>('/api/v1/auth/refresh', { refresh_token: refreshToken });
     return response.data.data!;

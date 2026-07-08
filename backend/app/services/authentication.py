@@ -24,6 +24,7 @@ from app.schemas.auth import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
     LoginRequest,
+    RegisterRequest,
     ResetPasswordRequest,
     TokenResponse,
     UserProfile,
@@ -39,6 +40,64 @@ class AuthenticationService:
         self.session = session
         self.user_repo = UserRepository(session)
         self.employee_repo = EmployeeRepository(session)
+
+    async def register(self, data: RegisterRequest) -> TokenResponse:
+        """Register a new user."""
+        from sqlalchemy import select
+        from app.models.organization import Organization
+        from app.models.role import Role
+
+        # Check if email exists
+        user_exists = await self.user_repo.get_by_email(data.email)
+        if user_exists:
+            raise DuplicateException(f"User with email {data.email} already exists")
+
+        # Get default organization
+        org_result = await self.session.execute(select(Organization))
+        org = org_result.scalars().first()
+        if not org:
+            raise ValidationException("No organization found to assign user to")
+
+        # Get employee role
+        role_result = await self.session.execute(
+            select(Role).where(Role.name == "employee")
+        )
+        role = role_result.scalars().first()
+        if not role:
+            raise ValidationException("Employee role not found")
+
+        # Create user
+        hashed_password = hash_password(data.password)
+        new_user = await self.user_repo.create(
+            email=data.email,
+            password_hash=hashed_password,
+            organization_id=org.id,
+            role_id=role.id,
+            is_active=True
+        )
+
+        # Create employee record
+        new_employee = await self.employee_repo.create(
+            user_id=new_user.id,
+            organization_id=org.id,
+            full_name=data.full_name,
+            email=data.email,
+            job_title="Employee",
+            status="active"
+        )
+        
+        await self.session.commit()
+
+        # Generate tokens
+        tokens = create_token_pair(
+            user_id=new_user.id,
+            organization_id=new_user.organization_id,
+            role=role.name,
+        )
+
+        logger.info("user_registered", user_id=str(new_user.id), email=new_user.email)
+
+        return TokenResponse(**tokens)
 
     async def login(self, data: LoginRequest) -> TokenResponse:
         """Authenticate user and return tokens."""

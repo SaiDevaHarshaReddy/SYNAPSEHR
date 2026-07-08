@@ -9,6 +9,7 @@ from app.schemas.auth import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
     LoginRequest,
+    RegisterRequest,
     RefreshTokenRequest,
     ResetPasswordRequest,
     TokenResponse,
@@ -18,6 +19,21 @@ from app.schemas.response import SuccessResponse
 from app.services.authentication import AuthenticationService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+@router.post("/register", response_model=SuccessResponse[TokenResponse])
+async def register(
+    data: RegisterRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Register user and return tokens."""
+    service = AuthenticationService(db)
+    tokens = await service.register(data)
+
+    return SuccessResponse(
+        message="Registration successful",
+        data=tokens,
+    )
 
 
 @router.post("/login", response_model=SuccessResponse[TokenResponse])

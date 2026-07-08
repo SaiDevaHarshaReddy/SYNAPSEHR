@@ -24,8 +24,15 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
       </div>
 
       <!-- Login Card -->
+      <!-- Login Card -->
       <div class="card-static p-8">
-        <h2 class="text-xl font-semibold text-white mb-6">Welcome back</h2>
+        <div class="flex items-center justify-between mb-6">
+          <h2 id="formTitle" class="text-xl font-semibold text-white">Welcome back</h2>
+          <div class="bg-slate-800/50 p-1 rounded-lg flex items-center text-sm font-medium">
+            <button id="showLoginBtn" type="button" class="px-3 py-1.5 rounded-md bg-indigo-500 text-white shadow-sm transition-all duration-200">Login</button>
+            <button id="showSignupBtn" type="button" class="px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition-all duration-200">Sign Up</button>
+          </div>
+        </div>
 
         <div class="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3" role="alert">
           <svg class="w-5 h-5 text-amber-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -36,7 +43,19 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
           </p>
         </div>
 
-        <form id="loginForm" class="space-y-5" novalidate>
+        <form id="authForm" class="space-y-5" novalidate>
+          <div id="nameField" class="space-y-1.5 hidden">
+            <label for="fullName" class="block text-sm font-medium text-slate-300">Full Name</label>
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              class="input"
+              placeholder="John Doe"
+              autocomplete="name"
+            />
+          </div>
+
           <div class="space-y-1.5">
             <label for="email" class="block text-sm font-medium text-slate-300">Email address</label>
             <input
@@ -54,7 +73,7 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
           <div class="space-y-1.5">
             <div class="flex items-center justify-between">
               <label for="password" class="text-sm font-medium text-slate-300">Password</label>
-              <a href="/forgot-password" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors duration-200">Forgot password?</a>
+              <a href="/forgot-password" id="forgotPasswordLink" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors duration-200">Forgot password?</a>
             </div>
             <input
               type="password"
@@ -79,7 +98,7 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
           </button>
         </form>
 
-        <div class="mt-6 pt-6 border-t border-slate-800/50">
+        <div id="demoAccountsSection" class="mt-6 pt-6 border-t border-slate-800/50">
           <p class="text-sm text-slate-500 text-center mb-3 font-medium">Demo Accounts</p>
           <div class="space-y-2">
             <button onclick="fillDemo('admin@synapsehr.com', 'Admin@123')" class="w-full text-left text-xs text-slate-400 hover:text-slate-200 bg-slate-800/40 hover:bg-slate-800/60 rounded-xl px-3 py-2.5 transition-all duration-200 flex items-center justify-between group">
@@ -98,9 +117,6 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
         </div>
       </div>
 
-      <p class="text-center text-xs text-slate-500 mt-6">
-        Don't have an account? <a href="/forgot-password" class="text-indigo-400 hover:text-indigo-300 transition-colors">Contact admin</a>
-      </p>
     </div>
   </div>
 
@@ -113,11 +129,48 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
     }
     (window as any).fillDemo = fillDemo;
 
-    const form = document.getElementById('loginForm') as HTMLFormElement;
+    let isSignup = false;
+    const form = document.getElementById('authForm') as HTMLFormElement;
     const errorDiv = document.getElementById('error') as HTMLDivElement;
     const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
     const btnText = document.getElementById('btnText') as HTMLSpanElement;
     const btnSpinner = document.getElementById('btnSpinner') as unknown as SVGElement;
+    const formTitle = document.getElementById('formTitle') as HTMLHeadingElement;
+    const nameField = document.getElementById('nameField') as HTMLDivElement;
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink') as HTMLAnchorElement;
+    const demoAccountsSection = document.getElementById('demoAccountsSection') as HTMLDivElement;
+    const showLoginBtn = document.getElementById('showLoginBtn') as HTMLButtonElement;
+    const showSignupBtn = document.getElementById('showSignupBtn') as HTMLButtonElement;
+
+    showSignupBtn.addEventListener('click', () => {
+      isSignup = true;
+      formTitle.textContent = 'Create an account';
+      btnText.textContent = 'Sign up';
+      nameField.classList.remove('hidden');
+      forgotPasswordLink.classList.add('hidden');
+      demoAccountsSection.classList.add('hidden');
+      
+      showSignupBtn.classList.add('bg-indigo-500', 'text-white', 'shadow-sm');
+      showSignupBtn.classList.remove('text-slate-400');
+      
+      showLoginBtn.classList.remove('bg-indigo-500', 'text-white', 'shadow-sm');
+      showLoginBtn.classList.add('text-slate-400');
+    });
+
+    showLoginBtn.addEventListener('click', () => {
+      isSignup = false;
+      formTitle.textContent = 'Welcome back';
+      btnText.textContent = 'Sign in';
+      nameField.classList.add('hidden');
+      forgotPasswordLink.classList.remove('hidden');
+      demoAccountsSection.classList.remove('hidden');
+      
+      showLoginBtn.classList.add('bg-indigo-500', 'text-white', 'shadow-sm');
+      showLoginBtn.classList.remove('text-slate-400');
+      
+      showSignupBtn.classList.remove('bg-indigo-500', 'text-white', 'shadow-sm');
+      showSignupBtn.classList.add('text-slate-400');
+    });
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -125,14 +178,20 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
       
       // Loading state
       submitBtn.disabled = true;
-      btnText.textContent = 'Signing in...';
+      btnText.textContent = isSignup ? 'Signing up...' : 'Signing in...';
       btnSpinner.classList.remove('hidden');
 
       const email = (document.getElementById('email') as HTMLInputElement).value;
       const password = (document.getElementById('password') as HTMLInputElement).value;
 
       try {
-        const data = await api.login(email, password);
+        let data;
+        if (isSignup) {
+          const fullName = (document.getElementById('fullName') as HTMLInputElement).value || 'New Employee';
+          data = await api.register(fullName, email, password);
+        } else {
+          data = await api.login(email, password);
+        }
         
         sessionStorage.setItem('access_token', data.access_token);
         if (data.refresh_token) {
@@ -140,10 +199,10 @@ import PublicLayout from '../../layouts/PublicLayout.astro';
         }
         window.location.href = '/dashboard';
       } catch (error: any) {
-        errorDiv.textContent = error.response?.data?.error?.message || error.response?.data?.detail || 'Login failed or network error. Please try again.';
+        errorDiv.textContent = error.response?.data?.error?.message || error.response?.data?.detail || 'Authentication failed. Please try again.';
         errorDiv.classList.remove('hidden');
         submitBtn.disabled = false;
-        btnText.textContent = 'Sign in';
+        btnText.textContent = isSignup ? 'Sign up' : 'Sign in';
         btnSpinner.classList.add('hidden');
       }
     });
