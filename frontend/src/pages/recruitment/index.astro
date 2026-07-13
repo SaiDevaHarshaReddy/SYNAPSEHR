@@ -1100,7 +1100,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       renderCandidates(allCandidates);
       document.getElementById("candidate-count")!.textContent =
         `${allCandidates.length} candidates`;
-      await loadStats();
+      // Load stats async without blocking
+      loadStats();
     } catch (err) {
       candidatesTable.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-400">Failed to load candidates</td></tr>`;
     }

@@ -322,21 +322,25 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
     
+    const promises: Promise<any>[] = [];
+    
     // Make sure departments are loaded for lists/selects
     if (departments.length === 0) {
-      await loadDepartmentsList();
+      promises.push(loadDepartmentsList());
     }
 
     if (id) {
       listView?.classList.add('hidden');
       detailView?.classList.remove('hidden');
-      await loadEmployeeDetail(id);
+      promises.push(loadEmployeeDetail(id));
     } else {
       detailView?.classList.add('hidden');
       listView?.classList.remove('hidden');
       toggleEditState(false);
-      await loadEmployees(currentPage);
+      promises.push(loadEmployees(currentPage));
     }
+    
+    await Promise.all(promises);
   }
 
   function getDeptName(deptId: string): string {

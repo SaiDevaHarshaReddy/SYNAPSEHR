@@ -272,14 +272,12 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     async function loadDepartments() {
       try {
-        const response = await api.getDepartments();
-        departments = response.data || [];
-
-        // Load employees to compute counts
-        try {
-          const empRes = await api.getEmployees({ page: 1, limit: 100 });
-          employees = empRes.data || [];
-        } catch {}
+        const [deptResponse, empRes] = await Promise.all([
+          api.getDepartments().catch(() => ({ data: [] })),
+          api.getEmployees({ page: 1, limit: 100 }).catch(() => ({ data: [] }))
+        ]);
+        departments = deptResponse.data || [];
+        employees = empRes.data || [];
 
         renderDepartments();
         updateStats();
