@@ -105,7 +105,7 @@ async def get_ai_analytics(
 
 @router.get("/employees")
 async def get_employee_analytics(
-    current_user: dict = Depends(require_roles("admin", "hr")),
+    current_user: dict = Depends(require_role("hr")),
     db: AsyncSession = Depends(get_db),
 ):
     """Get employee analytics report."""
@@ -133,7 +133,7 @@ async def get_employee_analytics(
 
 @router.get("/insights")
 async def get_hr_insights(
-    current_user: dict = Depends(require_roles("admin", "hr")),
+    current_user: dict = Depends(require_role("hr")),
     db: AsyncSession = Depends(get_db),
 ):
     """Get AI-generated HR insights based on recent data."""
