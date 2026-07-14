@@ -22,6 +22,12 @@ if settings.async_database_url.startswith("sqlite"):
 else:
     _engine_kwargs["pool_size"] = settings.DATABASE_POOL_SIZE
     _engine_kwargs["max_overflow"] = settings.DATABASE_MAX_OVERFLOW
+    
+    # Supabase connection pooler on port 6543 (transaction mode) requires disabling prepared statements for asyncpg
+    if "pooler.supabase.com:6543" in settings.async_database_url:
+        _engine_kwargs["connect_args"] = {
+            "prepared_statement_cache_size": 0,
+        }
 
 engine = create_async_engine(
     settings.async_database_url,
