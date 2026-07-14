@@ -20,6 +20,7 @@ class InterviewQuestionsRequest(BaseSchema):
     """Request to generate interview questions."""
 
     job_title: Optional[str] = None
+    experience_level: Optional[str] = None
     focus_skills: Optional[list[str]] = None
 
 
@@ -51,9 +52,10 @@ class CandidateResponse(BaseSchema):
     experience_score: Optional[float] = None
     education_score: Optional[float] = None
     recommendation: Optional[str] = None
+    match_explanation: Optional[str] = None
     missing_skills: list[str] = []
     stage: str
-    interview_questions: list[dict] = []
+    interview_questions: Any = None
     resume_filename: Optional[str] = None
     created_at: datetime
     updated_at: datetime
@@ -70,6 +72,7 @@ class CandidateListResponse(BaseSchema):
     skills: list[str] = []
     overall_score: Optional[float] = None
     recommendation: Optional[str] = None
+    match_explanation: Optional[str] = None
     stage: str
     job_title: Optional[str] = None
     created_at: datetime

@@ -152,6 +152,7 @@ async def generate_interview_questions(
     candidate = await service.generate_interview_questions(
         candidate_id=candidate_id,
         job_title=data.job_title,
+        experience_level=data.experience_level,
         focus_skills=data.focus_skills,
     )
     return SuccessResponse(message="Interview questions generated", data=candidate)

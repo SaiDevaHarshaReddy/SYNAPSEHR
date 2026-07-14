@@ -280,6 +280,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
           id="resumeFile"
           class="hidden"
           accept=".pdf,.docx,.txt"
+          multiple
         />
         <p
           id="fileSelected"
@@ -428,6 +429,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
           <span
             id="d-recommendation"
             class="px-3 py-1.5 rounded-lg text-sm font-semibold"></span>
+          <p id="d-match-explanation" class="text-sm text-slate-300 italic w-full sm:w-auto mt-2 sm:mt-0 flex-1"></p>
           <div class="flex items-center gap-2 ml-auto">
             <label class="text-sm text-slate-400">Stage:</label>
             <select id="d-stage-select" class="input py-1.5 text-sm">
@@ -510,16 +512,23 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             <h4 class="text-sm font-semibold text-slate-300">
               AI Interview Questions
             </h4>
-            <button
-              id="generateQuestionsBtn"
-              class="btn btn-secondary py-1.5 text-xs flex items-center gap-1.5"
-            >
-              <svg
-                class="w-3.5 h-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                ><path
+            <div class="flex items-center gap-2">
+              <select id="expLevelSelect" class="input py-1.5 text-xs bg-slate-800 border-slate-700">
+                <option value="Junior">Junior</option>
+                <option value="Mid-Level" selected>Mid-Level</option>
+                <option value="Senior">Senior</option>
+                <option value="Lead/Staff">Lead/Staff</option>
+              </select>
+              <button
+                id="generateQuestionsBtn"
+                class="btn btn-secondary py-1.5 text-xs flex items-center gap-1.5"
+              >
+                <svg
+                  class="w-3.5 h-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  ><path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
@@ -636,21 +645,25 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       const dt = new DataTransfer();
       dt.items.add(file);
       resumeFileInput.files = dt.files;
-      fileSelectedLabel.textContent = `📄 ${file.name}`;
+      const fileCount = dt.files.length;
+      fileSelectedLabel.textContent = fileCount > 1 ? `📄 ${fileCount} files selected` : `📄 ${file.name}`;
       fileSelectedLabel.classList.remove("hidden");
     }
   });
   resumeFileInput.addEventListener("change", () => {
-    const f = resumeFileInput.files?.[0];
-    if (f) {
+    const files = resumeFileInput.files;
+    if (files && files.length > 0) {
       const validExtensions = ['.pdf', '.docx', '.txt'];
-      const ext = f.name.substring(f.name.lastIndexOf('.')).toLowerCase();
-      if (!validExtensions.includes(ext)) {
-        alert("Invalid file type. Please upload a PDF, DOCX, or TXT file.");
-        resumeFileInput.value = "";
-        return;
+      for (let i = 0; i < files.length; i++) {
+        const ext = files[i].name.substring(files[i].name.lastIndexOf('.')).toLowerCase();
+        if (!validExtensions.includes(ext)) {
+          alert(`Invalid file type for ${files[i].name}. Please upload PDF, DOCX, or TXT.`);
+          resumeFileInput.value = "";
+          return;
+        }
       }
-      fileSelectedLabel.textContent = `📄 ${f.name}`;
+      const fileCount = files.length;
+      fileSelectedLabel.textContent = fileCount > 1 ? `📄 ${fileCount} files selected` : `📄 ${files[0].name}`;
       fileSelectedLabel.classList.remove("hidden");
     }
   });
@@ -659,9 +672,9 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
   document
     .getElementById("submitUpload")!
     .addEventListener("click", async () => {
-      const file = resumeFileInput.files?.[0];
-      if (!file) {
-        alert("Please select a resume file.");
+      const files = resumeFileInput.files;
+      if (!files || files.length === 0) {
+        alert("Please select at least one resume file.");
         return;
       }
 
@@ -670,38 +683,25 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       const statusText = document.getElementById("uploadStatusText")!;
       progress.classList.remove("hidden");
 
-      const steps = [
-        { text: "Extracting text...", pct: 25 },
-        { text: "Parsing with AI...", pct: 55 },
-        { text: "Scoring candidate...", pct: 80 },
-        { text: "Saving to database...", pct: 95 },
-      ];
-      let stepIdx = 0;
-      const stepInterval = setInterval(() => {
-        if (stepIdx < steps.length) {
-          statusText.textContent = steps[stepIdx].text;
-          progressBar.style.width = steps[stepIdx].pct + "%";
-          stepIdx++;
-        }
-      }, 800);
+      const jobTitle = (document.getElementById("jobTitle") as HTMLInputElement).value;
+      const jobDescription = (document.getElementById("jobDescription") as HTMLTextAreaElement).value;
 
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        const jobTitle = (
-          document.getElementById("jobTitle") as HTMLInputElement
-        ).value;
-        const jobDescription = (
-          document.getElementById("jobDescription") as HTMLTextAreaElement
-        ).value;
-        if (jobTitle) formData.append("job_title", jobTitle);
-        if (jobDescription) formData.append("job_description", jobDescription);
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          statusText.textContent = `Parsing ${file.name} (${i + 1}/${files.length})...`;
+          progressBar.style.width = `${((i) / files.length) * 100}%`;
+          
+          const formData = new FormData();
+          formData.append("file", file);
+          if (jobTitle) formData.append("job_title", jobTitle);
+          if (jobDescription) formData.append("job_description", jobDescription);
 
-        const response = await api.postForm("/api/v1/recruitment/upload", formData);
+          await api.postForm("/api/v1/recruitment/upload", formData);
+          progressBar.style.width = `${((i + 1) / files.length) * 100}%`;
+        }
 
-        clearInterval(stepInterval);
-        progressBar.style.width = "100%";
-        statusText.textContent = "✅ Done!";
+        statusText.textContent = "✅ All resumes uploaded and scored!";
 
         setTimeout(() => {
           uploadModal.classList.add("hidden");
@@ -710,13 +710,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
           resumeFileInput.value = "";
           fileSelectedLabel.classList.add("hidden");
           (document.getElementById("jobTitle") as HTMLInputElement).value = "";
-          (
-            document.getElementById("jobDescription") as HTMLTextAreaElement
-          ).value = "";
+          (document.getElementById("jobDescription") as HTMLTextAreaElement).value = "";
           loadCandidates();
-        }, 800);
+        }, 1000);
       } catch (err: any) {
-        clearInterval(stepInterval);
         progress.classList.add("hidden");
         alert("Upload failed: " + (err.message || "Unknown error"));
       }
@@ -885,7 +882,15 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       "Not Recommended": "bg-red-500/20 text-red-400 border border-red-500/30",
     };
     recEl.textContent = c.recommendation || "Not Scored";
-    recEl.className = `px-3 py-1.5 rounded-lg text-sm font-semibold ${recMap[c.recommendation] || "bg-slate-700 text-slate-300"}`;
+    recEl.className = `px-3 py-1.5 rounded-lg text-sm font-semibold flex-shrink-0 ${recMap[c.recommendation] || "bg-slate-700 text-slate-300"}`;
+
+    const matchExpl = document.getElementById("d-match-explanation")!;
+    if (c.match_explanation) {
+      matchExpl.textContent = c.match_explanation;
+      matchExpl.classList.remove("hidden");
+    } else {
+      matchExpl.classList.add("hidden");
+    }
 
     // Stage select
     const stageSelect = document.getElementById(
@@ -948,52 +953,55 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     renderInterviewQuestions(c.interview_questions || []);
   }
 
-  function renderInterviewQuestions(questions: any[]) {
+  function renderInterviewQuestions(data: any) {
     const qEl = document.getElementById("d-questions")!;
-    if (!questions.length) {
+    if (!data || (Array.isArray(data) && !data.length) || Object.keys(data).length === 0) {
       qEl.innerHTML =
-        '<p class="text-slate-500 text-sm">No questions generated yet. Click "Generate Questions".</p>';
+        '<p class="text-slate-500 text-sm">No questions generated yet. Select experience level and click "Generate Questions".</p>';
       return;
     }
 
-    const groups: Record<string, any[]> = {};
-    questions.forEach((q) => {
-      const cat = q.category || "General";
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(q);
-    });
+    let html = "";
 
-    const diffColor = (d: string) =>
-      d === "Hard"
-        ? "text-red-400"
-        : d === "Medium"
-          ? "text-amber-400"
-          : "text-emerald-400";
-
-    qEl.innerHTML = Object.entries(groups)
-      .map(
-        ([cat, qs]) => `
-      <div>
-        <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">${cat}</h5>
+    const addSection = (title: string, items: string[], isList: boolean = true) => {
+      if (!items || !items.length) return "";
+      let sectionHtml = `
+      <div class="mb-4">
+        <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">${title}</h5>
         <div class="space-y-1.5">
-          ${qs
-            .map(
-              (q: any, i: number) => `
+      `;
+      items.forEach((item, i) => {
+        sectionHtml += `
             <div class="flex gap-2 p-2.5 bg-slate-700/30 rounded-lg text-sm">
-              <span class="text-slate-500 flex-shrink-0 font-mono">${i + 1}.</span>
-              <div class="flex-1">
-                <span class="text-slate-200">${q.question}</span>
-                ${q.difficulty ? `<span class="ml-2 text-xs ${diffColor(q.difficulty)}">[${q.difficulty}]</span>` : ""}
-              </div>
+              ${isList ? `<span class="text-slate-500 flex-shrink-0 font-mono">${i + 1}.</span>` : `<span class="text-indigo-400 flex-shrink-0">•</span>`}
+              <div class="flex-1 text-slate-200">${item}</div>
             </div>
-          `,
-            )
-            .join("")}
-        </div>
-      </div>
-    `,
-      )
-      .join("");
+        `;
+      });
+      sectionHtml += `</div></div>`;
+      return sectionHtml;
+    };
+
+    if (Array.isArray(data)) {
+      // Legacy array format
+      const groups: Record<string, any[]> = {};
+      data.forEach((q) => {
+        const cat = q.category || "General";
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(q.question);
+      });
+      for (const [cat, qs] of Object.entries(groups)) {
+        html += addSection(cat, qs);
+      }
+    } else {
+      // New structured format
+      html += addSection("Technical Questions", data.technical_questions);
+      html += addSection("Behavioral Questions", data.behavioral_questions);
+      html += addSection("Coding Questions", data.coding_questions);
+      html += addSection("Evaluation Criteria", data.evaluation_criteria, false);
+    }
+
+    qEl.innerHTML = html;
   }
 
   // Generate interview questions
@@ -1006,9 +1014,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       btn.setAttribute("disabled", "true");
 
       try {
+        const expLevel = (document.getElementById("expLevelSelect") as HTMLSelectElement).value;
         const json = await api.post(
           `/api/v1/recruitment/candidates/${currentCandidateId}/interview-questions`,
-          {}
+          { experience_level: expLevel }
         );
         renderInterviewQuestions(json.data?.interview_questions || []);
       } catch (err) {

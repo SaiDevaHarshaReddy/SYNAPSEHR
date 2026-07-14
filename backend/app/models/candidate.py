@@ -49,6 +49,7 @@ class Candidate(BaseModel):
     education_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     recommendation: Mapped[str | None] = mapped_column(String(50), nullable=True)  # Highly Recommended, Recommended, etc.
     missing_skills_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    match_explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Hiring stage
     stage: Mapped[str] = mapped_column(

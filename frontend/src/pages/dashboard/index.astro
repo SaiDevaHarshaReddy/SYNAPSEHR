@@ -15,6 +15,21 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
       <RecentActivity />
     </div>
 
+    <!-- AI HR Insights -->
+    <div class="card p-6 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/10 to-transparent relative overflow-hidden">
+      <div class="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="flex items-center gap-2 mb-4">
+        <svg class="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <h2 class="text-base font-semibold text-white">AI HR Insights</h2>
+        <span class="badge badge-info text-[10px] py-0 px-1.5 ml-2">Beta</span>
+      </div>
+      <div id="dash-ai-insights" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="text-slate-500 text-sm py-2">Generating insights...</div>
+      </div>
+    </div>
+
     <!-- Analytics Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="card p-6">
@@ -123,6 +138,35 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
           renderRecentHires(employees);
         }
       } catch {}
+
+      // Load AI HR Insights
+      try {
+        const insightsRes = await api.get("/api/v1/analytics/insights");
+        if (insightsRes && insightsRes.data) {
+          renderAIInsights(insightsRes.data);
+        }
+      } catch (err) {
+        document.getElementById("dash-ai-insights")!.innerHTML = '<div class="text-slate-500 text-sm py-2">Failed to load insights.</div>';
+      }
+    }
+
+    function renderAIInsights(insights: string[]) {
+      const container = document.getElementById("dash-ai-insights")!;
+      if (!insights || !insights.length) {
+        container.innerHTML = '<div class="text-slate-500 text-sm py-2">No insights available yet.</div>';
+        return;
+      }
+      
+      container.innerHTML = insights.map(insight => `
+        <div class="flex items-start gap-3 p-3 bg-slate-800/40 rounded-xl border border-slate-700/50 hover:bg-slate-800/80 transition-colors">
+          <div class="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <p class="text-sm text-slate-300 leading-relaxed">${insight}</p>
+        </div>
+      `).join("");
     }
 
     function renderDeptChart(

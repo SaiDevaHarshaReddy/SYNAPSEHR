@@ -130,3 +130,22 @@ async def get_employee_analytics(
             "by_department": departments,
         },
     )
+
+@router.get("/insights")
+async def get_hr_insights(
+    current_user: dict = Depends(require_roles("admin", "hr")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get AI-generated HR insights based on recent data."""
+    # Mocking the AI logic for now to demonstrate the UI
+    insights = [
+        "Recruitment completion increased by 15% this month.",
+        "Engineering department has the highest leave utilization.",
+        "Three candidates are ready for final interviews.",
+        "Average time to hire has decreased by 2 days compared to last quarter."
+    ]
+
+    return SuccessResponse(
+        message="HR insights retrieved",
+        data=insights,
+    )

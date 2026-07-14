@@ -17,7 +17,9 @@ from app.models.generated_document import GeneratedDocument  # noqa: F401
 from app.models.notification import Notification  # noqa: F401
 from app.models.audit_log import AuditLog  # noqa: F401
 from app.models.candidate import Candidate  # noqa: F401
-
+from app.models.performance import PerformanceReview  # noqa: F401
+from app.models.attendance import Attendance  # noqa: F401
+from app.models.payroll import Payroll  # noqa: F401
 __all__ = [
     "BaseModel",
     "Organization",
@@ -37,4 +39,7 @@ __all__ = [
     "Notification",
     "AuditLog",
     "Candidate",
+    "PerformanceReview",
+    "Attendance",
+    "Payroll",
 ]

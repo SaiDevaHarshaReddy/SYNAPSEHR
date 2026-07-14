@@ -45,6 +45,7 @@ def _to_response(c: Candidate) -> CandidateResponse:
         experience_score=c.experience_score,
         education_score=c.education_score,
         recommendation=c.recommendation,
+        match_explanation=c.match_explanation,
         missing_skills=_parse_json_field(c.missing_skills_json),
         stage=c.stage,
         interview_questions=_parse_json_field(c.interview_questions_json),
@@ -64,6 +65,7 @@ def _to_list_response(c: Candidate) -> CandidateListResponse:
         skills=_parse_json_field(c.skills_json),
         overall_score=c.overall_score,
         recommendation=c.recommendation,
+        match_explanation=c.match_explanation,
         stage=c.stage,
         job_title=c.job_title,
         created_at=c.created_at,
@@ -117,6 +119,7 @@ class CandidateService:
             candidate.experience_score = score_data.get("experience_score")
             candidate.education_score = score_data.get("education_score")
             candidate.recommendation = score_data.get("recommendation")
+            candidate.match_explanation = score_data.get("match_explanation")
             candidate.missing_skills_json = json.dumps(score_data.get("missing_skills", []))
 
         self.session.add(candidate)
@@ -154,6 +157,7 @@ class CandidateService:
         candidate.experience_score = score_data.get("experience_score")
         candidate.education_score = score_data.get("education_score")
         candidate.recommendation = score_data.get("recommendation")
+        candidate.match_explanation = score_data.get("match_explanation")
         candidate.missing_skills_json = json.dumps(score_data.get("missing_skills", []))
 
         await self.session.commit()
@@ -164,6 +168,7 @@ class CandidateService:
         self,
         candidate_id: UUID,
         job_title: Optional[str] = None,
+        experience_level: Optional[str] = None,
         focus_skills: Optional[list[str]] = None,
     ) -> CandidateResponse:
         """Generate personalized interview questions for a candidate."""
@@ -177,8 +182,9 @@ class CandidateService:
 
         skills = focus_skills or _parse_json_field(candidate.skills_json)[:8]
         jt = job_title or candidate.job_title or "Software Developer"
+        exp_level = experience_level or "Mid-Level"
 
-        questions = await self._ai_generate_interview_questions(jt, skills, candidate.resume_text or "")
+        questions = await self._ai_generate_interview_questions(jt, exp_level, skills, candidate.resume_text or "")
 
         candidate.interview_questions_json = json.dumps(questions)
         await self.session.commit()
@@ -403,6 +409,7 @@ Return a JSON object:
   "experience_score": <0-100>,
   "education_score": <0-100>,
   "recommendation": "Highly Recommended" | "Recommended" | "Consider" | "Not Recommended",
+  "match_explanation": "A short, concise explanation (1-2 sentences) of why this candidate is a good/bad match.",
   "missing_skills": ["skill1", "skill2", ...]
 }}
 
@@ -440,61 +447,63 @@ Return ONLY the JSON object."""
             "experience_score": exp_score,
             "education_score": 70.0,
             "recommendation": rec,
+            "match_explanation": f"Candidate matches {overlap} key skills and has {exp} years of experience.",
             "missing_skills": [],
         }
 
     async def _ai_generate_interview_questions(
-        self, job_title: str, skills: list[str], resume_text: str
-    ) -> list[dict]:
+        self, job_title: str, experience_level: str, skills: list[str], resume_text: str
+    ) -> dict:
         """Generate personalized interview questions."""
         skills_str = ', '.join(skills[:10]) if skills else 'general software development'
-        prompt = f"""You are an expert technical interviewer. Generate 10 personalized interview questions for a {job_title} candidate.
+        prompt = f"""You are an expert technical interviewer. Generate personalized interview questions for a {experience_level} {job_title} candidate.
 
 Candidate skills: {skills_str}
 
-Create questions in these categories:
-- Technical (based on their skills)
-- Problem Solving  
-- Behavioral
-- System Design
+Return a JSON object with exactly these fields:
+{{
+  "technical_questions": ["question 1", "question 2", ...],
+  "behavioral_questions": ["question 1", "question 2", ...],
+  "coding_questions": ["question 1", "question 2", ...],
+  "evaluation_criteria": ["criterion 1", "criterion 2", ...]
+}}
 
-Return a JSON array:
-[
-  {{"category": "Technical", "question": "...", "difficulty": "Easy|Medium|Hard"}},
-  ...
-]
-
-Return ONLY the JSON array."""
+Return ONLY the JSON object."""
 
         try:
             response_text = await self._call_ai(prompt)
-            json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
         except Exception as e:
             logger.warning("ai_questions_failed", error=str(e))
 
         # Fallback questions
-        return self._generate_fallback_questions(job_title, skills)
+        return self._generate_fallback_questions(job_title, skills, experience_level)
 
-    def _generate_fallback_questions(self, job_title: str, skills: list[str]) -> list[dict]:
+    def _generate_fallback_questions(self, job_title: str, skills: list[str], experience_level: str) -> dict:
         """Generate fallback interview questions."""
         tech_questions = []
-        for skill in skills[:4]:
-            tech_questions.append({
-                "category": "Technical",
-                "question": f"Can you explain your experience with {skill} and describe a project where you used it effectively?",
-                "difficulty": "Medium"
-            })
+        for skill in skills[:3]:
+            tech_questions.append(f"Can you explain your experience with {skill}?")
+            
+        tech_questions.append(f"What are the key principles you follow when building {job_title} solutions?")
 
-        return tech_questions + [
-            {"category": "Technical", "question": f"What are the key principles you follow when building {job_title} solutions?", "difficulty": "Medium"},
-            {"category": "Problem Solving", "question": "Describe a time when you faced a complex technical challenge. How did you approach solving it?", "difficulty": "Medium"},
-            {"category": "Problem Solving", "question": "How do you debug a production issue under time pressure?", "difficulty": "Hard"},
-            {"category": "Behavioral", "question": "Tell me about a time you had to work with a difficult team member. How did you handle it?", "difficulty": "Medium"},
-            {"category": "Behavioral", "question": "How do you prioritize tasks when you have multiple deadlines?", "difficulty": "Easy"},
-            {"category": "System Design", "question": f"Design a scalable system for a high-traffic {job_title} application.", "difficulty": "Hard"},
-        ]
+        return {{
+            "technical_questions": tech_questions,
+            "behavioral_questions": [
+                "Tell me about a time you had to work with a difficult team member. How did you handle it?",
+                "How do you prioritize tasks when you have multiple deadlines?"
+            ],
+            "coding_questions": [
+                f"Design a scalable system for a high-traffic {job_title} application."
+            ],
+            "evaluation_criteria": [
+                f"Demonstrates strong knowledge of {', '.join(skills[:3]) if skills else 'core concepts'}.",
+                "Communicates effectively and handles behavioral situations well.",
+                f"Understands system architecture suitable for a {experience_level} role."
+            ]
+        }}
 
     async def _call_ai(self, prompt: str) -> str:
         """Call the free AI model (Pollinations or fallback)."""
