@@ -421,7 +421,16 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     function renderLeaveChart(data: Record<string, number>) {
       const ctx = document.getElementById("leave-chart") as HTMLCanvasElement;
       if (!ctx) return;
-      if (leaveChartInstance) leaveChartInstance.destroy();
+      if (leaveChartInstance) {
+        leaveChartInstance.data.datasets[0].data = [
+          data.pending || 0,
+          data.approved || 0,
+          data.rejected || 0,
+          data.cancelled || 0,
+        ];
+        leaveChartInstance.update();
+        return;
+      }
 
       leaveChartInstance = new Chart(ctx, {
         type: "doughnut",
@@ -476,7 +485,14 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         CHART_COLORS.emerald,
       ];
 
-      if (deptChartInstance) deptChartInstance.destroy();
+      if (deptChartInstance) {
+        deptChartInstance.data.labels = data.map((d) => d.department);
+        deptChartInstance.data.datasets[0].data = data.map((d) => d.count);
+        deptChartInstance.data.datasets[0].backgroundColor = data.map((_, i) => colors[i % colors.length] + "cc");
+        deptChartInstance.data.datasets[0].borderColor = data.map((_, i) => colors[i % colors.length]);
+        deptChartInstance.update();
+        return;
+      }
       deptChartInstance = new Chart(ctx, {
         type: "bar",
         data: {
@@ -554,8 +570,19 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       // Score brackets based on average (simulated distribution)
       const avg = recData.average_score || 75;
       const total = recData.total_candidates || 5;
+      const newData = [
+        Math.floor(total * 0.05),
+        Math.floor(total * 0.1),
+        Math.floor(total * 0.25),
+        Math.floor(total * 0.35),
+        Math.floor(total * 0.25),
+      ];
 
-      if (scoreChartInstance) scoreChartInstance.destroy();
+      if (scoreChartInstance) {
+        scoreChartInstance.data.datasets[0].data = newData;
+        scoreChartInstance.update();
+        return;
+      }
       scoreChartInstance = new Chart(ctx, {
         type: "bar",
         data: {
@@ -608,5 +635,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     (window as any).reloadAnalytics = loadAnalytics;
 
     Promise.all([loadDepartments(), loadAnalytics()]);
+    // Poll every 5 seconds for real-time updates
+    setInterval(loadAnalytics, 5000);
   </script>
 </DashboardLayout>

@@ -95,6 +95,10 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
       cyan: "#06b6d4",
     };
 
+    let dashDeptChartInstance: any = null;
+    let dashLeaveChartInstance: any = null;
+    let dashEmploymentChartInstance: any = null;
+
     async function loadDashboardCharts() {
       const token = sessionStorage.getItem("access_token");
       if (!token) return;
@@ -176,7 +180,15 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
         CHART_COLORS.emerald,
         CHART_COLORS.cyan,
       ];
-      new (window as any).Chart(ctx, {
+      if (dashDeptChartInstance) {
+        dashDeptChartInstance.data.labels = data.map((d) => d.department);
+        dashDeptChartInstance.data.datasets[0].data = data.map((d) => d.count);
+        dashDeptChartInstance.data.datasets[0].backgroundColor = data.map((_, i) => colors[i % colors.length] + "cc");
+        dashDeptChartInstance.data.datasets[0].borderColor = data.map((_, i) => colors[i % colors.length]);
+        dashDeptChartInstance.update();
+        return;
+      }
+      dashDeptChartInstance = new (window as any).Chart(ctx, {
         type: "bar",
         data: {
           labels: data.map((d) => d.department),
@@ -214,7 +226,17 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
         "dash-leave-chart",
       ) as HTMLCanvasElement;
       if (!ctx) return;
-      new (window as any).Chart(ctx, {
+      if (dashLeaveChartInstance) {
+        dashLeaveChartInstance.data.datasets[0].data = [
+          data.pending || 0,
+          data.approved || 0,
+          data.rejected || 0,
+          data.cancelled || 0,
+        ];
+        dashLeaveChartInstance.update();
+        return;
+      }
+      dashLeaveChartInstance = new (window as any).Chart(ctx, {
         type: "doughnut",
         data: {
           labels: ["Pending", "Approved", "Rejected", "Cancelled"],
@@ -271,7 +293,14 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
         CHART_COLORS.amber,
         CHART_COLORS.emerald,
       ];
-      new (window as any).Chart(ctx, {
+      if (dashEmploymentChartInstance) {
+        dashEmploymentChartInstance.data.labels = labels;
+        dashEmploymentChartInstance.data.datasets[0].data = values;
+        dashEmploymentChartInstance.data.datasets[0].backgroundColor = colors.slice(0, labels.length).map((c) => c + "cc");
+        dashEmploymentChartInstance.update();
+        return;
+      }
+      dashEmploymentChartInstance = new (window as any).Chart(ctx, {
         type: "doughnut",
         data: {
           labels,
@@ -313,7 +342,7 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
           '<p class="text-slate-500 text-sm text-center py-4">No recent hires</p>';
         return;
       }
-      container.innerHTML = recent
+      const newHtml = recent
         .map(
           (emp: any) => `
         <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800/40 transition-colors">
@@ -329,8 +358,13 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
       `,
         )
         .join("");
+        if (container.innerHTML !== newHtml) {
+          container.innerHTML = newHtml;
+        }
     }
 
     loadDashboardCharts();
+    // Poll every 5 seconds for real-time updates
+    setInterval(loadDashboardCharts, 5000);
   </script>
 </DashboardLayout>
