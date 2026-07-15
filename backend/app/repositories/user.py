@@ -16,10 +16,23 @@ class UserRepository(BaseRepository[User]):
     def __init__(self, session: AsyncSession):
         super().__init__(User, session)
 
+    async def get_by_id(self, id: UUID) -> Optional[User]:
+        """Get a record by ID."""
+        from sqlalchemy.orm import selectinload
+        result = await self.session.execute(
+            select(User)
+            .options(selectinload(User.role), selectinload(User.organization))
+            .where(User.id == id)
+        )
+        return result.scalar_one_or_none()
+
     async def get_by_email(self, email: str) -> Optional[User]:
         """Get user by email."""
+        from sqlalchemy.orm import selectinload
         result = await self.session.execute(
-            select(User).where(User.email == email)
+            select(User)
+            .options(selectinload(User.role), selectinload(User.organization))
+            .where(User.email == email)
         )
         return result.scalar_one_or_none()
 
