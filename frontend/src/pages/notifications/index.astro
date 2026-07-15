@@ -85,7 +85,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     }
 
     const userRole = getRoleFromToken();
-    const ALLOWED_ROLES = ["hr", "admin", "superadmin", "manager"];
+    const ALLOWED_ROLES = ["hr", "admin", "superadmin", "manager", "employee"];
 
     if (!ALLOWED_ROLES.includes(userRole)) {
       // Hide all page content
