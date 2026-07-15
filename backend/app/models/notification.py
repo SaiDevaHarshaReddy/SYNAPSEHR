@@ -23,4 +23,4 @@ class Notification(BaseModel):
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
-    employee = relationship("Employee", back_populates="notifications", lazy="selectin")
+    employee = relationship("Employee", back_populates="notifications")

@@ -26,5 +26,5 @@ class LeaveBalance(BaseModel):
     year: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # Relationships
-    employee = relationship("Employee", back_populates="leave_balances", lazy="selectin")
-    leave_type = relationship("LeaveType", back_populates="leave_balances", lazy="selectin")
+    employee = relationship("Employee", back_populates="leave_balances")
+    leave_type = relationship("LeaveType", back_populates="leave_balances")

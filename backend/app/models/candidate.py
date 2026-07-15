@@ -60,4 +60,4 @@ class Candidate(BaseModel):
     interview_questions_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    organization = relationship("Organization", lazy="selectin")
+    organization = relationship("Organization")

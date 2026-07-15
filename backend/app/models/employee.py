@@ -19,7 +19,7 @@ class Employee(BaseModel):
         UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False
     )
     department_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("departments.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("departments.id"), nullable=False, index=True
     )
     employee_code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -34,18 +34,18 @@ class Employee(BaseModel):
         UUID(as_uuid=True), ForeignKey("employees.id"), nullable=True
     )
     employment_type: Mapped[str] = mapped_column(String(50), default="full_time", nullable=False)
-    status: Mapped[str] = mapped_column(String(20), default="active", nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="active", nullable=False, index=True)
 
     # Relationships
-    user = relationship("User", back_populates="employee", lazy="selectin")
-    department = relationship("Department", back_populates="employees", foreign_keys=[department_id], lazy="selectin")
-    manager = relationship("Employee", remote_side="Employee.id", back_populates="subordinates", foreign_keys="Employee.manager_id", lazy="selectin")
-    subordinates = relationship("Employee", back_populates="manager", foreign_keys="Employee.manager_id", lazy="selectin")
-    managed_departments = relationship("Department", foreign_keys="Department.manager_id", back_populates="manager", lazy="selectin")
-    leave_requests = relationship("LeaveRequest", back_populates="employee", foreign_keys="LeaveRequest.employee_id", lazy="selectin")
-    leave_balances = relationship("LeaveBalance", back_populates="employee", lazy="selectin")
-    conversations = relationship("Conversation", back_populates="employee", lazy="selectin")
-    notifications = relationship("Notification", back_populates="employee", lazy="selectin")
+    user = relationship("User", back_populates="employee")
+    department = relationship("Department", back_populates="employees", foreign_keys=[department_id])
+    manager = relationship("Employee", remote_side="Employee.id", back_populates="subordinates", foreign_keys="Employee.manager_id")
+    subordinates = relationship("Employee", back_populates="manager", foreign_keys="Employee.manager_id")
+    managed_departments = relationship("Department", foreign_keys="Department.manager_id", back_populates="manager")
+    leave_requests = relationship("LeaveRequest", back_populates="employee", foreign_keys="LeaveRequest.employee_id")
+    leave_balances = relationship("LeaveBalance", back_populates="employee")
+    conversations = relationship("Conversation", back_populates="employee")
+    notifications = relationship("Notification", back_populates="employee")
 
     @property
     def full_name(self) -> str:

@@ -23,6 +23,6 @@ class LeaveType(BaseModel):
     is_paid: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     # Relationships
-    organization = relationship("Organization", back_populates="leave_types", lazy="selectin")
-    leave_balances = relationship("LeaveBalance", back_populates="leave_type", lazy="selectin")
-    leave_requests = relationship("LeaveRequest", back_populates="leave_type", lazy="selectin")
+    organization = relationship("Organization", back_populates="leave_types")
+    leave_balances = relationship("LeaveBalance", back_populates="leave_type")
+    leave_requests = relationship("LeaveRequest", back_populates="leave_type")

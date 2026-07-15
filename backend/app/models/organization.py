@@ -20,7 +20,7 @@ class Organization(BaseModel):
     address: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    departments = relationship("Department", back_populates="organization", lazy="selectin")
-    users = relationship("User", back_populates="organization", lazy="selectin")
-    leave_types = relationship("LeaveType", back_populates="organization", lazy="selectin")
-    policy_documents = relationship("PolicyDocument", back_populates="organization", lazy="selectin")
+    departments = relationship("Department", back_populates="organization")
+    users = relationship("User", back_populates="organization")
+    leave_types = relationship("LeaveType", back_populates="organization")
+    policy_documents = relationship("PolicyDocument", back_populates="organization")

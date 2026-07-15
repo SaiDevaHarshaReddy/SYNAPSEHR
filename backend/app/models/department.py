@@ -24,6 +24,6 @@ class Department(BaseModel):
     )
 
     # Relationships
-    organization = relationship("Organization", back_populates="departments", lazy="selectin")
-    manager = relationship("Employee", foreign_keys=[manager_id], back_populates="managed_departments", lazy="selectin")
-    employees = relationship("Employee", back_populates="department", foreign_keys="Employee.department_id", lazy="selectin")
+    organization = relationship("Organization", back_populates="departments")
+    manager = relationship("Employee", foreign_keys=[manager_id], back_populates="managed_departments")
+    employees = relationship("Employee", back_populates="department", foreign_keys="Employee.department_id")

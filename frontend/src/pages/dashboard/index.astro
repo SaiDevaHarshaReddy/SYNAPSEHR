@@ -98,54 +98,46 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
     async function loadDashboardCharts() {
       const token = sessionStorage.getItem("access_token");
       if (!token) return;
-      const headers: Record<string, string> = {
-        Authorization: `Bearer ${token}`,
-      };
 
-      // Load department distribution for bar chart
-      try {
-        const deptData = await api.getDepartmentDistribution();
-        if (deptData && deptData.length > 0) {
-          renderDeptChart(deptData);
-        } else {
-          document.getElementById("dash-dept-empty")!.classList.remove("hidden");
-        }
-      } catch {
+      const [deptData, leaveData, employeesRes, insightsRes] = await Promise.allSettled([
+        api.getDepartmentDistribution(),
+        api.getLeaveAnalytics(),
+        api.getEmployees({ page: 1, limit: 100 }),
+        api.get("/api/v1/analytics/insights")
+      ]);
+
+      // Handle Department Data
+      if (deptData.status === "fulfilled" && deptData.value && deptData.value.length > 0) {
+        renderDeptChart(deptData.value);
+      } else {
         document.getElementById("dash-dept-empty")!.classList.remove("hidden");
       }
 
-      // Load leave analytics for doughnut chart
-      try {
-        const leaveData = await api.getLeaveAnalytics();
-        if (leaveData) {
-          const hasData = Object.values(leaveData).some((v: any) => v > 0);
-          if (hasData) {
-            renderLeaveChart(leaveData);
-          } else {
-            document.getElementById("dash-leave-empty")!.classList.remove("hidden");
-          }
+      // Handle Leave Analytics
+      if (leaveData.status === "fulfilled" && leaveData.value) {
+        const hasData = Object.values(leaveData.value).some((v: any) => v > 0);
+        if (hasData) {
+          renderLeaveChart(leaveData.value);
+        } else {
+          document.getElementById("dash-leave-empty")!.classList.remove("hidden");
         }
-      } catch {
+      } else {
         document.getElementById("dash-leave-empty")!.classList.remove("hidden");
       }
 
-      // Load employees for employment type chart and recent hires
-      try {
-        const response = await api.getEmployees({ page: 1, limit: 100 });
-        const employees = response.data || [];
+      // Handle Employees Data
+      if (employeesRes.status === "fulfilled" && employeesRes.value && employeesRes.value.data) {
+        const employees = employeesRes.value.data;
         if (employees.length > 0) {
           renderEmploymentChart(employees);
           renderRecentHires(employees);
         }
-      } catch {}
+      }
 
-      // Load AI HR Insights
-      try {
-        const insightsRes = await api.get("/api/v1/analytics/insights");
-        if (insightsRes && insightsRes.data) {
-          renderAIInsights(insightsRes.data);
-        }
-      } catch (err) {
+      // Handle AI HR Insights
+      if (insightsRes.status === "fulfilled" && insightsRes.value && insightsRes.value.data) {
+        renderAIInsights(insightsRes.value.data);
+      } else {
         document.getElementById("dash-ai-insights")!.innerHTML = '<div class="text-slate-500 text-sm py-2">Failed to load insights.</div>';
       }
     }

@@ -27,5 +27,5 @@ class Conversation(BaseModel):
     )
 
     # Relationships
-    employee = relationship("Employee", back_populates="conversations", lazy="selectin")
-    messages = relationship("Message", back_populates="conversation", lazy="selectin", order_by="Message.created_at")
+    employee = relationship("Employee", back_populates="conversations")
+    messages = relationship("Message", back_populates="conversation", order_by="Message.created_at")

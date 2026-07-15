@@ -27,6 +27,6 @@ class User(BaseModel):
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    organization = relationship("Organization", back_populates="users", lazy="selectin")
-    role = relationship("Role", back_populates="users", lazy="selectin")
-    employee = relationship("Employee", back_populates="user", uselist=False, lazy="selectin")
+    organization = relationship("Organization", back_populates="users")
+    role = relationship("Role", back_populates="users")
+    employee = relationship("Employee", back_populates="user", uselist=False)

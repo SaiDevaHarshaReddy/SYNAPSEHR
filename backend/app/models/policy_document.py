@@ -27,5 +27,5 @@ class PolicyDocument(BaseModel):
     )
 
     # Relationships
-    organization = relationship("Organization", back_populates="policy_documents", lazy="selectin")
-    uploader = relationship("User", lazy="selectin")
+    organization = relationship("Organization", back_populates="policy_documents")
+    uploader = relationship("User")

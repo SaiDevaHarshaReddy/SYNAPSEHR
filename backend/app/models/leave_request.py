@@ -16,7 +16,7 @@ class LeaveRequest(BaseModel):
     __tablename__ = "leave_requests"
 
     employee_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("employees.id"), nullable=False, index=True
     )
     leave_type_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("leave_types.id"), nullable=False
@@ -24,7 +24,7 @@ class LeaveRequest(BaseModel):
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[date] = mapped_column(Date, nullable=False)
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True, nullable=False)
     approved_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("employees.id"), nullable=True
     )
@@ -32,6 +32,6 @@ class LeaveRequest(BaseModel):
     is_read: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     # Relationships
-    employee = relationship("Employee", foreign_keys=[employee_id], back_populates="leave_requests", lazy="selectin")
-    leave_type = relationship("LeaveType", back_populates="leave_requests", lazy="selectin")
-    approver = relationship("Employee", foreign_keys=[approved_by], lazy="selectin")
+    employee = relationship("Employee", foreign_keys=[employee_id], back_populates="leave_requests")
+    leave_type = relationship("LeaveType", back_populates="leave_requests")
+    approver = relationship("Employee", foreign_keys=[approved_by])

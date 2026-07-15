@@ -28,5 +28,5 @@ class GeneratedDocument(BaseModel):
     )
 
     # Relationships
-    employee = relationship("Employee", lazy="selectin")
-    generator = relationship("User", lazy="selectin")
+    employee = relationship("Employee")
+    generator = relationship("User")

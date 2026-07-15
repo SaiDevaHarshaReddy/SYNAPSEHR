@@ -22,4 +22,4 @@ class Message(BaseModel):
     token_usage: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Relationships
-    conversation = relationship("Conversation", back_populates="messages", lazy="selectin")
+    conversation = relationship("Conversation", back_populates="messages")

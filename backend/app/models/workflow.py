@@ -29,8 +29,8 @@ class Workflow(BaseModel):
     )
 
     # Relationships
-    employee = relationship("Employee", lazy="selectin")
-    steps = relationship("WorkflowStep", back_populates="workflow", lazy="selectin", order_by="WorkflowStep.created_at")
+    employee = relationship("Employee")
+    steps = relationship("WorkflowStep", back_populates="workflow", order_by="WorkflowStep.created_at")
 
 
 class WorkflowStep(BaseModel):
@@ -48,4 +48,4 @@ class WorkflowStep(BaseModel):
     output: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     # Relationships
-    workflow = relationship("Workflow", back_populates="steps", lazy="selectin")
+    workflow = relationship("Workflow", back_populates="steps")

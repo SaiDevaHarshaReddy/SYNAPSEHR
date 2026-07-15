@@ -11,7 +11,7 @@ logger = structlog.get_logger()
 
 
 class PerformanceMiddleware(BaseHTTPMiddleware):
-    """Track request duration and log slow requests."""
+    """Track request duration and log all requests for performance debugging."""
 
     SLOW_THRESHOLD_MS = 1000
 
@@ -24,6 +24,15 @@ class PerformanceMiddleware(BaseHTTPMiddleware):
 
         response.headers["X-Response-Time"] = f"{duration_ms}ms"
         response.headers["X-Request-Path"] = request.url.path
+
+        # Log every request's performance
+        logger.info(
+            "api_request",
+            path=request.url.path,
+            method=request.method,
+            duration_ms=duration_ms,
+            status_code=response.status_code
+        )
 
         if duration_ms > self.SLOW_THRESHOLD_MS:
             logger.warning(

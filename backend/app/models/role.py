@@ -25,4 +25,4 @@ class Role(BaseModel):
     )
 
     # Relationships
-    users: Mapped[list["User"]] = relationship("User", back_populates="role", lazy="selectin")
+    users: Mapped[list["User"]] = relationship("User", back_populates="role")

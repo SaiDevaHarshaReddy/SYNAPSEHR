@@ -183,8 +183,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         document.getElementById('actions-header')?.classList.remove('hidden');
       }
 
-      // Fetch balances
-      const balances = await api.getLeaveBalance();
+      // Fetch balances and history concurrently
+      const [balances, history] = await Promise.all([
+        api.getLeaveBalance().catch(() => []),
+        api.getLeaveHistory().catch(() => [])
+      ]);
+
       let usedTotal = 0;
       
       // Default to showing 0 if no records found
@@ -209,9 +213,6 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       
       const usedEl = document.getElementById('balance-used');
       if (usedEl) usedEl.textContent = usedTotal.toString();
-
-      // Fetch history
-      const history = await api.getLeaveHistory();
       if (leaveHistoryTable) {
         if (!history || history.length === 0) {
           leaveHistoryTable.innerHTML = `
