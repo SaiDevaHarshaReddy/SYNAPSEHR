@@ -322,12 +322,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
     
-    const promises: Promise<any>[] = [];
-    
-    // Make sure departments are loaded for lists/selects
+    // Make sure departments are loaded for lists/selects BEFORE rendering employees
     if (departments.length === 0) {
-      promises.push(loadDepartmentsList());
+      await loadDepartmentsList();
     }
+    
+    const promises: Promise<any>[] = [];
 
     if (id) {
       listView?.classList.add('hidden');
