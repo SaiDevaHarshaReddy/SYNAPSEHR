@@ -82,6 +82,7 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
   </div>
 
   <script>
+    import Chart from "chart.js/auto";
     import { api } from "../../services/api";
 
     const CHART_COLORS = {
@@ -188,7 +189,7 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
         dashDeptChartInstance.update();
         return;
       }
-      dashDeptChartInstance = new (window as any).Chart(ctx, {
+      dashDeptChartInstance = new Chart(ctx, {
         type: "bar",
         data: {
           labels: data.map((d) => d.department),
@@ -236,7 +237,7 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
         dashLeaveChartInstance.update();
         return;
       }
-      dashLeaveChartInstance = new (window as any).Chart(ctx, {
+      dashLeaveChartInstance = new Chart(ctx, {
         type: "doughnut",
         data: {
           labels: ["Pending", "Approved", "Rejected", "Cancelled"],
@@ -300,7 +301,7 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
         dashEmploymentChartInstance.update();
         return;
       }
-      dashEmploymentChartInstance = new (window as any).Chart(ctx, {
+      dashEmploymentChartInstance = new Chart(ctx, {
         type: "doughnut",
         data: {
           labels,
