@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
@@ -62,6 +63,7 @@ def create_app() -> FastAPI:
     )
 
      #Register middleware (order matters - last registered = first executed)
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(PerformanceMiddleware)
     app.add_middleware(AIRateLimitMiddleware)
