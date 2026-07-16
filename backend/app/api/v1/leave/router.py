@@ -73,7 +73,7 @@ async def get_leave_history(
     service = LeaveService(db)
 
     # If the user is admin/hr and no employee_id is specified, return organization history
-    if employee_id is None and current_user.get("role") in ["admin", "hr"]:
+    if employee_id is None and current_user.get("role") in ["admin", "hr", "administrator"]:
         history = await service.get_organization_leave_history(UUID(current_user["organization_id"]))
     else:
         if employee_id is None:
