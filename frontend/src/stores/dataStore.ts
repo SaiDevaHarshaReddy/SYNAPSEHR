@@ -7,6 +7,11 @@ export const departmentsStore = atom<Department[]>([]);
 export const leaveRequestsStore = atom<LeaveRequest[]>([]);
 export const knowledgeStore = atom<any[]>([]);
 export const candidatesStore = atom<any[]>([]); // Using any since Candidate might not be in types yet
+export const dashboardMetricsStore = atom<any>(null);
+export const recruitmentStatsStore = atom<any>(null);
+export const deptDistributionStore = atom<any>(null);
+export const leaveAnalyticsStore = atom<any>(null);
+export const aiInsightsStore = atom<any>(null);
 
 export const dataStoreStatus = atom<{
   isLoading: boolean;
@@ -24,12 +29,15 @@ export async function preloadData() {
       api.getEmployees({ page: 1, limit: 100 }),
       api.getLeaveHistory().catch(() => []), 
       api.listKnowledgeDocuments().catch(() => []),
-      // Recruitment API is untyped, we use the generic post/get in api.ts or the stats one. 
-      // For candidates, we assume there's a candidates route. 
-      api.get('/api/v1/recruitment/candidates').catch(() => []) 
+      api.get('/api/v1/recruitment/candidates').catch(() => []),
+      api.getDashboardMetrics().catch(() => null),
+      api.get('/api/v1/recruitment/stats').catch(() => null),
+      api.getDepartmentDistribution().catch(() => []),
+      api.getLeaveAnalytics().catch(() => null),
+      api.get('/api/v1/analytics/insights').catch(() => null)
     ];
 
-    const [depsRes, empsRes, leaves, knowledge, candidatesRes] = await Promise.allSettled(promises);
+    const [depsRes, empsRes, leaves, knowledge, candidatesRes, dashMetrics, recStats, deptDist, leaveAnalyt, aiInsights] = await Promise.allSettled(promises);
 
     if (depsRes.status === 'fulfilled') {
       departmentsStore.set((depsRes.value as any)?.data || []);
@@ -46,6 +54,21 @@ export async function preloadData() {
     if (candidatesRes.status === 'fulfilled') {
       const data = (candidatesRes.value as any)?.data || (candidatesRes.value as any) || [];
       candidatesStore.set(data);
+    }
+    if (dashMetrics.status === 'fulfilled' && dashMetrics.value) {
+      dashboardMetricsStore.set(dashMetrics.value);
+    }
+    if (recStats.status === 'fulfilled' && recStats.value) {
+      recruitmentStatsStore.set((recStats.value as any)?.data || recStats.value);
+    }
+    if (deptDist.status === 'fulfilled' && deptDist.value) {
+      deptDistributionStore.set(deptDist.value);
+    }
+    if (leaveAnalyt.status === 'fulfilled' && leaveAnalyt.value) {
+      leaveAnalyticsStore.set(leaveAnalyt.value);
+    }
+    if (aiInsights.status === 'fulfilled' && aiInsights.value) {
+      aiInsightsStore.set((aiInsights.value as any)?.data || aiInsights.value);
     }
     
     dataStoreStatus.set({ isLoading: false, hasLoaded: true });

@@ -168,68 +168,73 @@
 
 <script>
   import { api } from "../../services/api";
+  import { dashboardMetricsStore, recruitmentStatsStore, departmentsStore } from "../../stores/dataStore";
 
-  async function loadDashboardStats() {
-    const token = sessionStorage.getItem("access_token");
-    if (!token) return;
+  let unsubscribes: any[] = [];
+
+  function initStatsGrid() {
+    unsubscribes.forEach(unsub => unsub());
+    unsubscribes = [];
 
     // Dashboard metrics (employees, pending, today's leave)
-    try {
-      const m = await api.getDashboardMetrics();
+    unsubscribes.push(dashboardMetricsStore.subscribe(m => {
       if (m) {
-        document.getElementById("stat-employees")!.textContent = String(
-          m.total_employees ?? 0,
-        );
-        document.getElementById("stat-pending")!.textContent = String(
-          m.pending_approvals ?? 0,
-        );
-        document.getElementById("stat-today-leave")!.textContent = String(
-          m.todays_leave ?? 0,
-        );
+        const elEmp = document.getElementById("stat-employees");
+        if(elEmp) elEmp.textContent = String(m.total_employees ?? 0);
+        
+        const elPending = document.getElementById("stat-pending");
+        if(elPending) elPending.textContent = String(m.pending_approvals ?? 0);
+        
+        const elLeave = document.getElementById("stat-today-leave");
+        if(elLeave) elLeave.textContent = String(m.todays_leave ?? 0);
+      } else {
+        // Fallback fetch if empty
+        api.getDashboardMetrics().then(data => {
+          if(data) dashboardMetricsStore.set(data);
+        }).catch(() => {});
       }
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        // api.ts handles redirecting to login on 401 already
-        return;
-      }
-      console.warn("Dashboard metrics failed:", err);
-    }
+    }));
 
     // Recruitment stats (candidates)
-    try {
-      const d = await api.get("/api/v1/recruitment/stats").then((r: any) => r.data || {});
+    unsubscribes.push(recruitmentStatsStore.subscribe(d => {
       if (d) {
-        document.getElementById("stat-candidates")!.textContent = String(
-          d.total_candidates ?? 0,
-        );
+        const elCand = document.getElementById("stat-candidates");
+        if(elCand) elCand.textContent = String(d.total_candidates ?? 0);
+        
         if (d.hired > 0) {
-          document
-            .getElementById("stat-candidate-hired")!
-            .classList.remove("hidden");
-          document.getElementById("stat-hired-count")!.textContent = String(
-            d.hired,
-          );
+          const elHired = document.getElementById("stat-candidate-hired");
+          if(elHired) elHired.classList.remove("hidden");
+          const elHiredCount = document.getElementById("stat-hired-count");
+          if(elHiredCount) elHiredCount.textContent = String(d.hired);
         }
+      } else {
+        // Fallback fetch
+        api.get("/api/v1/recruitment/stats").then((res: any) => {
+          if(res && res.data) recruitmentStatsStore.set(res.data);
+        }).catch(() => {});
       }
-    } catch {
-      /* non-critical */
-    }
+    }));
 
-    // Load department count for context
-    try {
-      const response = await api.getDepartments();
-      const deptCount = (response.data || []).length;
-      if (deptCount > 0) {
-        document
-          .getElementById("stat-employees-depts")!
-          .classList.remove("hidden");
-        document.getElementById("stat-dept-count")!.textContent =
-          String(deptCount);
+    // Department count
+    unsubscribes.push(departmentsStore.subscribe(deps => {
+      if (deps && deps.length > 0) {
+        const elDepts = document.getElementById("stat-employees-depts");
+        if(elDepts) elDepts.classList.remove("hidden");
+        const elDeptCount = document.getElementById("stat-dept-count");
+        if(elDeptCount) elDeptCount.textContent = String(deps.length);
+      } else {
+        // Fallback fetch
+        api.getDepartments().then((res: any) => {
+          if(res && res.data) departmentsStore.set(res.data);
+        }).catch(() => {});
       }
-    } catch {
-      /* non-critical */
-    }
+    }));
   }
 
-  loadDashboardStats();
+  document.addEventListener('astro:page-load', () => {
+    // Only init if we are on dashboard (or any page that renders this grid, but it's mainly dashboard)
+    if (document.getElementById("stats-grid")) {
+      initStatsGrid();
+    }
+  });
 </script>

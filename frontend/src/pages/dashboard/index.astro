@@ -84,6 +84,14 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
   <script>
     import Chart from "chart.js/auto";
     import { api } from "../../services/api";
+    import { 
+      deptDistributionStore, 
+      leaveAnalyticsStore, 
+      employeesStore, 
+      aiInsightsStore,
+      dashboardMetricsStore,
+      recruitmentStatsStore 
+    } from "../../stores/dataStore";
 
     const CHART_COLORS = {
       indigo: "#6366f1",
@@ -99,56 +107,80 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
     let dashDeptChartInstance: any = null;
     let dashLeaveChartInstance: any = null;
     let dashEmploymentChartInstance: any = null;
+    let unsubscribes: any[] = [];
 
-    async function loadDashboardCharts() {
-      const token = sessionStorage.getItem("access_token");
-      if (!token) return;
-
-      const [deptData, leaveData, employeesRes, insightsRes] = await Promise.allSettled([
-        api.getDepartmentDistribution(),
-        api.getLeaveAnalytics(),
-        api.getEmployees({ page: 1, limit: 100 }),
-        api.get("/api/v1/analytics/insights")
-      ]);
-
-      // Handle Department Data
-      if (deptData.status === "fulfilled" && deptData.value && deptData.value.length > 0) {
-        renderDeptChart(deptData.value);
-      } else {
-        document.getElementById("dash-dept-empty")!.classList.remove("hidden");
+    async function fetchMissingDashboardData() {
+      // If stores are empty, we fetch them individually (fallback)
+      if (!deptDistributionStore.get() || deptDistributionStore.get().length === 0) {
+        api.getDepartmentDistribution().then(d => { if(d) deptDistributionStore.set(d); }).catch(() => {});
       }
-
-      // Handle Leave Analytics
-      if (leaveData.status === "fulfilled" && leaveData.value) {
-        const hasData = Object.values(leaveData.value).some((v: any) => v > 0);
-        if (hasData) {
-          renderLeaveChart(leaveData.value);
-        } else {
-          document.getElementById("dash-leave-empty")!.classList.remove("hidden");
-        }
-      } else {
-        document.getElementById("dash-leave-empty")!.classList.remove("hidden");
+      if (!leaveAnalyticsStore.get()) {
+        api.getLeaveAnalytics().then(d => { if(d) leaveAnalyticsStore.set(d); }).catch(() => {});
       }
-
-      // Handle Employees Data
-      if (employeesRes.status === "fulfilled" && employeesRes.value && employeesRes.value.data) {
-        const employees = employeesRes.value.data;
-        if (employees.length > 0) {
-          renderEmploymentChart(employees);
-          renderRecentHires(employees);
-        }
+      if (!employeesStore.get() || employeesStore.get().length === 0) {
+        api.getEmployees({ page: 1, limit: 100 }).then(d => { if(d && (d as any).data) employeesStore.set((d as any).data); }).catch(() => {});
       }
-
-      // Handle AI HR Insights
-      if (insightsRes.status === "fulfilled" && insightsRes.value && insightsRes.value.data) {
-        renderAIInsights(insightsRes.value.data);
-      } else {
-        document.getElementById("dash-ai-insights")!.innerHTML = '<div class="text-slate-500 text-sm py-2">Failed to load insights.</div>';
+      if (!aiInsightsStore.get()) {
+        api.get("/api/v1/analytics/insights").then(d => { if(d && (d as any).data) aiInsightsStore.set((d as any).data); }).catch(() => {});
       }
     }
 
+    function initDashboard() {
+      // Clean up previous charts to prevent canvas re-use issues
+      if (dashDeptChartInstance) { dashDeptChartInstance.destroy(); dashDeptChartInstance = null; }
+      if (dashLeaveChartInstance) { dashLeaveChartInstance.destroy(); dashLeaveChartInstance = null; }
+      if (dashEmploymentChartInstance) { dashEmploymentChartInstance.destroy(); dashEmploymentChartInstance = null; }
+      
+      unsubscribes.forEach(unsub => unsub());
+      unsubscribes = [];
+
+      unsubscribes.push(deptDistributionStore.subscribe(deptData => {
+        if (deptData && deptData.length > 0) {
+          document.getElementById("dash-dept-empty")?.classList.add("hidden");
+          renderDeptChart(deptData);
+        } else {
+          document.getElementById("dash-dept-empty")?.classList.remove("hidden");
+        }
+      }));
+
+      unsubscribes.push(leaveAnalyticsStore.subscribe(leaveData => {
+        if (leaveData) {
+          const hasData = Object.values(leaveData).some((v: any) => v > 0);
+          if (hasData) {
+            document.getElementById("dash-leave-empty")?.classList.add("hidden");
+            renderLeaveChart(leaveData);
+          } else {
+            document.getElementById("dash-leave-empty")?.classList.remove("hidden");
+          }
+        } else {
+          document.getElementById("dash-leave-empty")?.classList.remove("hidden");
+        }
+      }));
+
+      unsubscribes.push(employeesStore.subscribe(employees => {
+        if (employees && employees.length > 0) {
+          renderEmploymentChart(employees);
+          renderRecentHires(employees);
+        }
+      }));
+
+      unsubscribes.push(aiInsightsStore.subscribe(insights => {
+        const container = document.getElementById("dash-ai-insights");
+        if (container) {
+          if (insights && Array.isArray(insights)) {
+            renderAIInsights(insights);
+          } else {
+            container.innerHTML = '<div class="text-slate-500 text-sm py-2">No insights available yet.</div>';
+          }
+        }
+      }));
+
+      fetchMissingDashboardData();
+    }
+
     function renderAIInsights(insights: string[]) {
-      const container = document.getElementById("dash-ai-insights")!;
+      const container = document.getElementById("dash-ai-insights");
+      if (!container) return;
       if (!insights || !insights.length) {
         container.innerHTML = '<div class="text-slate-500 text-sm py-2">No insights available yet.</div>';
         return;
@@ -331,7 +363,8 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
     }
 
     function renderRecentHires(employees: any[]) {
-      const container = document.getElementById("dash-recent-hires")!;
+      const container = document.getElementById("dash-recent-hires");
+      if (!container) return;
       const sorted = [...employees].sort((a, b) => {
         const da = a.joining_date ? new Date(a.joining_date).getTime() : 0;
         const db = b.joining_date ? new Date(b.joining_date).getTime() : 0;
@@ -364,8 +397,11 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
         }
     }
 
-    loadDashboardCharts();
-    // Poll every 5 seconds for real-time updates
-    setInterval(loadDashboardCharts, 5000);
+    document.addEventListener('astro:page-load', () => {
+      if (window.location.pathname === '/dashboard') {
+        initDashboard();
+      }
+    });
+
   </script>
 </DashboardLayout>
