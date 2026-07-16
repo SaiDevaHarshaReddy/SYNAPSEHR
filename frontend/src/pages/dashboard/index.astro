@@ -4,6 +4,7 @@ import WelcomeCard from "../../components/dashboard/WelcomeCard.astro";
 import StatsGrid from "../../components/dashboard/StatsGrid.astro";
 import QuickActions from "../../components/dashboard/QuickActions.astro";
 import RecentActivity from "../../components/dashboard/RecentActivity.astro";
+import EmployeeNotifications from "../../components/dashboard/EmployeeNotifications.astro";
 ---
 
 <DashboardLayout title="Dashboard - SynapseHR">
@@ -18,6 +19,9 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
       <QuickActions />
       <div data-hr-only class="hidden">
         <RecentActivity />
+      </div>
+      <div data-employee-only class="hidden">
+        <EmployeeNotifications />
       </div>
     </div>
 
@@ -410,8 +414,18 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
         const isHrOrAdmin = user && ['admin', 'administrator', 'hr'].includes(user.role);
         
         const hrElements = document.querySelectorAll('[data-hr-only]');
+        const empElements = document.querySelectorAll('[data-employee-only]');
+        
         hrElements.forEach(el => {
           if (isHrOrAdmin) {
+            el.classList.remove('hidden');
+          } else {
+            el.classList.add('hidden');
+          }
+        });
+        
+        empElements.forEach(el => {
+          if (!isHrOrAdmin) {
             el.classList.remove('hidden');
           } else {
             el.classList.add('hidden');

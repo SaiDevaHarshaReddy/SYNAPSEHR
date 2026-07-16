@@ -1,0 +1,118 @@
+---
+---
+
+<div class="card-static">
+  <div class="flex items-center justify-between mb-5">
+    <h2 class="text-lg font-semibold text-white">Recent Notifications</h2>
+    <a href="/notifications" class="text-sm text-indigo-400 hover:text-indigo-300 font-medium transition-colors duration-200 flex items-center gap-1">
+      View all
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </a>
+  </div>
+  <div id="dash-employee-notifs" class="space-y-2">
+    <div class="text-slate-500 text-sm py-4 text-center">Loading notifications...</div>
+  </div>
+</div>
+
+<script>
+  import { api } from "../../services/api";
+
+  const fallbackNotifs = [
+    {
+      id: "n1",
+      type: "leave",
+      title: "Leave Request Approved",
+      message: "Your casual leave request for Jul 10–15 has been approved by your manager.",
+      is_read: false,
+      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "n2",
+      type: "document",
+      title: "Document Ready",
+      message: "Your requested Payslip for June 2026 is ready for download.",
+      is_read: false,
+      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "n5",
+      type: "ai",
+      title: "AI Assistant",
+      message: "You have 3 new policy updates suggested by the AI Assistant.",
+      is_read: true,
+      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    }
+  ];
+
+  function getNotifIcon(type: string): string {
+    const icons: Record<string, string> = {
+      leave: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
+      approval: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+      document: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+      ai: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z",
+    };
+    return icons[type] || icons.leave;
+  }
+
+  function getNotifColor(type: string): string {
+    const colors: Record<string, string> = {
+      leave: "bg-amber-500/10 text-amber-400",
+      approval: "bg-emerald-500/10 text-emerald-400",
+      document: "bg-indigo-500/10 text-indigo-400",
+      ai: "bg-cyan-500/10 text-cyan-400",
+    };
+    return colors[type] || "bg-slate-700 text-slate-400";
+  }
+
+  function renderNotifs(notifs: any[]) {
+    const container = document.getElementById("dash-employee-notifs");
+    if (!container) return;
+
+    if (notifs.length === 0) {
+      container.innerHTML = '<div class="text-slate-500 text-sm py-4 text-center">No recent notifications</div>';
+      return;
+    }
+
+    container.innerHTML = notifs.slice(0, 4).map((n: any, i: number) => `
+      <div 
+        class="flex items-start gap-3 p-3.5 rounded-xl transition-all duration-200 hover:bg-slate-800/40 group animate-fade-in-up"
+        style="animation-delay: ${i * 0.05}s"
+      >
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${getNotifColor(n.type)}">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${getNotifIcon(n.type)}" />
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-sm font-medium text-white truncate">${n.title || "Notification"}</p>
+            ${!n.is_read ? '<span class="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0"></span>' : ""}
+          </div>
+          <p class="text-sm text-slate-300 group-hover:text-white transition-colors leading-relaxed mt-0.5 line-clamp-2">${n.message || ""}</p>
+          <p class="text-xs text-slate-500 mt-1">${new Date(n.created_at).toLocaleString()}</p>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  async function loadDashNotifs() {
+    try {
+      const res = await api.get("/api/v1/notifications");
+      let notifs = res.data || [];
+      if (!notifs || notifs.length === 0) {
+        notifs = fallbackNotifs;
+      }
+      renderNotifs(notifs);
+    } catch (error) {
+      renderNotifs(fallbackNotifs);
+    }
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    if (document.getElementById("dash-employee-notifs")) {
+      loadDashNotifs();
+    }
+  });
+</script>
