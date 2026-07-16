@@ -11,6 +11,7 @@ from app.models.leave_balance import LeaveBalance
 from app.models.leave_request import LeaveRequest
 from app.models.leave_type import LeaveType
 from app.repositories.base import BaseRepository
+from sqlalchemy.orm import joinedload
 
 
 class LeaveTypeRepository(BaseRepository[LeaveType]):
@@ -38,7 +39,9 @@ class LeaveBalanceRepository(BaseRepository[LeaveBalance]):
     ) -> list[LeaveBalance]:
         """Get leave balances for an employee."""
         result = await self.session.execute(
-            select(LeaveBalance).where(
+            select(LeaveBalance)
+            .options(joinedload(LeaveBalance.leave_type))
+            .where(
                 LeaveBalance.employee_id == employee_id,
                 LeaveBalance.year == year,
             )
@@ -50,7 +53,9 @@ class LeaveBalanceRepository(BaseRepository[LeaveBalance]):
     ) -> Optional[LeaveBalance]:
         """Get specific leave balance for an employee."""
         result = await self.session.execute(
-            select(LeaveBalance).where(
+            select(LeaveBalance)
+            .options(joinedload(LeaveBalance.leave_type))
+            .where(
                 LeaveBalance.employee_id == employee_id,
                 LeaveBalance.leave_type_id == leave_type_id,
                 LeaveBalance.year == year,
@@ -69,6 +74,7 @@ class LeaveRequestRepository(BaseRepository[LeaveRequest]):
         """Get all leave requests for an employee."""
         result = await self.session.execute(
             select(LeaveRequest)
+            .options(joinedload(LeaveRequest.employee), joinedload(LeaveRequest.leave_type))
             .where(LeaveRequest.employee_id == employee_id)
             .order_by(LeaveRequest.created_at.desc())
         )
@@ -78,6 +84,7 @@ class LeaveRequestRepository(BaseRepository[LeaveRequest]):
         """Get pending leave requests for a manager's team."""
         result = await self.session.execute(
             select(LeaveRequest)
+            .options(joinedload(LeaveRequest.employee), joinedload(LeaveRequest.leave_type))
             .where(
                 LeaveRequest.status == "pending",
             )
@@ -88,10 +95,13 @@ class LeaveRequestRepository(BaseRepository[LeaveRequest]):
     async def get_all_by_organization(self, organization_id: UUID) -> list[LeaveRequest]:
         """Get all leave requests for an organization."""
         from app.models.employee import Employee
+        from app.models.user import User
         result = await self.session.execute(
             select(LeaveRequest)
+            .options(joinedload(LeaveRequest.employee), joinedload(LeaveRequest.leave_type))
             .join(Employee, LeaveRequest.employee_id == Employee.id)
-            .where(Employee.organization_id == organization_id)
+            .join(User, Employee.user_id == User.id)
+            .where(User.organization_id == organization_id)
             .order_by(LeaveRequest.created_at.desc())
         )
         return list(result.scalars().all())

@@ -72,8 +72,8 @@ async def get_leave_history(
     """Get leave history."""
     service = LeaveService(db)
 
-    # If the user is admin/hr/manager and no employee_id is specified, return organization history
-    if employee_id is None and current_user.get("role") in ["admin", "hr", "manager"]:
+    # If the user is admin/hr and no employee_id is specified, return organization history
+    if employee_id is None and current_user.get("role") in ["admin", "hr"]:
         history = await service.get_organization_leave_history(UUID(current_user["organization_id"]))
     else:
         if employee_id is None:
@@ -96,7 +96,7 @@ async def get_leave_history(
 async def mark_leave_read(
     request_id: UUID,
     is_read: bool = Query(True),
-    current_user: dict = Depends(require_role("manager")),
+    current_user: dict = Depends(require_role("hr")),
     db: AsyncSession = Depends(get_db),
 ):
     """Mark a leave request as read."""
@@ -137,7 +137,7 @@ async def create_leave_request(
 async def approve_leave(
     request_id: UUID,
     status: str = Query("approved"),
-    current_user: dict = Depends(require_role("manager")),
+    current_user: dict = Depends(require_role("hr")),
     db: AsyncSession = Depends(get_db),
 ):
     """Approve, reject or reset a leave request."""
