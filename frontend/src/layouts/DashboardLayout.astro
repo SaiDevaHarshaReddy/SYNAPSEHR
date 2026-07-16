@@ -98,6 +98,7 @@ const { title = 'SynapseHR', description } = Astro.props;
     <script>
       import { api } from '../services/api';
       import { authStore, setUser } from '../stores/index';
+      import { preloadData } from '../stores/dataStore';
 
       async function initAuth() {
         if (!sessionStorage.getItem('access_token')) return;
@@ -107,9 +108,12 @@ const { title = 'SynapseHR', description } = Astro.props;
           try {
             const user = await api.getCurrentUser();
             setUser(user);
+            preloadData(); // Trigger data loading
           } catch (err) {
             console.error('Failed to load user session', err);
           }
+        } else {
+          preloadData();
         }
       }
       

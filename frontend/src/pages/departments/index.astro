@@ -242,43 +242,22 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     </div>
   </div>
 
-  <script>
+<script>
     import { api } from "../../services/api";
     import { showToast } from "../../stores/index";
-
-    const API = import.meta.env.PUBLIC_API_URL; // keeping this if used anywhere else
+    import { departmentsStore, employeesStore } from "../../stores/dataStore";
 
     let departments: any[] = [];
     let employees: any[] = [];
 
     // Project data per department
-    const deptProjects: Record<string, { active: number; completed: number }> =
-      {
-        Engineering: { active: 8, completed: 24 },
-        "Human Resources": { active: 3, completed: 12 },
-        Marketing: { active: 5, completed: 18 },
-        Finance: { active: 4, completed: 15 },
-        Operations: { active: 6, completed: 20 },
-      };
-
-    async function loadDepartments() {
-      try {
-        const [deptResponse, empRes] = await Promise.all([
-          api.getDepartments().catch(() => ({ data: [] })),
-          api.getEmployees({ page: 1, limit: 100 }).catch(() => ({ data: [] }))
-        ]);
-        departments = deptResponse.data || [];
-        employees = empRes.data || [];
-
-        renderDepartments();
-        updateStats();
-      } catch (error) {
-        console.error("Failed to load departments:", error);
-        document.getElementById("departments-table")!.innerHTML = `
-          <tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">Failed to load departments</td></tr>
-        `;
-      }
-    }
+    const deptProjects: Record<string, { active: number; completed: number }> = {
+      Engineering: { active: 8, completed: 24 },
+      "Human Resources": { active: 3, completed: 12 },
+      Marketing: { active: 5, completed: 18 },
+      Finance: { active: 4, completed: 15 },
+      Operations: { active: 6, completed: 20 },
+    };
 
     function getDeptEmployeeCount(deptId: string): number {
       return employees.filter((e) => e.department_id === deptId).length;
@@ -290,10 +269,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       return manager ? `${manager.first_name} ${manager.last_name}` : "Department Lead";
     }
 
-    function getDeptProjects(deptName: string): {
-      active: number;
-      completed: number;
-    } {
+    function getDeptProjects(deptName: string): { active: number; completed: number; } {
       return deptProjects[deptName] || { active: 2, completed: 5 };
     }
 
@@ -301,13 +277,11 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       const tbody = document.getElementById("departments-table");
       if (!tbody) return;
       if (departments.length === 0) {
-        tbody.innerHTML =
-          '<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">No departments found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">No departments found</td></tr>';
         return;
       }
 
-      tbody.innerHTML = departments
-        .map((dept) => {
+      tbody.innerHTML = departments.map((dept) => {
           const deptCode = dept.code || dept.name.substring(0, 3).toUpperCase();
           const empCount = getDeptEmployeeCount(dept.id);
           const managerName = getDeptManagerName(dept);
@@ -361,19 +335,17 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             </td>
           </tr>
         `;
-        })
-        .join("");
+        }).join("");
     }
 
     function updateStats() {
-      document.getElementById("total-departments")!.textContent =
-        String(departments.length);
-      const totalEmp =
-        employees.length ||
-        departments.reduce((sum, d) => sum + getDeptEmployeeCount(d.id), 0);
-      document.getElementById("total-employees")!.textContent = String(totalEmp);
-      document.getElementById("avg-employees")!.textContent =
-        String(departments.length > 0 ? Math.round(totalEmp / departments.length) : 0);
+      const td = document.getElementById("total-departments");
+      if(td) td.textContent = String(departments.length);
+      const totalEmp = employees.length || departments.reduce((sum, d) => sum + getDeptEmployeeCount(d.id), 0);
+      const te = document.getElementById("total-employees");
+      if(te) te.textContent = String(totalEmp);
+      const ae = document.getElementById("avg-employees");
+      if(ae) ae.textContent = String(departments.length > 0 ? Math.round(totalEmp / departments.length) : 0);
     }
 
     (window as any).deleteDepartment = async function (id: string) {
@@ -381,34 +353,59 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         try {
           await api.delete("/api/v1/departments/" + id);
           showToast("Department deleted successfully", "success");
-          loadDepartments();
+          departmentsStore.set(departments.filter(d => d.id !== id));
         } catch (error) {
           showToast("Failed to delete department", "error");
         }
       }
     };
 
-    document
-      .getElementById("department-form")!
-      .addEventListener("submit", async (e) => {
+    function bindEvents() {
+      document.getElementById("department-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target as HTMLFormElement);
         try {
-          await api.post("/api/v1/departments", {
+          const newDept = await api.post("/api/v1/departments", {
             name: formData.get("name"),
             description: formData.get("description"),
           });
           showToast("Department created successfully", "success");
-          document
-            .getElementById("add-department-modal")!
-            .classList.add("hidden");
+          document.getElementById("add-department-modal")!.classList.add("hidden");
           (e.target as HTMLFormElement).reset();
-          loadDepartments();
+          departmentsStore.set([newDept.data, ...departments]);
         } catch (error) {
           showToast("Failed to create department", "error");
         }
       });
+      
+      departmentsStore.subscribe(val => {
+        departments = val;
+        renderDepartments();
+        updateStats();
+      });
 
-    loadDepartments();
-  </script>
+      employeesStore.subscribe(val => {
+        employees = val;
+        renderDepartments();
+        updateStats();
+      });
+    }
+
+    document.addEventListener('astro:page-load', () => {
+      if (window.location.pathname === '/departments') {
+        bindEvents();
+        
+        if (departmentsStore.get().length === 0) {
+          api.getDepartments().then(res => {
+            departmentsStore.set(res.data || []);
+          }).catch(() => {});
+        }
+        if (employeesStore.get().length === 0) {
+          api.getEmployees({ page: 1, limit: 100 }).then(res => {
+            employeesStore.set((res as any).data || []);
+          }).catch(() => {});
+        }
+      }
+    });
+</script>
 </DashboardLayout>

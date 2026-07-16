@@ -258,6 +258,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
 <script>
   import { api } from '../../services/api';
+  import { employeesStore, departmentsStore } from '../../stores/dataStore';
 
   let currentPage = 1;
   let employees: any[] = [];
@@ -266,135 +267,205 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   let currentEmployee: any = null;
   let isEditing = false;
 
-  const listView = document.getElementById('employee-list-view') as HTMLDivElement;
-  const detailView = document.getElementById('employee-detail-view') as HTMLDivElement;
-  const searchInput = document.getElementById('search') as HTMLInputElement;
-  const deptFilter = document.getElementById('dept-filter') as HTMLSelectElement;
-  const statusFilter = document.getElementById('status-filter') as HTMLSelectElement;
-  const employeeTable = document.getElementById('employee-table') as HTMLTableSectionElement;
-  const pageInfo = document.getElementById('page-info') as HTMLParagraphElement;
-  const prevPageBtn = document.getElementById('prev-page') as HTMLButtonElement;
-  const nextPageBtn = document.getElementById('next-page') as HTMLButtonElement;
+  // Variables for DOM elements (initialized in page-load)
+  let listView: HTMLDivElement | null;
+  let detailView: HTMLDivElement | null;
+  let searchInput: HTMLInputElement | null;
+  let deptFilter: HTMLSelectElement | null;
+  let statusFilter: HTMLSelectElement | null;
+  let employeeTable: HTMLTableSectionElement | null;
+  let pageInfo: HTMLParagraphElement | null;
+  let prevPageBtn: HTMLButtonElement | null;
+  let nextPageBtn: HTMLButtonElement | null;
 
-  // Add employee triggers
-  const addModal = document.getElementById('addEmployeeModal') as HTMLDivElement;
-  const addBtn = document.getElementById('add-employee-btn') as HTMLButtonElement;
-  const cancelAddBtn = document.getElementById('cancel-add-btn') as HTMLButtonElement;
-  const closeAddBtn = document.getElementById('close-add-btn') as HTMLButtonElement;
-  const addEmployeeForm = document.getElementById('add-employee-form') as HTMLFormElement;
-  const addDeptSelect = document.getElementById('add-department') as HTMLSelectElement;
+  let addModal: HTMLDivElement | null;
+  let addEmployeeForm: HTMLFormElement | null;
+  let addDeptSelect: HTMLSelectElement | null;
+  
+  let contactModal: HTMLDivElement | null;
+  let contactForm: HTMLFormElement | null;
 
-  addBtn?.addEventListener('click', () => addModal?.classList.remove('hidden'));
-  cancelAddBtn?.addEventListener('click', () => addModal?.classList.add('hidden'));
-  closeAddBtn?.addEventListener('click', () => addModal?.classList.add('hidden'));
+  let editActionsRow: HTMLDivElement | null;
+  let editBtn: HTMLButtonElement | null;
+  let editForm: HTMLFormElement | null;
+  let editDeptSelect: HTMLSelectElement | null;
 
-  // Detail triggers
-  const backBtn = document.getElementById('back-to-list-btn') as HTMLButtonElement;
-  const editBtn = document.getElementById('edit-employee-btn') as HTMLButtonElement;
-  const cancelEditBtn = document.getElementById('cancel-edit-btn') as HTMLButtonElement;
-  const contactBtn = document.getElementById('contact-employee-btn') as HTMLButtonElement;
-  const editActionsRow = document.getElementById('edit-actions-row') as HTMLDivElement;
-  const editForm = document.getElementById('edit-employee-form') as HTMLFormElement;
-  const editDeptSelect = document.getElementById('edit-department') as HTMLSelectElement;
+  function bindDOM() {
+    listView = document.getElementById('employee-list-view') as HTMLDivElement;
+    detailView = document.getElementById('employee-detail-view') as HTMLDivElement;
+    searchInput = document.getElementById('search') as HTMLInputElement;
+    deptFilter = document.getElementById('dept-filter') as HTMLSelectElement;
+    statusFilter = document.getElementById('status-filter') as HTMLSelectElement;
+    employeeTable = document.getElementById('employee-table') as HTMLTableSectionElement;
+    pageInfo = document.getElementById('page-info') as HTMLParagraphElement;
+    prevPageBtn = document.getElementById('prev-page') as HTMLButtonElement;
+    nextPageBtn = document.getElementById('next-page') as HTMLButtonElement;
 
-  // Contact triggers
-  const contactModal = document.getElementById('contactModal') as HTMLDivElement;
-  const closeContactBtn = document.getElementById('close-contact-btn') as HTMLButtonElement;
-  const cancelContactBtn = document.getElementById('cancel-contact-btn') as HTMLButtonElement;
-  const contactForm = document.getElementById('contactForm') as HTMLFormElement;
+    // Add employee triggers
+    addModal = document.getElementById('addEmployeeModal') as HTMLDivElement;
+    const addBtn = document.getElementById('add-employee-btn');
+    const cancelAddBtn = document.getElementById('cancel-add-btn');
+    const closeAddBtn = document.getElementById('close-add-btn');
+    addEmployeeForm = document.getElementById('add-employee-form') as HTMLFormElement;
+    addDeptSelect = document.getElementById('add-department') as HTMLSelectElement;
 
-  contactBtn?.addEventListener('click', () => contactModal?.classList.remove('hidden'));
-  closeContactBtn?.addEventListener('click', () => contactModal?.classList.add('hidden'));
-  cancelContactBtn?.addEventListener('click', () => contactModal?.classList.add('hidden'));
+    addBtn?.addEventListener('click', () => addModal?.classList.remove('hidden'));
+    cancelAddBtn?.addEventListener('click', () => addModal?.classList.add('hidden'));
+    closeAddBtn?.addEventListener('click', () => addModal?.classList.add('hidden'));
 
-  backBtn?.addEventListener('click', () => {
-    window.history.pushState({}, '', '/employees');
-    checkUrlState();
-  });
+    // Detail triggers
+    const backBtn = document.getElementById('back-to-list-btn');
+    editBtn = document.getElementById('edit-employee-btn') as HTMLButtonElement;
+    const cancelEditBtn = document.getElementById('cancel-edit-btn');
+    const contactBtn = document.getElementById('contact-employee-btn');
+    editActionsRow = document.getElementById('edit-actions-row') as HTMLDivElement;
+    editForm = document.getElementById('edit-employee-form') as HTMLFormElement;
+    editDeptSelect = document.getElementById('edit-department') as HTMLSelectElement;
 
-  editBtn?.addEventListener('click', () => toggleEditState(true));
-  cancelEditBtn?.addEventListener('click', () => {
-    toggleEditState(false);
-    populateEditForm();
-  });
+    // Contact triggers
+    contactModal = document.getElementById('contactModal') as HTMLDivElement;
+    const closeContactBtn = document.getElementById('close-contact-btn');
+    const cancelContactBtn = document.getElementById('cancel-contact-btn');
+    contactForm = document.getElementById('contactForm') as HTMLFormElement;
 
-  async function checkUrlState() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-    
-    // Make sure departments are loaded for lists/selects BEFORE rendering employees
-    if (departments.length === 0) {
-      await loadDepartmentsList();
-    }
-    
-    const promises: Promise<any>[] = [];
+    contactBtn?.addEventListener('click', () => contactModal?.classList.remove('hidden'));
+    closeContactBtn?.addEventListener('click', () => contactModal?.classList.add('hidden'));
+    cancelContactBtn?.addEventListener('click', () => contactModal?.classList.add('hidden'));
 
-    if (id) {
-      listView?.classList.add('hidden');
-      detailView?.classList.remove('hidden');
-      promises.push(loadEmployeeDetail(id));
-    } else {
-      detailView?.classList.add('hidden');
-      listView?.classList.remove('hidden');
+    backBtn?.addEventListener('click', () => {
+      window.history.pushState({}, '', '/employees');
+      checkUrlState();
+    });
+
+    editBtn?.addEventListener('click', () => toggleEditState(true));
+    cancelEditBtn?.addEventListener('click', () => {
       toggleEditState(false);
-      promises.push(loadEmployees(currentPage));
-    }
+      populateEditForm();
+    });
+
+    // Form handlers
+    editForm?.addEventListener('submit', handleEditSubmit);
+    addEmployeeForm?.addEventListener('submit', handleAddSubmit);
+    contactForm?.addEventListener('submit', handleContactSubmit);
+
+    // List filter and pagination listeners
+    searchInput?.addEventListener('input', () => { currentPage = 1; renderEmployees(); });
+    deptFilter?.addEventListener('change', () => { currentPage = 1; renderEmployees(); });
+    statusFilter?.addEventListener('change', () => { currentPage = 1; renderEmployees(); });
+    prevPageBtn?.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderEmployees(); updatePagination(); }});
+    nextPageBtn?.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; renderEmployees(); updatePagination(); }});
     
-    await Promise.all(promises);
+    // Store subscriptions
+    departmentsStore.subscribe(val => {
+      departments = val;
+      populateDeptSelects();
+      if (employees.length > 0) renderEmployees();
+    });
+
+    employeesStore.subscribe(val => {
+      employees = val;
+      totalPages = Math.ceil((employees.length || 0) / 10);
+      renderEmployees();
+      updatePagination();
+    });
+  }
+
+  async function handleEditSubmit(e: Event) {
+    e.preventDefault();
+    if (!currentEmployee) return;
+
+    const data = {
+      first_name: (document.getElementById('edit-first-name') as HTMLInputElement).value,
+      last_name: (document.getElementById('edit-last-name') as HTMLInputElement).value,
+      designation: (document.getElementById('edit-designation') as HTMLInputElement).value,
+      department_id: (document.getElementById('edit-department') as HTMLSelectElement).value,
+      email: (document.getElementById('edit-email') as HTMLInputElement).value,
+      phone: (document.getElementById('edit-phone') as HTMLInputElement).value,
+      joining_date: (document.getElementById('edit-joining-date') as HTMLInputElement).value,
+      employment_type: (document.getElementById('edit-employment-type') as HTMLSelectElement).value,
+      status: (document.getElementById('edit-status') as HTMLSelectElement).value,
+    };
+
+    try {
+      currentEmployee = await api.updateEmployee(currentEmployee.id, data);
+      alert('Employee changes saved successfully!');
+      toggleEditState(false);
+      populateEditForm();
+      // Update store
+      const updated = employees.map(emp => emp.id === currentEmployee.id ? currentEmployee : emp);
+      employeesStore.set(updated);
+    } catch (err) {
+      console.error('Failed to update employee:', err);
+      alert('Error saving changes. Email must be unique.');
+    }
+  }
+
+  async function handleAddSubmit(e: Event) {
+    e.preventDefault();
+    const data = {
+      first_name: (document.getElementById('add-first-name') as HTMLInputElement).value,
+      last_name: (document.getElementById('add-last-name') as HTMLInputElement).value,
+      designation: (document.getElementById('add-designation') as HTMLInputElement).value,
+      department_id: (document.getElementById('add-department') as HTMLSelectElement).value,
+      email: (document.getElementById('add-email') as HTMLInputElement).value,
+      employee_code: (document.getElementById('add-code') as HTMLInputElement).value,
+      status: 'active',
+      employment_type: 'full_time',
+      joining_date: new Date().toISOString().split('T')[0],
+    };
+
+    try {
+      const newEmp = await api.createEmployee(data);
+      alert('Employee created successfully!');
+      addModal?.classList.add('hidden');
+      addEmployeeForm?.reset();
+      employeesStore.set([newEmp, ...employeesStore.get()]);
+    } catch (err) {
+      console.error('Failed to create employee:', err);
+      alert('Error creating employee. Email/Code must be unique.');
+    }
+  }
+
+  function handleContactSubmit(e: Event) {
+    e.preventDefault();
+    const subject = (document.getElementById('contact-subject') as HTMLInputElement).value;
+    const body = (document.getElementById('contact-message') as HTMLTextAreaElement).value;
+
+    alert(`Message Sent to ${currentEmployee?.first_name} ${currentEmployee?.last_name}!\n\nSubject: ${subject}\nMessage: ${body}`);
+    contactModal?.classList.add('hidden');
+    contactForm?.reset();
+  }
+
+  function populateDeptSelects() {
+    if (deptFilter) {
+      const currentVal = deptFilter.value;
+      deptFilter.innerHTML = '<option value="">All Departments</option>';
+      departments.forEach(d => {
+        deptFilter!.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+      });
+      deptFilter.value = currentVal;
+    }
+    if (addDeptSelect) {
+      const currentVal = addDeptSelect.value;
+      addDeptSelect.innerHTML = '';
+      departments.forEach(d => {
+        addDeptSelect!.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+      });
+      addDeptSelect.value = currentVal;
+    }
+    if (editDeptSelect) {
+      const currentVal = editDeptSelect.value;
+      editDeptSelect.innerHTML = '';
+      departments.forEach(d => {
+        editDeptSelect!.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+      });
+      editDeptSelect.value = currentVal;
+    }
   }
 
   function getDeptName(deptId: string): string {
     const dept = departments.find((d: any) => d.id === deptId);
     return dept ? dept.name : 'Unknown';
-  }
-
-  async function loadDepartmentsList() {
-    try {
-      const response = await api.getDepartments();
-      departments = response.data || [];
-      
-      // Populate filters
-      if (deptFilter) {
-        deptFilter.innerHTML = '<option value="">All Departments</option>';
-        departments.forEach(d => {
-          deptFilter.innerHTML += `<option value="${d.id}">${d.name}</option>`;
-        });
-      }
-
-      // Populate selects in add/edit modals
-      if (addDeptSelect) {
-        addDeptSelect.innerHTML = '';
-        departments.forEach(d => {
-          addDeptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`;
-        });
-      }
-
-      if (editDeptSelect) {
-        editDeptSelect.innerHTML = '';
-        departments.forEach(d => {
-          editDeptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`;
-        });
-      }
-    } catch (err) {
-      console.error('Failed to load departments:', err);
-    }
-  }
-
-  async function loadEmployees(page = 1) {
-    try {
-      const params: any = { page, limit: 10 };
-      const response = await api.getEmployees(params);
-      employees = (response as any).data || [];
-      totalPages = Math.ceil(((response as any).total || 0) / 10);
-      currentPage = page;
-      renderEmployees();
-      updatePagination();
-    } catch (error) {
-      console.error('Failed to load employees:', error);
-      if (employeeTable) {
-        employeeTable.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-red-400">Failed to load employees</td></tr>';
-      }
-    }
   }
 
   function renderEmployees() {
@@ -418,12 +489,19 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       filtered = filtered.filter(e => e.status === statusVal);
     }
 
-    if (filtered.length === 0) {
+    totalPages = Math.ceil(filtered.length / 10) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const startIndex = (currentPage - 1) * 10;
+    const paginated = filtered.slice(startIndex, startIndex + 10);
+
+    if (paginated.length === 0) {
       employeeTable.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No employees found</td></tr>';
+      updatePagination();
       return;
     }
 
-    employeeTable.innerHTML = filtered.map(emp => `
+    employeeTable.innerHTML = paginated.map(emp => `
       <tr class="hover:bg-slate-800/40 transition-colors cursor-pointer" onclick="navigateToDetail('${emp.id}')">
         <td class="px-6 py-4 whitespace-nowrap">
           <div class="flex items-center gap-3">
@@ -451,6 +529,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         </td>
       </tr>
     `).join('');
+    updatePagination();
   }
 
   (window as any).navigateToDetail = function(id: string) {
@@ -465,43 +544,72 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     if (nextPageBtn) nextPageBtn.disabled = currentPage >= totalPages;
   }
 
-  async function loadEmployeeDetail(id: string) {
-    try {
-      currentEmployee = await api.getEmployee(id);
+  async function checkUrlState() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    
+    if (id) {
+      listView?.classList.add('hidden');
+      detailView?.classList.remove('hidden');
+      
+      // Try from cache first
+      currentEmployee = employees.find(e => e.id === id);
+      if (!currentEmployee) {
+        try {
+          currentEmployee = await api.getEmployee(id);
+        } catch (err) {
+          console.error('Failed to load employee details:', err);
+          alert('Error fetching employee information.');
+        }
+      }
       populateEditForm();
-    } catch (err) {
-      console.error('Failed to load employee details:', err);
-      alert('Error fetching employee information.');
+    } else {
+      detailView?.classList.add('hidden');
+      listView?.classList.remove('hidden');
+      toggleEditState(false);
+      renderEmployees();
     }
   }
 
   function populateEditForm() {
     if (!currentEmployee) return;
     
-    // Top Profile Card details
-    document.getElementById('detail-avatar')!.textContent = (currentEmployee.first_name?.[0] || '') + (currentEmployee.last_name?.[0] || '');
-    document.getElementById('detail-fullname')!.textContent = `${currentEmployee.first_name} ${currentEmployee.last_name}`;
-    document.getElementById('detail-designation-header')!.textContent = currentEmployee.designation || 'Staff';
-    document.getElementById('detail-dept-badge')!.textContent = getDeptName(currentEmployee.department_id) || 'No Department';
+    const avatar = document.getElementById('detail-avatar');
+    if(avatar) avatar.textContent = (currentEmployee.first_name?.[0] || '') + (currentEmployee.last_name?.[0] || '');
+    const nameEl = document.getElementById('detail-fullname');
+    if(nameEl) nameEl.textContent = `${currentEmployee.first_name} ${currentEmployee.last_name}`;
+    const desig = document.getElementById('detail-designation-header');
+    if(desig) desig.textContent = currentEmployee.designation || 'Staff';
+    const dept = document.getElementById('detail-dept-badge');
+    if(dept) dept.textContent = getDeptName(currentEmployee.department_id) || 'No Department';
 
-    // Form inputs
-    (document.getElementById('edit-first-name') as HTMLInputElement).value = currentEmployee.first_name || '';
-    (document.getElementById('edit-last-name') as HTMLInputElement).value = currentEmployee.last_name || '';
-    (document.getElementById('edit-code') as HTMLInputElement).value = currentEmployee.employee_code || '';
-    (document.getElementById('edit-designation') as HTMLInputElement).value = currentEmployee.designation || '';
-    (document.getElementById('edit-department') as HTMLSelectElement).value = currentEmployee.department_id || '';
-    (document.getElementById('edit-email') as HTMLInputElement).value = currentEmployee.email || '';
-    (document.getElementById('edit-phone') as HTMLInputElement).value = currentEmployee.phone || '';
-    (document.getElementById('edit-joining-date') as HTMLInputElement).value = currentEmployee.joining_date || '';
-    (document.getElementById('edit-employment-type') as HTMLSelectElement).value = currentEmployee.employment_type || 'full_time';
-    (document.getElementById('edit-status') as HTMLSelectElement).value = currentEmployee.status || 'active';
+    const fn = document.getElementById('edit-first-name') as HTMLInputElement;
+    if(fn) fn.value = currentEmployee.first_name || '';
+    const ln = document.getElementById('edit-last-name') as HTMLInputElement;
+    if(ln) ln.value = currentEmployee.last_name || '';
+    const ec = document.getElementById('edit-code') as HTMLInputElement;
+    if(ec) ec.value = currentEmployee.employee_code || '';
+    const ed = document.getElementById('edit-designation') as HTMLInputElement;
+    if(ed) ed.value = currentEmployee.designation || '';
+    const edept = document.getElementById('edit-department') as HTMLSelectElement;
+    if(edept) edept.value = currentEmployee.department_id || '';
+    const em = document.getElementById('edit-email') as HTMLInputElement;
+    if(em) em.value = currentEmployee.email || '';
+    const ph = document.getElementById('edit-phone') as HTMLInputElement;
+    if(ph) ph.value = currentEmployee.phone || '';
+    const jd = document.getElementById('edit-joining-date') as HTMLInputElement;
+    if(jd) jd.value = currentEmployee.joining_date || '';
+    const et = document.getElementById('edit-employment-type') as HTMLSelectElement;
+    if(et) et.value = currentEmployee.employment_type || 'full_time';
+    const st = document.getElementById('edit-status') as HTMLSelectElement;
+    if(st) st.value = currentEmployee.status || 'active';
   }
 
   function toggleEditState(editable: boolean) {
     isEditing = editable;
     const formFields = editForm?.querySelectorAll('input, select');
     formFields?.forEach(field => {
-      if (field.id !== 'edit-code') { // Code should remain disabled/read-only
+      if (field.id !== 'edit-code') {
         (field as HTMLInputElement | HTMLSelectElement).disabled = !editable;
       }
     });
@@ -515,82 +623,29 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     }
   }
 
-  // Handle save employee changes
-  editForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!currentEmployee) return;
-
-    const data = {
-      first_name: (document.getElementById('edit-first-name') as HTMLInputElement).value,
-      last_name: (document.getElementById('edit-last-name') as HTMLInputElement).value,
-      designation: (document.getElementById('edit-designation') as HTMLInputElement).value,
-      department_id: (document.getElementById('edit-department') as HTMLSelectElement).value,
-      email: (document.getElementById('edit-email') as HTMLInputElement).value,
-      phone: (document.getElementById('edit-phone') as HTMLInputElement).value,
-      joining_date: (document.getElementById('edit-joining-date') as HTMLInputElement).value,
-      employment_type: (document.getElementById('edit-employment-type') as HTMLSelectElement).value,
-      status: (document.getElementById('edit-status') as HTMLSelectElement).value,
-    };
-
-    try {
-      currentEmployee = await api.updateEmployee(currentEmployee.id, data);
-      alert('Employee changes saved successfully!');
-      toggleEditState(false);
-      populateEditForm();
-    } catch (err) {
-      console.error('Failed to update employee:', err);
-      alert('Error saving changes. Email must be unique.');
+  window.addEventListener('popstate', () => {
+    if (window.location.pathname.startsWith('/employees')) {
+      checkUrlState();
     }
   });
 
-  // Handle add new employee
-  addEmployeeForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const data = {
-      first_name: (document.getElementById('add-first-name') as HTMLInputElement).value,
-      last_name: (document.getElementById('add-last-name') as HTMLInputElement).value,
-      designation: (document.getElementById('add-designation') as HTMLInputElement).value,
-      department_id: (document.getElementById('add-department') as HTMLSelectElement).value,
-      email: (document.getElementById('add-email') as HTMLInputElement).value,
-      employee_code: (document.getElementById('add-code') as HTMLInputElement).value,
-      status: 'active',
-      employment_type: 'full_time',
-      joining_date: new Date().toISOString().split('T')[0],
-    };
+  document.addEventListener('astro:page-load', () => {
+    if (window.location.pathname.startsWith('/employees')) {
+      bindDOM();
+      
+      // If store is empty, trigger a fetch
+      if (employeesStore.get().length === 0) {
+        api.getEmployees({ page: 1, limit: 100 }).then(res => {
+          employeesStore.set((res as any).data || []);
+        });
+      }
+      if (departmentsStore.get().length === 0) {
+        api.getDepartments({ page: 1, limit: 100 }).then(res => {
+          departmentsStore.set((res as any).data || []);
+        });
+      }
 
-    try {
-      await api.createEmployee(data);
-      alert('Employee created successfully!');
-      addModal?.classList.add('hidden');
-      addEmployeeForm.reset();
-      await loadEmployees(currentPage);
-    } catch (err) {
-      console.error('Failed to create employee:', err);
-      alert('Error creating employee. Email/Code must be unique.');
+      checkUrlState();
     }
   });
-
-  // Handle contact messaging
-  contactForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const subject = (document.getElementById('contact-subject') as HTMLInputElement).value;
-    const body = (document.getElementById('contact-message') as HTMLTextAreaElement).value;
-
-    alert(`Message Sent to ${currentEmployee?.first_name} ${currentEmployee?.last_name}!\n\nSubject: ${subject}\nMessage: ${body}`);
-    contactModal?.classList.add('hidden');
-    contactForm.reset();
-  });
-
-  // List filter and pagination listeners
-  searchInput?.addEventListener('input', () => renderEmployees());
-  deptFilter?.addEventListener('change', () => renderEmployees());
-  statusFilter?.addEventListener('change', () => renderEmployees());
-  prevPageBtn?.addEventListener('click', () => loadEmployees(currentPage - 1));
-  nextPageBtn?.addEventListener('click', () => loadEmployees(currentPage + 1));
-
-  // Hook window state popstate events
-  window.addEventListener('popstate', checkUrlState);
-
-  // Initialize page
-  checkUrlState();
 </script>

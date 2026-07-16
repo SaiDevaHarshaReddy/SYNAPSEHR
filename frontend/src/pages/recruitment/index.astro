@@ -582,149 +582,147 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
 <script>
   import { api } from "../../services/api";
+  import { candidatesStore } from "../../stores/dataStore";
 
   let allCandidates: any[] = [];
   let currentCandidateId: string | null = null;
 
   // ── DOM refs ──
-  const uploadModal = document.getElementById("uploadModal")!;
-  const detailModal = document.getElementById("detailModal")!;
-  const candidatesTable = document.getElementById("candidatesTable")!;
-  const searchInput = document.getElementById(
-    "searchInput",
-  ) as HTMLInputElement;
-  const stageFilter = document.getElementById(
-    "stageFilter",
-  ) as HTMLSelectElement;
-  const scoreFilter = document.getElementById(
-    "scoreFilter",
-  ) as HTMLSelectElement;
+  let uploadModal: HTMLElement;
+  let detailModal: HTMLElement;
+  let candidatesTable: HTMLElement;
+  let searchInput: HTMLInputElement;
+  let stageFilter: HTMLSelectElement;
+  let scoreFilter: HTMLSelectElement;
+
+  function initRefs() {
+    uploadModal = document.getElementById("uploadModal")!;
+    detailModal = document.getElementById("detailModal")!;
+    candidatesTable = document.getElementById("candidatesTable")!;
+    searchInput = document.getElementById("searchInput") as HTMLInputElement;
+    stageFilter = document.getElementById("stageFilter") as HTMLSelectElement;
+    scoreFilter = document.getElementById("scoreFilter") as HTMLSelectElement;
+  }
 
   // Modal open/close
-  document
-    .getElementById("uploadResumeBtn")!
-    .addEventListener("click", () => uploadModal.classList.remove("hidden"));
-  document
-    .getElementById("closeUpload")!
-    .addEventListener("click", () => uploadModal.classList.add("hidden"));
-  document
-    .getElementById("cancelUpload")!
-    .addEventListener("click", () => uploadModal.classList.add("hidden"));
-  document
-    .getElementById("closeDetail")!
-    .addEventListener("click", () => detailModal.classList.add("hidden"));
+  function bindModalEvents() {
+    document.getElementById("uploadResumeBtn")?.addEventListener("click", () => uploadModal.classList.remove("hidden"));
+    document.getElementById("closeUpload")?.addEventListener("click", () => uploadModal.classList.add("hidden"));
+    document.getElementById("cancelUpload")?.addEventListener("click", () => uploadModal.classList.add("hidden"));
+    document.getElementById("closeDetail")?.addEventListener("click", () => detailModal.classList.add("hidden"));
+  }
 
   // File drop zone
-  const dropZone = document.getElementById("dropZone")!;
-  const resumeFileInput = document.getElementById(
-    "resumeFile",
-  ) as HTMLInputElement;
-  const fileSelectedLabel = document.getElementById("fileSelected")!;
+  function bindDropZoneEvents() {
+    const dropZone = document.getElementById("dropZone")!;
+    const resumeFileInput = document.getElementById("resumeFile") as HTMLInputElement;
+    const fileSelectedLabel = document.getElementById("fileSelected")!;
 
-  dropZone.addEventListener("click", () => resumeFileInput.click());
-  dropZone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropZone.classList.add("border-indigo-500", "bg-indigo-500/5");
-  });
-  dropZone.addEventListener("dragleave", () => {
-    dropZone.classList.remove("border-indigo-500", "bg-indigo-500/5");
-  });
-  dropZone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropZone.classList.remove("border-indigo-500", "bg-indigo-500/5");
-    const files = (e as DragEvent).dataTransfer?.files;
-    if (files?.length) {
-      const file = files[0];
-      const validExtensions = ['.pdf', '.docx', '.txt'];
-      const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-      if (!validExtensions.includes(ext)) {
-        alert("Invalid file type. Please upload a PDF, DOCX, or TXT file.");
-        return;
-      }
-      
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      resumeFileInput.files = dt.files;
-      const fileCount = dt.files.length;
-      fileSelectedLabel.textContent = fileCount > 1 ? `📄 ${fileCount} files selected` : `📄 ${file.name}`;
-      fileSelectedLabel.classList.remove("hidden");
-    }
-  });
-  resumeFileInput.addEventListener("change", () => {
-    const files = resumeFileInput.files;
-    if (files && files.length > 0) {
-      const validExtensions = ['.pdf', '.docx', '.txt'];
-      for (let i = 0; i < files.length; i++) {
-        const ext = files[i].name.substring(files[i].name.lastIndexOf('.')).toLowerCase();
+    if (!dropZone || !resumeFileInput) return;
+
+    dropZone.addEventListener("click", () => resumeFileInput.click());
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.classList.add("border-indigo-500", "bg-indigo-500/5");
+    });
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("border-indigo-500", "bg-indigo-500/5");
+    });
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("border-indigo-500", "bg-indigo-500/5");
+      const files = (e as DragEvent).dataTransfer?.files;
+      if (files?.length) {
+        const file = files[0];
+        const validExtensions = ['.pdf', '.docx', '.txt'];
+        const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
         if (!validExtensions.includes(ext)) {
-          alert(`Invalid file type for ${files[i].name}. Please upload PDF, DOCX, or TXT.`);
-          resumeFileInput.value = "";
+          alert("Invalid file type. Please upload a PDF, DOCX, or TXT file.");
           return;
         }
-      }
-      const fileCount = files.length;
-      fileSelectedLabel.textContent = fileCount > 1 ? `📄 ${fileCount} files selected` : `📄 ${files[0].name}`;
-      fileSelectedLabel.classList.remove("hidden");
-    }
-  });
-
-  // Upload submit
-  document
-    .getElementById("submitUpload")!
-    .addEventListener("click", async () => {
-      const files = resumeFileInput.files;
-      if (!files || files.length === 0) {
-        alert("Please select at least one resume file.");
-        return;
-      }
-
-      const progress = document.getElementById("uploadProgress")!;
-      const progressBar = document.getElementById("uploadProgressBar")!;
-      const statusText = document.getElementById("uploadStatusText")!;
-      progress.classList.remove("hidden");
-
-      const jobTitle = (document.getElementById("jobTitle") as HTMLInputElement).value;
-      const jobDescription = (document.getElementById("jobDescription") as HTMLTextAreaElement).value;
-
-      try {
-        let completed = 0;
-        statusText.textContent = `Starting upload of ${files.length} resumes...`;
         
-        const uploadPromises = Array.from(files).map((file) => {
-          const formData = new FormData();
-          formData.append("file", file);
-          if (jobTitle) formData.append("job_title", jobTitle);
-          if (jobDescription) formData.append("job_description", jobDescription);
-          
-          return api.postForm("/api/v1/recruitment/upload", formData).then(() => {
-            completed++;
-            progressBar.style.width = `${(completed / files.length) * 100}%`;
-            statusText.textContent = `Parsing resumes (${completed}/${files.length})...`;
-          });
-        });
-
-        await Promise.all(uploadPromises);
-
-        statusText.textContent = "✅ All resumes uploaded and scored!";
-
-        setTimeout(() => {
-          uploadModal.classList.add("hidden");
-          progress.classList.add("hidden");
-          progressBar.style.width = "0%";
-          resumeFileInput.value = "";
-          fileSelectedLabel.classList.add("hidden");
-          (document.getElementById("jobTitle") as HTMLInputElement).value = "";
-          (document.getElementById("jobDescription") as HTMLTextAreaElement).value = "";
-          loadCandidates();
-        }, 1000);
-      } catch (err: any) {
-        progress.classList.add("hidden");
-        alert("Upload failed: " + (err.message || "Unknown error"));
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        resumeFileInput.files = dt.files;
+        const fileCount = dt.files.length;
+        fileSelectedLabel.textContent = fileCount > 1 ? `📄 ${fileCount} files selected` : `📄 ${file.name}`;
+        fileSelectedLabel.classList.remove("hidden");
+      }
+    });
+    
+    resumeFileInput.addEventListener("change", () => {
+      const files = resumeFileInput.files;
+      if (files && files.length > 0) {
+        const validExtensions = ['.pdf', '.docx', '.txt'];
+        for (let i = 0; i < files.length; i++) {
+          const ext = files[i].name.substring(files[i].name.lastIndexOf('.')).toLowerCase();
+          if (!validExtensions.includes(ext)) {
+            alert(`Invalid file type for ${files[i].name}. Please upload PDF, DOCX, or TXT.`);
+            resumeFileInput.value = "";
+            return;
+          }
+        }
+        const fileCount = files.length;
+        fileSelectedLabel.textContent = fileCount > 1 ? `📄 ${fileCount} files selected` : `📄 ${files[0].name}`;
+        fileSelectedLabel.classList.remove("hidden");
       }
     });
 
-  // Filters
+    document.getElementById("submitUpload")?.addEventListener("click", async () => {
+        const files = resumeFileInput.files;
+        if (!files || files.length === 0) {
+          alert("Please select at least one resume file.");
+          return;
+        }
+
+        const progress = document.getElementById("uploadProgress")!;
+        const progressBar = document.getElementById("uploadProgressBar")!;
+        const statusText = document.getElementById("uploadStatusText")!;
+        progress.classList.remove("hidden");
+
+        const jobTitle = (document.getElementById("jobTitle") as HTMLInputElement).value;
+        const jobDescription = (document.getElementById("jobDescription") as HTMLTextAreaElement).value;
+
+        try {
+          let completed = 0;
+          statusText.textContent = `Starting upload of ${files.length} resumes...`;
+          
+          const uploadPromises = Array.from(files).map((file) => {
+            const formData = new FormData();
+            formData.append("file", file);
+            if (jobTitle) formData.append("job_title", jobTitle);
+            if (jobDescription) formData.append("job_description", jobDescription);
+            
+            return api.postForm("/api/v1/recruitment/upload", formData).then(() => {
+              completed++;
+              progressBar.style.width = `${(completed / files.length) * 100}%`;
+              statusText.textContent = `Parsing resumes (${completed}/${files.length})...`;
+            });
+          });
+
+          await Promise.all(uploadPromises);
+
+          statusText.textContent = "✅ All resumes uploaded and scored!";
+
+          setTimeout(() => {
+            uploadModal.classList.add("hidden");
+            progress.classList.add("hidden");
+            progressBar.style.width = "0%";
+            resumeFileInput.value = "";
+            fileSelectedLabel.classList.add("hidden");
+            (document.getElementById("jobTitle") as HTMLInputElement).value = "";
+            (document.getElementById("jobDescription") as HTMLTextAreaElement).value = "";
+            refreshCandidates();
+          }, 1000);
+        } catch (err: any) {
+          progress.classList.add("hidden");
+          alert("Upload failed: " + (err.message || "Unknown error"));
+        }
+      });
+  }
+
   const applyFilters = () => {
+    if (!searchInput || !stageFilter || !scoreFilter) return;
     const search = searchInput.value.toLowerCase();
     const stage = stageFilter.value;
     const minScore = scoreFilter.value ? parseFloat(scoreFilter.value) : null;
@@ -742,13 +740,15 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     });
 
     renderCandidates(filtered);
-    document.getElementById("candidate-count")!.textContent =
-      `${filtered.length} of ${allCandidates.length}`;
+    const countEl = document.getElementById("candidate-count");
+    if (countEl) countEl.textContent = `${filtered.length} of ${allCandidates.length}`;
   };
 
-  searchInput.addEventListener("input", applyFilters);
-  stageFilter.addEventListener("change", applyFilters);
-  scoreFilter.addEventListener("change", applyFilters);
+  function bindFilterEvents() {
+    if (searchInput) searchInput.addEventListener("input", applyFilters);
+    if (stageFilter) stageFilter.addEventListener("change", applyFilters);
+    if (scoreFilter) scoreFilter.addEventListener("change", applyFilters);
+  }
 
   // Render helpers
   function stageLabel(stage: string) {
@@ -772,6 +772,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
   }
 
   function renderCandidates(candidates: any[]) {
+    if (!candidatesTable) return;
     if (!candidates.length) {
       candidatesTable.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-slate-400">
         <svg class="w-8 h-8 mx-auto mb-2 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -847,7 +848,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
   async function openCandidateDetail(id: string) {
     currentCandidateId = id;
-    detailModal.classList.remove("hidden");
+    if (detailModal) detailModal.classList.remove("hidden");
     try {
       const json = await api.get(`/api/v1/recruitment/candidates/${id}`);
       const c = json.data;
@@ -858,110 +859,109 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
   }
 
   function renderDetailModal(c: any) {
-    document.getElementById("detail-name")!.textContent = c.full_name;
-    document.getElementById("detail-role")!.textContent =
-      c.current_role || c.job_title || "";
-    document.getElementById("d-email")!.textContent = c.email || "—";
-    document.getElementById("d-phone")!.textContent = c.phone || "—";
+    const el = (id: string) => document.getElementById(id);
+    if(el("detail-name")) el("detail-name")!.textContent = c.full_name;
+    if(el("detail-role")) el("detail-role")!.textContent = c.current_role || c.job_title || "";
+    if(el("d-email")) el("d-email")!.textContent = c.email || "—";
+    if(el("d-phone")) el("d-phone")!.textContent = c.phone || "—";
 
     // Scores
     const overall = c.overall_score;
-    const overallEl = document.getElementById("d-overall-score")!;
-    overallEl.textContent = overall != null ? `${overall}%` : "—";
-    overallEl.className = `text-3xl font-bold ${scoreColor(overall)}`;
-    document.getElementById("d-skill-score")!.textContent =
-      c.skill_match_score != null ? `${c.skill_match_score}%` : "—";
-    document.getElementById("d-exp-score")!.textContent =
-      c.experience_score != null ? `${c.experience_score}%` : "—";
-    document.getElementById("d-edu-score")!.textContent =
-      c.education_score != null ? `${c.education_score}%` : "—";
+    const overallEl = el("d-overall-score");
+    if (overallEl) {
+      overallEl.textContent = overall != null ? `${overall}%` : "—";
+      overallEl.className = `text-3xl font-bold ${scoreColor(overall)}`;
+    }
+    if(el("d-skill-score")) el("d-skill-score")!.textContent = c.skill_match_score != null ? `${c.skill_match_score}%` : "—";
+    if(el("d-exp-score")) el("d-exp-score")!.textContent = c.experience_score != null ? `${c.experience_score}%` : "—";
+    if(el("d-edu-score")) el("d-edu-score")!.textContent = c.education_score != null ? `${c.education_score}%` : "—";
 
     // Recommendation badge
-    const recEl = document.getElementById("d-recommendation")!;
-    const recMap: Record<string, string> = {
-      "Highly Recommended":
-        "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
-      Recommended: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
-      Consider: "bg-amber-500/20 text-amber-400 border border-amber-500/30",
-      "Not Recommended": "bg-red-500/20 text-red-400 border border-red-500/30",
-    };
-    recEl.textContent = c.recommendation || "Not Scored";
-    recEl.className = `px-3 py-1.5 rounded-lg text-sm font-semibold flex-shrink-0 ${recMap[c.recommendation] || "bg-slate-700 text-slate-300"}`;
+    const recEl = el("d-recommendation");
+    if (recEl) {
+      const recMap: Record<string, string> = {
+        "Highly Recommended": "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
+        Recommended: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
+        Consider: "bg-amber-500/20 text-amber-400 border border-amber-500/30",
+        "Not Recommended": "bg-red-500/20 text-red-400 border border-red-500/30",
+      };
+      recEl.textContent = c.recommendation || "Not Scored";
+      recEl.className = `px-3 py-1.5 rounded-lg text-sm font-semibold flex-shrink-0 ${recMap[c.recommendation] || "bg-slate-700 text-slate-300"}`;
+    }
 
-    const matchExpl = document.getElementById("d-match-explanation")!;
-    if (c.match_explanation) {
-      matchExpl.textContent = c.match_explanation;
-      matchExpl.classList.remove("hidden");
-    } else {
-      matchExpl.classList.add("hidden");
+    const matchExpl = el("d-match-explanation");
+    if (matchExpl) {
+      if (c.match_explanation) {
+        matchExpl.textContent = c.match_explanation;
+        matchExpl.classList.remove("hidden");
+      } else {
+        matchExpl.classList.add("hidden");
+      }
     }
 
     // Stage select
-    const stageSelect = document.getElementById(
-      "d-stage-select",
-    ) as HTMLSelectElement;
-    stageSelect.value = c.stage;
+    const stageSelect = el("d-stage-select") as HTMLSelectElement;
+    if (stageSelect) stageSelect.value = c.stage;
 
     // Skills
-    const skillsEl = document.getElementById("d-skills")!;
-    skillsEl.innerHTML =
-      (c.skills || [])
-        .map(
-          (s: string) =>
-            `<span class="px-2.5 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 rounded-lg text-xs font-medium">${s}</span>`,
-        )
-        .join("") ||
-      '<span class="text-slate-500 text-sm">No skills listed</span>';
+    const skillsEl = el("d-skills");
+    if (skillsEl) {
+      skillsEl.innerHTML =
+        (c.skills || [])
+          .map((s: string) => `<span class="px-2.5 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 rounded-lg text-xs font-medium">${s}</span>`)
+          .join("") || '<span class="text-slate-500 text-sm">No skills listed</span>';
+    }
 
     // Missing skills
-    if (c.missing_skills?.length) {
-      document.getElementById("d-missing-section")!.classList.remove("hidden");
-      document.getElementById("d-missing")!.innerHTML = c.missing_skills
-        .map(
-          (s: string) =>
-            `<span class="px-2.5 py-1 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-xs">${s}</span>`,
-        )
-        .join("");
-    } else {
-      document.getElementById("d-missing-section")!.classList.add("hidden");
+    const missingSec = el("d-missing-section");
+    const missingEl = el("d-missing");
+    if (missingSec && missingEl) {
+      if (c.missing_skills?.length) {
+        missingSec.classList.remove("hidden");
+        missingEl.innerHTML = c.missing_skills
+          .map((s: string) => `<span class="px-2.5 py-1 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-xs">${s}</span>`)
+          .join("");
+      } else {
+        missingSec.classList.add("hidden");
+      }
     }
 
     // Experience
-    const expEl = document.getElementById("d-experience")!;
-    expEl.innerHTML =
-      (c.experience || [])
-        .map(
-          (e: any) =>
-            `<div class="p-3 bg-slate-700/30 rounded-lg">
-        <div class="font-medium text-slate-200">${e.role || ""} at ${e.company || ""}</div>
-        <div class="text-xs text-slate-500 mt-0.5">${e.duration || ""}</div>
-        ${e.description ? `<div class="text-xs text-slate-400 mt-1">${e.description}</div>` : ""}
-      </div>`,
+    const expEl = el("d-experience");
+    if (expEl) {
+      expEl.innerHTML = (c.experience || [])
+        .map((e: any) =>
+          `<div class="p-3 bg-slate-700/30 rounded-lg">
+            <div class="font-medium text-slate-200">${e.role || ""} at ${e.company || ""}</div>
+            <div class="text-xs text-slate-500 mt-0.5">${e.duration || ""}</div>
+            ${e.description ? `<div class="text-xs text-slate-400 mt-1">${e.description}</div>` : ""}
+          </div>`
         )
         .join("") || '<div class="text-slate-500">No experience data</div>';
+    }
 
     // Education
-    const eduEl = document.getElementById("d-education")!;
-    eduEl.innerHTML =
-      (c.education || [])
-        .map(
-          (e: any) =>
-            `<div class="p-3 bg-slate-700/30 rounded-lg">
-        <div class="font-medium text-slate-200">${e.degree || ""}</div>
-        <div class="text-xs text-slate-400 mt-0.5">${e.institution || ""} ${e.year ? "· " + e.year : ""}</div>
-      </div>`,
+    const eduEl = el("d-education");
+    if (eduEl) {
+      eduEl.innerHTML = (c.education || [])
+        .map((e: any) =>
+          `<div class="p-3 bg-slate-700/30 rounded-lg">
+            <div class="font-medium text-slate-200">${e.degree || ""}</div>
+            <div class="text-xs text-slate-400 mt-0.5">${e.institution || ""} ${e.year ? "· " + e.year : ""}</div>
+          </div>`
         )
         .join("") || '<div class="text-slate-500">No education data</div>';
+    }
 
     // Interview Questions
     renderInterviewQuestions(c.interview_questions || []);
   }
 
   function renderInterviewQuestions(data: any) {
-    const qEl = document.getElementById("d-questions")!;
+    const qEl = document.getElementById("d-questions");
+    if (!qEl) return;
     if (!data || (Array.isArray(data) && !data.length) || Object.keys(data).length === 0) {
-      qEl.innerHTML =
-        '<p class="text-slate-500 text-sm">No questions generated yet. Select experience level and click "Generate Questions".</p>';
+      qEl.innerHTML = '<p class="text-slate-500 text-sm">No questions generated yet. Select experience level and click "Generate Questions".</p>';
       return;
     }
 
@@ -1008,129 +1008,137 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     qEl.innerHTML = html;
   }
 
-  // Generate interview questions
-  document
-    .getElementById("generateQuestionsBtn")!
-    .addEventListener("click", async () => {
+  function bindDetailModalEvents() {
+    // Generate interview questions
+    document.getElementById("generateQuestionsBtn")?.addEventListener("click", async () => {
+        if (!currentCandidateId) return;
+        const btn = document.getElementById("generateQuestionsBtn")!;
+        btn.textContent = "Generating...";
+        btn.setAttribute("disabled", "true");
+
+        try {
+          const expLevel = (document.getElementById("expLevelSelect") as HTMLSelectElement).value;
+          const json = await api.post(
+            `/api/v1/recruitment/candidates/${currentCandidateId}/interview-questions`,
+            { experience_level: expLevel }
+          );
+          renderInterviewQuestions(json.data?.interview_questions || []);
+        } catch (err) {
+          console.error("Failed to generate questions", err);
+        } finally {
+          btn.textContent = "Generate Questions";
+          btn.removeAttribute("disabled");
+        }
+      });
+
+    // Score against JD
+    document.getElementById("scoreBtn")?.addEventListener("click", async () => {
       if (!currentCandidateId) return;
-      const btn = document.getElementById("generateQuestionsBtn")!;
-      btn.textContent = "Generating...";
+      const jt = (document.getElementById("score-job-title") as HTMLInputElement).value;
+      const jd = (document.getElementById("score-jd") as HTMLTextAreaElement).value;
+      if (!jd) {
+        alert("Please enter a job description to score against.");
+        return;
+      }
+
+      const btn = document.getElementById("scoreBtn")!;
+      btn.textContent = "Scoring...";
       btn.setAttribute("disabled", "true");
 
       try {
-        const expLevel = (document.getElementById("expLevelSelect") as HTMLSelectElement).value;
         const json = await api.post(
-          `/api/v1/recruitment/candidates/${currentCandidateId}/interview-questions`,
-          { experience_level: expLevel }
+          `/api/v1/recruitment/candidates/${currentCandidateId}/score`,
+          {
+            job_title: jt || "Position",
+            job_description: jd,
+          }
         );
-        renderInterviewQuestions(json.data?.interview_questions || []);
+        renderDetailModal(json.data);
+        await refreshCandidates();
       } catch (err) {
-        console.error("Failed to generate questions", err);
+        console.error("Failed to score candidate", err);
       } finally {
-        btn.textContent = "Generate Questions";
+        btn.textContent = "Run AI Scoring";
         btn.removeAttribute("disabled");
       }
     });
 
-  // Score against JD
-  document.getElementById("scoreBtn")!.addEventListener("click", async () => {
-    if (!currentCandidateId) return;
-    const jt = (document.getElementById("score-job-title") as HTMLInputElement)
-      .value;
-    const jd = (document.getElementById("score-jd") as HTMLTextAreaElement)
-      .value;
-    if (!jd) {
-      alert("Please enter a job description to score against.");
-      return;
-    }
-
-    const btn = document.getElementById("scoreBtn")!;
-    btn.textContent = "Scoring...";
-    btn.setAttribute("disabled", "true");
-
-    try {
-      const json = await api.post(
-        `/api/v1/recruitment/candidates/${currentCandidateId}/score`,
-        {
-          job_title: jt || "Position",
-          job_description: jd,
+    // Update stage
+    document.getElementById("updateStageBtn")?.addEventListener("click", async () => {
+        if (!currentCandidateId) return;
+        const stage = (document.getElementById("d-stage-select") as HTMLSelectElement).value;
+        try {
+          await api.patch(
+            `/api/v1/recruitment/candidates/${currentCandidateId}/stage`,
+            { stage }
+          );
+          await refreshCandidates();
+          // Update badge in modal
+          const stageEl = document.querySelector(`[data-id="${currentCandidateId}"] .badge`);
+          if (stageEl) stageEl.outerHTML = stageLabel(stage);
+        } catch (err) {
+          console.error("Failed to update stage", err);
         }
-      );
-      renderDetailModal(json.data);
-      await loadCandidates();
-    } catch (err) {
-      console.error("Failed to score candidate", err);
-    } finally {
-      btn.textContent = "Run AI Scoring";
-      btn.removeAttribute("disabled");
-    }
-  });
-
-  // Update stage
-  document
-    .getElementById("updateStageBtn")!
-    .addEventListener("click", async () => {
-      if (!currentCandidateId) return;
-      const stage = (
-        document.getElementById("d-stage-select") as HTMLSelectElement
-      ).value;
-      try {
-        await api.patch(
-          `/api/v1/recruitment/candidates/${currentCandidateId}/stage`,
-          { stage }
-        );
-        await loadCandidates();
-        // Update badge in modal
-        const stageEl = document.querySelector(
-          `[data-id="${currentCandidateId}"] .badge`,
-        );
-        if (stageEl) stageEl.outerHTML = stageLabel(stage);
-      } catch (err) {
-        console.error("Failed to update stage", err);
-      }
-    });
+      });
+  }
 
   async function loadStats() {
     try {
       const json = await api.get("/api/v1/recruitment/stats");
       const d = json.data || {};
-      document.getElementById("stat-total")!.textContent =
-        d.total_candidates ?? "0";
-      document.getElementById("stat-shortlisted")!.textContent =
-        d.shortlisted ?? "0";
-      document.getElementById("stat-interviews")!.textContent =
-        d.interviews_scheduled ?? "0";
-      document.getElementById("stat-hired")!.textContent = d.hired ?? "0";
+      const el = (id: string) => document.getElementById(id);
+      if(el("stat-total")) el("stat-total")!.textContent = d.total_candidates ?? "0";
+      if(el("stat-shortlisted")) el("stat-shortlisted")!.textContent = d.shortlisted ?? "0";
+      if(el("stat-interviews")) el("stat-interviews")!.textContent = d.interviews_scheduled ?? "0";
+      if(el("stat-hired")) el("stat-hired")!.textContent = d.hired ?? "0";
     } catch (err) {
       console.error("Failed to load stats", err);
     }
   }
 
-  async function loadCandidates() {
+  async function refreshCandidates() {
     try {
       const json = await api.get("/api/v1/recruitment/candidates");
-      allCandidates = json.data || [];
-      renderCandidates(allCandidates);
-      document.getElementById("candidate-count")!.textContent =
-        `${allCandidates.length} candidates`;
-      // Load stats async without blocking
+      candidatesStore.set(json.data || []);
       loadStats();
     } catch (err) {
-      candidatesTable.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-400">Failed to load candidates</td></tr>`;
+      console.error("Failed to refresh candidates", err);
     }
   }
 
-  // Init
-  loadCandidates();
+  function bindEvents() {
+    initRefs();
+    bindModalEvents();
+    bindDropZoneEvents();
+    bindFilterEvents();
+    bindDetailModalEvents();
+
+    candidatesStore.subscribe((val) => {
+      allCandidates = val;
+      applyFilters();
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    if (window.location.pathname === '/recruitment') {
+      bindEvents();
+      
+      if (candidatesStore.get().length === 0) {
+        refreshCandidates();
+      } else {
+        loadStats(); // always load stats on nav
+      }
+    }
+  });
 
   (window as any).updateCandidateStage = async (id: string, stage: string) => {
     try {
       await api.patch(`/api/v1/recruitment/candidates/${id}/stage`, { stage });
-      await loadCandidates();
+      await refreshCandidates();
     } catch (err) {
       console.error("Failed to update candidate stage:", err);
       alert("Failed to update candidate stage. Please try again.");
-      await loadCandidates(); // Revert dropdown
+      await refreshCandidates(); // Revert dropdown
     }
   };
 </script>

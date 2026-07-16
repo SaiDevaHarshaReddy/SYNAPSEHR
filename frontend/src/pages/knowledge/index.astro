@@ -368,36 +368,12 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     </div>
   </div>
 
-  <script>
+<script>
     import { api } from "../../services/api";
     import { showToast } from "../../stores/index";
-
-    const API = import.meta.env.PUBLIC_API_URL; // keeping this if used anywhere else
+    import { knowledgeStore } from "../../stores/dataStore";
 
     let documents: any[] = [];
-
-    const kbViewerModal = document.getElementById(
-      "kb-viewer-modal",
-    ) as HTMLDivElement;
-    const closeKbViewer = document.getElementById(
-      "close-kb-viewer",
-    ) as HTMLButtonElement;
-    const kbDownloadBtn = document.getElementById(
-      "kb-download-btn",
-    ) as HTMLButtonElement;
-    const kbViewerContent = document.getElementById(
-      "kb-viewer-content",
-    ) as HTMLDivElement;
-    const kbViewerTitle = document.getElementById(
-      "kb-viewer-title",
-    ) as HTMLHeadingElement;
-    const kbViewerMeta = document.getElementById(
-      "kb-viewer-meta",
-    ) as HTMLParagraphElement;
-
-    closeKbViewer?.addEventListener("click", () =>
-      kbViewerModal?.classList.add("hidden"),
-    );
 
     const kbContents: Record<string, string> = {
       "Employee Handbook 2026": `
@@ -484,7 +460,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       `,
     };
 
-    // Sample knowledge base documents
     const sampleDocuments = [
       {
         id: "kb1",
@@ -584,36 +559,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       },
     ];
 
-    document
-      .getElementById("file-upload")
-      ?.addEventListener("change", (e: any) => {
-        const file = e.target.files?.[0];
-        if (file) {
-          const nameEl = document.getElementById("file-name")!;
-          nameEl.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-          nameEl.classList.remove("hidden");
-        }
-      });
-
-    async function loadDocuments() {
-      try {
-        const res = await api.get("/api/v1/knowledge");
-        documents = res.data || [];
-        if (!documents || documents.length === 0) documents = sampleDocuments;
-      } catch {
-        documents = sampleDocuments;
-      }
-      renderDocuments();
-      document.getElementById("kb-documents")!.textContent =
-        documents.length.toString();
-      document.getElementById("kb-categories")!.textContent = new Set(
-        documents.map((d) => d.category),
-      ).size.toString();
-      document.getElementById("kb-chunks")!.textContent = documents
-        .reduce((sum, d) => sum + (d.chunks_indexed || 0), 0)
-        .toString();
-    }
-
     function getCategoryLabel(cat: string): string {
       return (
         (
@@ -674,6 +619,15 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       `,
         )
         .join("");
+        
+      const kbDocs = document.getElementById("kb-documents");
+      if (kbDocs) kbDocs.textContent = documents.length.toString();
+      
+      const kbCats = document.getElementById("kb-categories");
+      if (kbCats) kbCats.textContent = new Set(documents.map((d) => d.category)).size.toString();
+      
+      const kbChunks = document.getElementById("kb-chunks");
+      if (kbChunks) kbChunks.textContent = documents.reduce((sum, d) => sum + (d.chunks_indexed || 0), 0).toString();
     }
 
     function viewKbDoc(id: string) {
@@ -682,11 +636,19 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       const content =
         kbContents[doc.title] ||
         `<h1 style="font-size:22px;color:#4f46e5;">${doc.title}</h1><p style="margin-top:20px;color:#475569;line-height:1.8;">This document contains ${doc.chunks_indexed || 0} indexed chunks across multiple sections. Content is available for AI-powered search and retrieval.</p><p style="margin-top:15px;color:#475569;line-height:1.8;">Category: ${getCategoryLabel(doc.category)}<br>Department: ${doc.department || "All Departments"}<br>Version: ${doc.version}</p>`;
-      kbViewerTitle.textContent = doc.title;
-      kbViewerMeta.textContent = `${getCategoryLabel(doc.category)} · ${doc.department || "All Departments"} · v${doc.version}`;
-      kbViewerContent.innerHTML = `<div style="padding:40px;background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">${content}</div>`;
-      kbViewerModal?.classList.remove("hidden");
-      kbDownloadBtn.onclick = () => downloadKbDoc(id);
+      
+      const titleEl = document.getElementById("kb-viewer-title");
+      if(titleEl) titleEl.textContent = doc.title;
+      
+      const metaEl = document.getElementById("kb-viewer-meta");
+      if(metaEl) metaEl.textContent = `${getCategoryLabel(doc.category)} · ${doc.department || "All Departments"} · v${doc.version}`;
+      
+      const contentEl = document.getElementById("kb-viewer-content");
+      if(contentEl) contentEl.innerHTML = `<div style="padding:40px;background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">${content}</div>`;
+      
+      document.getElementById("kb-viewer-modal")?.classList.remove("hidden");
+      const downloadBtn = document.getElementById("kb-download-btn");
+      if(downloadBtn) downloadBtn.onclick = () => downloadKbDoc(id);
     }
 
     function downloadKbDoc(id: string) {
@@ -714,22 +676,30 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       if (!confirm("Delete this document and its index?")) return;
       try {
         await api.delete(`/api/v1/knowledge/${id}`);
-        documents = documents.filter((d) => d.id !== id);
-        renderDocuments();
-        document.getElementById("kb-documents")!.textContent =
-          documents.length.toString();
-        document.getElementById("kb-chunks")!.textContent = documents
-          .reduce((sum, d) => sum + (d.chunks_indexed || 0), 0)
-          .toString();
+        knowledgeStore.set(documents.filter((d) => d.id !== id));
         showToast("Document deleted", "success");
       } catch {
         showToast("Failed to delete document", "error");
       }
     };
 
-    document
-      .getElementById("upload-form")
-      ?.addEventListener("submit", async (e: any) => {
+    function bindEvents() {
+      document.getElementById("close-kb-viewer")?.addEventListener("click", () => {
+          document.getElementById("kb-viewer-modal")?.classList.add("hidden");
+      });
+      
+      document.getElementById("file-upload")?.addEventListener("change", (e: any) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const nameEl = document.getElementById("file-name");
+          if (nameEl) {
+            nameEl.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            nameEl.classList.remove("hidden");
+          }
+        }
+      });
+      
+      document.getElementById("upload-form")?.addEventListener("submit", async (e: any) => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const file = formData.get("file") as File;
@@ -756,7 +726,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             `Document uploaded and ${json.data?.chunks_indexed || 0} chunks indexed`,
             "success",
           );
-          documents.unshift({
+          
+          const newDoc = {
             id: "kb" + Date.now(),
             title: formData.get("title") as string,
             category: formData.get("category") as string,
@@ -765,16 +736,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             department: formData.get("department") || "All Departments",
             created_at: new Date().toISOString(),
             chunks_indexed: Math.floor(Math.random() * 50) + 20,
-          });
-          renderDocuments();
-          document.getElementById("kb-documents")!.textContent =
-            documents.length.toString();
-          document.getElementById("kb-categories")!.textContent = new Set(
-            documents.map((d) => d.category),
-          ).size.toString();
-          document.getElementById("kb-chunks")!.textContent = documents
-            .reduce((sum, d) => sum + (d.chunks_indexed || 0), 0)
-            .toString();
+          };
+          
+          knowledgeStore.set([newDoc, ...documents]);
+
           document.getElementById("upload-modal")!.classList.add("hidden");
           e.target.reset();
           document.getElementById("file-name")!.classList.add("hidden");
@@ -789,7 +754,26 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
           spinner.classList.add("hidden");
         }
       });
+      
+      knowledgeStore.subscribe(val => {
+        documents = val;
+        renderDocuments();
+      });
+    }
 
-    loadDocuments();
-  </script>
+    document.addEventListener('astro:page-load', () => {
+      if (window.location.pathname === '/knowledge') {
+        bindEvents();
+        
+        if (knowledgeStore.get().length === 0) {
+          api.get("/api/v1/knowledge").then(res => {
+            const docs = res.data || [];
+            knowledgeStore.set(docs.length > 0 ? docs : sampleDocuments);
+          }).catch(() => {
+            knowledgeStore.set(sampleDocuments);
+          });
+        }
+      }
+    });
+</script>
 </DashboardLayout>

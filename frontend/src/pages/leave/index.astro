@@ -104,98 +104,97 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
 <script>
   import { api } from '../../services/api';
-
-  const modal = document.getElementById('leaveModal') as HTMLDivElement;
-  const requestBtn = document.getElementById('requestLeaveBtn') as HTMLButtonElement;
-  const cancelBtn = document.getElementById('cancelModal') as HTMLButtonElement;
-  const leaveForm = document.getElementById('leaveForm') as HTMLFormElement;
-  const leaveTypeSelect = document.getElementById('leaveType') as HTMLSelectElement;
-  const leaveHistoryTable = document.getElementById('leaveHistoryTable') as HTMLTableSectionElement;
-
-  requestBtn?.addEventListener('click', () => modal?.classList.remove('hidden'));
-  cancelBtn?.addEventListener('click', () => modal?.classList.add('hidden'));
+  import { leaveRequestsStore } from '../../stores/dataStore';
 
   let leaveTypes: any[] = [];
+  let user: any = null;
+  let isManager = false;
 
-  async function initLeavePage() {
+  let modal: HTMLDivElement | null;
+  let requestBtn: HTMLButtonElement | null;
+  let cancelBtn: HTMLButtonElement | null;
+  let leaveForm: HTMLFormElement | null;
+  let leaveTypeSelect: HTMLSelectElement | null;
+  let leaveHistoryTable: HTMLTableSectionElement | null;
+  let refreshInterval: number | undefined;
+
+  function bindDOM() {
+    modal = document.getElementById('leaveModal') as HTMLDivElement;
+    requestBtn = document.getElementById('requestLeaveBtn') as HTMLButtonElement;
+    cancelBtn = document.getElementById('cancelModal') as HTMLButtonElement;
+    leaveForm = document.getElementById('leaveForm') as HTMLFormElement;
+    leaveTypeSelect = document.getElementById('leaveType') as HTMLSelectElement;
+    leaveHistoryTable = document.getElementById('leaveHistoryTable') as HTMLTableSectionElement;
+
+    requestBtn?.addEventListener('click', () => modal?.classList.remove('hidden'));
+    cancelBtn?.addEventListener('click', () => modal?.classList.add('hidden'));
+
+    leaveForm?.addEventListener('submit', handleLeaveSubmit);
+  }
+
+  async function handleLeaveSubmit(e: Event) {
+    e.preventDefault();
+    const typeId = (document.getElementById('leaveType') as HTMLSelectElement).value;
+    const startDate = (document.getElementById('startDate') as HTMLInputElement).value;
+    const endDate = (document.getElementById('endDate') as HTMLInputElement).value;
+    const reason = (document.getElementById('reason') as HTMLTextAreaElement).value;
+
     try {
-      // 1. Fetch leave types to populate select dropdown
-      leaveTypes = await api.getLeaveTypes();
-      if (leaveTypeSelect) {
-        leaveTypeSelect.innerHTML = '<option value="">Select type</option>';
-        if (leaveTypes && leaveTypes.length > 0) {
-          leaveTypes.forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t.id;
-            opt.textContent = t.name;
-            leaveTypeSelect.appendChild(opt);
-          });
-        } else {
-          // Fallback: hardcoded leave types
-          const fallbackTypes = [
-            { id: 'casual', name: 'Casual Leave' },
-            { id: 'sick', name: 'Sick Leave' },
-            { id: 'annual', name: 'Annual Leave' },
-            { id: 'maternity', name: 'Maternity Leave' },
-            { id: 'paternity', name: 'Paternity Leave' },
-            { id: 'unpaid', name: 'Unpaid Leave' },
-          ];
-          fallbackTypes.forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t.id;
-            opt.textContent = t.name;
-            leaveTypeSelect.appendChild(opt);
-          });
-        }
-      }
-
-      // 2. Fetch and render balance & history
-      await loadLeaveData();
-    } catch (error) {
-      console.error('Failed to initialize leave page:', error);
-      // Fallback: populate leave types even if API fails
-      if (leaveTypeSelect && leaveTypeSelect.options.length <= 1) {
-        const fallbackTypes = [
-          { id: 'casual', name: 'Casual Leave' },
-          { id: 'sick', name: 'Sick Leave' },
-          { id: 'annual', name: 'Annual Leave' },
-          { id: 'maternity', name: 'Maternity Leave' },
-          { id: 'paternity', name: 'Paternity Leave' },
-          { id: 'unpaid', name: 'Unpaid Leave' },
-        ];
-        leaveTypeSelect.innerHTML = '<option value="">Select type</option>';
-        fallbackTypes.forEach(t => {
-          const opt = document.createElement('option');
-          opt.value = t.id;
-          opt.textContent = t.name;
-          leaveTypeSelect.appendChild(opt);
-        });
-      }
+      const newReq = await api.createLeaveRequest({
+        leave_type_id: typeId,
+        start_date: startDate,
+        end_date: endDate,
+        reason: reason,
+      });
+      modal?.classList.add('hidden');
+      leaveForm?.reset();
+      
+      // Update store
+      leaveRequestsStore.set([newReq, ...leaveRequestsStore.get()]);
+      updateBalances();
+    } catch (err) {
+      console.error('Failed to create leave request:', err);
+      alert('Error creating leave request. Please check inputs and balance.');
     }
   }
 
-  async function loadLeaveData() {
+  async function initLeavePage() {
     try {
-      const user = await api.getCurrentUser();
-      const isManager = user && ['admin', 'hr', 'administrator'].includes(user.role);
-
+      if(!user) {
+        user = await api.getCurrentUser();
+        isManager = user && ['admin', 'hr', 'administrator'].includes(user.role);
+      }
+      
       if (isManager) {
         document.getElementById('actions-header')?.classList.remove('hidden');
       }
 
-      // Fetch balances and history concurrently
-      const [balances, history] = await Promise.all([
-        api.getLeaveBalance().catch(() => []),
-        api.getLeaveHistory().catch(() => [])
-      ]);
+      leaveTypes = await api.getLeaveTypes().catch(() => []);
+      populateLeaveTypes();
+      
+      leaveRequestsStore.subscribe(history => {
+        renderHistory(history);
+      });
 
+      updateBalances();
+    } catch (error) {
+      console.error('Failed to initialize leave page:', error);
+      populateLeaveTypes(true);
+    }
+  }
+  
+  async function updateBalances() {
+      const balances = await api.getLeaveBalance().catch(() => []);
       let usedTotal = 0;
       
-      // Default to showing 0 if no records found
-      document.getElementById('balance-casual')!.textContent = '0';
-      document.getElementById('balance-sick')!.textContent = '0';
-      document.getElementById('balance-annual')!.textContent = '0';
-      document.getElementById('balance-used')!.textContent = '0';
+      const bc = document.getElementById('balance-casual');
+      if(bc) bc.textContent = '0';
+      const bs = document.getElementById('balance-sick');
+      if(bs) bs.textContent = '0';
+      const ba = document.getElementById('balance-annual');
+      if(ba) ba.textContent = '0';
+      const bu = document.getElementById('balance-used');
+      if(bu) bu.textContent = '0';
 
       if (balances && balances.length > 0) {
         balances.forEach(b => {
@@ -213,128 +212,90 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       
       const usedEl = document.getElementById('balance-used');
       if (usedEl) usedEl.textContent = usedTotal.toString();
-      if (leaveHistoryTable) {
-        if (!history || history.length === 0) {
-          leaveHistoryTable.innerHTML = `
-            <tr>
-              <td colspan="7" class="text-center py-8 text-slate-400">
-                No leave requests found
-              </td>
-            </tr>
-          `;
-        } else {
-          leaveHistoryTable.innerHTML = '';
-          history.forEach(req => {
-            const tr = document.createElement('tr');
-            if (req.is_read === false && isManager) {
-              tr.classList.add('bg-indigo-500/10');
-            }
-            
-            // Format status badge
-            const statusStr = (req.status || 'pending').toLowerCase();
-            let badgeClass = 'badge-warning'; // pending/waiting_approval
-            if (statusStr === 'approved' || statusStr === 'completed') {
-              badgeClass = 'badge-success';
-            } else if (statusStr === 'rejected' || statusStr === 'failed') {
-              badgeClass = 'badge-error';
-            }
-            
-            let statusHtml = ``;
-            if (isManager) {
-               statusHtml = `
-                <select class="input py-1 px-2 text-xs" onchange="window.updateLeaveStatus('${req.id}', this.value)">
-                  <option value="pending" ${statusStr === 'pending' ? 'selected' : ''}>Pending</option>
-                  <option value="approved" ${statusStr === 'approved' ? 'selected' : ''}>Approved</option>
-                  <option value="rejected" ${statusStr === 'rejected' ? 'selected' : ''}>Rejected</option>
-                </select>
-               `;
-            } else {
-               statusHtml = `<span class="badge ${badgeClass}">${req.status}</span>`;
-            }
-            
-            let actionsHtml = ``;
-            if (isManager) {
-              actionsHtml = `
-                <td class="flex gap-2">
-                  ${req.is_read === false ? `<button onclick="window.markLeaveRead('${req.id}')" class="btn btn-secondary py-1 px-2 text-xs">Mark Read</button>` : `<span class="text-xs text-slate-500">Read</span>`}
-                </td>
-              `;
-            } else {
-              actionsHtml = `<td class="hidden"></td>`;
-            }
-            
-            tr.innerHTML = `
-              <td class="font-medium text-white">${req.employee_name || 'Me'}</td>
-              <td class="font-medium text-white">${(req as any).leave_type?.name || req.leave_type_name || 'Leave'}</td>
-              <td class="text-slate-300">${req.start_date}</td>
-              <td class="text-slate-300">${req.end_date}</td>
-              <td>${statusHtml}</td>
-              <td class="text-slate-400 text-sm">${req.reason || '-'}</td>
-              ${actionsHtml}
-            `;
-            leaveHistoryTable.appendChild(tr);
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load leave data:', error);
-      // Show empty state
-      if (leaveHistoryTable) {
-        leaveHistoryTable.innerHTML = `
-          <tr>
-            <td colspan="7" class="text-center py-8 text-slate-400">
-              Unable to load leave data. Please check if the backend is running.
-            </td>
-
-          </tr>
-        `;
-      }
-    }
   }
 
-  // Handle form submit
-  leaveForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const typeId = (document.getElementById('leaveType') as HTMLSelectElement).value;
-    const startDate = (document.getElementById('startDate') as HTMLInputElement).value;
-    const endDate = (document.getElementById('endDate') as HTMLInputElement).value;
-    const reason = (document.getElementById('reason') as HTMLTextAreaElement).value;
-
-    try {
-      await api.createLeaveRequest({
-        leave_type_id: typeId,
-        start_date: startDate,
-        end_date: endDate,
-        reason: reason,
+  function populateLeaveTypes(fallback = false) {
+    if (leaveTypeSelect) {
+      leaveTypeSelect.innerHTML = '<option value="">Select type</option>';
+      const types = (!fallback && leaveTypes.length > 0) ? leaveTypes : [
+        { id: 'casual', name: 'Casual Leave' },
+        { id: 'sick', name: 'Sick Leave' },
+        { id: 'annual', name: 'Annual Leave' },
+        { id: 'maternity', name: 'Maternity Leave' },
+        { id: 'paternity', name: 'Paternity Leave' },
+        { id: 'unpaid', name: 'Unpaid Leave' },
+      ];
+      types.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = t.name;
+        leaveTypeSelect!.appendChild(opt);
       });
-      modal?.classList.add('hidden');
-      leaveForm.reset();
-      await loadLeaveData();
-    } catch (err) {
-      console.error('Failed to create leave request:', err);
-      alert('Error creating leave request. Please check inputs and balance.');
     }
-  });
-
-  // Start init
-  initLeavePage();
-
-  // Check if a leave was applied via chat and refresh immediately
-  if (sessionStorage.getItem('leave_applied') === 'true') {
-    sessionStorage.removeItem('leave_applied');
-    loadLeaveData();
   }
 
-  // Auto-refresh every 30 seconds to catch leaves applied via chat
-  setInterval(() => {
-    loadLeaveData();
-  }, 30000);
+  function renderHistory(history: any[]) {
+    if (!leaveHistoryTable) return;
+    
+    if (!history || history.length === 0) {
+      leaveHistoryTable.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400">No leave requests found</td></tr>`;
+      return;
+    }
+    
+    leaveHistoryTable.innerHTML = '';
+    history.forEach(req => {
+      const tr = document.createElement('tr');
+      if (req.is_read === false && isManager) {
+        tr.classList.add('bg-indigo-500/10');
+      }
+      
+      const statusStr = (req.status || 'pending').toLowerCase();
+      let badgeClass = 'badge-warning'; 
+      if (statusStr === 'approved' || statusStr === 'completed') badgeClass = 'badge-success';
+      else if (statusStr === 'rejected' || statusStr === 'failed') badgeClass = 'badge-error';
+      
+      let statusHtml = ``;
+      if (isManager) {
+          statusHtml = `
+          <select class="input py-1 px-2 text-xs" onchange="window.updateLeaveStatus('${req.id}', this.value)">
+            <option value="pending" ${statusStr === 'pending' ? 'selected' : ''}>Pending</option>
+            <option value="approved" ${statusStr === 'approved' ? 'selected' : ''}>Approved</option>
+            <option value="rejected" ${statusStr === 'rejected' ? 'selected' : ''}>Rejected</option>
+          </select>
+          `;
+      } else {
+          statusHtml = `<span class="badge ${badgeClass}">${req.status}</span>`;
+      }
+      
+      let actionsHtml = ``;
+      if (isManager) {
+        actionsHtml = `
+          <td class="flex gap-2">
+            ${req.is_read === false ? `<button onclick="window.markLeaveRead('${req.id}')" class="btn btn-secondary py-1 px-2 text-xs">Mark Read</button>` : `<span class="text-xs text-slate-500">Read</span>`}
+          </td>
+        `;
+      } else {
+        actionsHtml = `<td class="hidden"></td>`;
+      }
+      
+      tr.innerHTML = `
+        <td class="font-medium text-white">${req.employee_name || 'Me'}</td>
+        <td class="font-medium text-white">${req.leave_type?.name || req.leave_type_name || 'Leave'}</td>
+        <td class="text-slate-300">${req.start_date}</td>
+        <td class="text-slate-300">${req.end_date}</td>
+        <td>${statusHtml}</td>
+        <td class="text-slate-400 text-sm">${req.reason || '-'}</td>
+        ${actionsHtml}
+      `;
+      leaveHistoryTable!.appendChild(tr);
+    });
+  }
 
-  // Global functions for inline HTML event handlers
   (window as any).updateLeaveStatus = async function(requestId: string, status: string) {
     try {
-      await api.approveLeave(requestId, status);
-      await loadLeaveData();
+      const updated = await api.approveLeave(requestId, status);
+      const items = leaveRequestsStore.get().map(r => r.id === requestId ? updated : r);
+      leaveRequestsStore.set(items);
     } catch (err) {
       console.error('Failed to update status', err);
       alert('Failed to update leave status. Please try again.');
@@ -343,10 +304,40 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
   (window as any).markLeaveRead = async function(requestId: string) {
     try {
-      await api.markLeaveAsRead(requestId);
-      await loadLeaveData();
+      const updated = await api.markLeaveAsRead(requestId);
+      const items = leaveRequestsStore.get().map(r => r.id === requestId ? updated : r);
+      leaveRequestsStore.set(items);
     } catch (err) {
       console.error('Failed to mark as read', err);
     }
   };
+
+  document.addEventListener('astro:page-load', () => {
+    if (window.location.pathname.startsWith('/leave')) {
+      bindDOM();
+      initLeavePage();
+      
+      if (leaveRequestsStore.get().length === 0) {
+        api.getLeaveHistory().then(res => {
+          leaveRequestsStore.set((res as any) || []);
+        }).catch(() => {});
+      }
+
+      if (sessionStorage.getItem('leave_applied') === 'true') {
+        sessionStorage.removeItem('leave_applied');
+        api.getLeaveHistory().then(res => {
+          leaveRequestsStore.set((res as any) || []);
+        }).catch(() => {});
+      }
+
+      clearInterval(refreshInterval);
+      refreshInterval = window.setInterval(() => {
+        api.getLeaveHistory().then(res => {
+          leaveRequestsStore.set((res as any) || []);
+        }).catch(() => {});
+      }, 30000);
+    } else {
+      clearInterval(refreshInterval);
+    }
+  });
 </script>
