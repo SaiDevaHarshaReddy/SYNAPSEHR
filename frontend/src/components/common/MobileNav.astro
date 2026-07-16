@@ -111,8 +111,11 @@ const currentPath = Astro.url.pathname;
   }
 
   authStore.subscribe((state: any) => updateMobileNav(state.user));
-  const initialMobileState = authStore.get();
-  if (initialMobileState.user) updateMobileNav(initialMobileState.user);
+  
+  document.addEventListener('astro:page-load', () => {
+    const currentMobileState = authStore.get();
+    if (currentMobileState.user) updateMobileNav(currentMobileState.user);
+  });
 </script>
 
 <style>

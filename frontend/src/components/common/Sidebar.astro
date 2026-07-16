@@ -116,6 +116,9 @@ const currentPath = Astro.url.pathname;
   }
 
   authStore.subscribe((state: any) => updateUser(state.user));
-  const initialState = authStore.get();
-  if (initialState.user) updateUser(initialState.user);
+  
+  document.addEventListener('astro:page-load', () => {
+    const currentState = authStore.get();
+    if (currentState.user) updateUser(currentState.user);
+  });
 </script>
