@@ -231,10 +231,15 @@
     }));
   }
 
+  import { authStore } from "../../stores/index";
+
   document.addEventListener('astro:page-load', () => {
     // Only init if we are on dashboard (or any page that renders this grid, but it's mainly dashboard)
     if (document.getElementById("stats-grid")) {
-      initStatsGrid();
+      const user = authStore.get().user;
+      if (user && ['admin', 'administrator', 'hr'].includes(user.role)) {
+        initStatsGrid();
+      }
     }
   });
 </script>
