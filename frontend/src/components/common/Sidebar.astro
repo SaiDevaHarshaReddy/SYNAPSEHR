@@ -82,7 +82,7 @@ const currentPath = Astro.url.pathname;
     // Unhide Admin tab if admin
     const adminLink = document.querySelector('[data-nav-item="admin"]') as HTMLElement;
     if (adminLink) {
-      if (user.role === 'admin') {
+      if (user.role === 'admin' || user.role === 'administrator') {
         adminLink.classList.remove('hidden');
         adminLink.classList.add('flex');
       } else {
@@ -94,7 +94,7 @@ const currentPath = Astro.url.pathname;
     // Hide Recruitment and Analytics for non-admin and non-hr
     const recruitmentLink = document.querySelector('[data-nav-item="recruitment"]') as HTMLElement;
     if (recruitmentLink) {
-      if (user.role === 'admin' || user.role === 'hr') {
+      if (user.role === 'admin' || user.role === 'administrator' || user.role === 'hr') {
         recruitmentLink.classList.remove('hidden');
         recruitmentLink.classList.add('flex');
       } else {
@@ -105,7 +105,7 @@ const currentPath = Astro.url.pathname;
 
     const analyticsLink = document.querySelector('[data-nav-item="analytics"]') as HTMLElement;
     if (analyticsLink) {
-      if (user.role === 'admin' || user.role === 'hr') {
+      if (user.role === 'admin' || user.role === 'administrator' || user.role === 'hr') {
         analyticsLink.classList.remove('hidden');
         analyticsLink.classList.add('flex');
       } else {

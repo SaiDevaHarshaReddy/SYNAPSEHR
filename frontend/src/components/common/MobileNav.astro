@@ -89,7 +89,7 @@ const currentPath = Astro.url.pathname;
     // Hide Recruit and Analytics for non-admin and non-hr
     const recruitLink = document.querySelector('[data-mobile-nav-item="recruit"]') as HTMLElement;
     if (recruitLink) {
-      if (user.role === 'admin' || user.role === 'hr') {
+      if (user.role === 'admin' || user.role === 'administrator' || user.role === 'hr') {
         recruitLink.classList.remove('hidden');
         recruitLink.classList.add('flex');
       } else {
@@ -100,7 +100,7 @@ const currentPath = Astro.url.pathname;
 
     const analyticsLink = document.querySelector('[data-mobile-nav-item="analytics"]') as HTMLElement;
     if (analyticsLink) {
-      if (user.role === 'admin' || user.role === 'hr') {
+      if (user.role === 'admin' || user.role === 'administrator' || user.role === 'hr') {
         analyticsLink.classList.remove('hidden');
         analyticsLink.classList.add('flex');
       } else {
