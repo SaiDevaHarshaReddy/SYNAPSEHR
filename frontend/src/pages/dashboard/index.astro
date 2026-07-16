@@ -14,7 +14,7 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
       <StatsGrid />
     </div>
     
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div id="quick-actions-row" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <QuickActions />
       <div data-hr-only class="hidden">
         <RecentActivity />
@@ -417,6 +417,23 @@ import RecentActivity from "../../components/dashboard/RecentActivity.astro";
             el.classList.add('hidden');
           }
         });
+        
+        const quickActionsRow = document.getElementById('quick-actions-row');
+        const quickActionsGrid = document.getElementById('quick-actions-grid');
+        
+        if (isHrOrAdmin) {
+          if (quickActionsRow) quickActionsRow.classList.add('lg:grid-cols-2');
+          if (quickActionsGrid) {
+            quickActionsGrid.classList.remove('sm:grid-cols-4', 'lg:grid-cols-4');
+            quickActionsGrid.classList.add('grid-cols-2');
+          }
+        } else {
+          if (quickActionsRow) quickActionsRow.classList.remove('lg:grid-cols-2');
+          if (quickActionsGrid) {
+            quickActionsGrid.classList.remove('grid-cols-2');
+            quickActionsGrid.classList.add('grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-4');
+          }
+        }
         
         if (isHrOrAdmin) {
           initDashboard();
