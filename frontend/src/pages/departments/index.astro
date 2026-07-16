@@ -251,15 +251,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     let departments: any[] = [];
     let employees: any[] = [];
 
-    // Manager name mapping per department (from seed data)
-    const deptManagerMap: Record<string, string> = {
-      Engineering: "Michael Chen",
-      "Human Resources": "Sarah Johnson",
-      Marketing: "Emily Davis",
-      Finance: "Robert Martinez",
-      Operations: "Nina Garcia",
-    };
-
     // Project data per department
     const deptProjects: Record<string, { active: number; completed: number }> =
       {
@@ -293,8 +284,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
       return employees.filter((e) => e.department_id === deptId).length;
     }
 
-    function getDeptManagerName(deptName: string): string {
-      return deptManagerMap[deptName] || "Department Lead";
+    function getDeptManagerName(dept: any): string {
+      if (!dept.manager_id) return "Department Lead";
+      const manager = employees.find((e: any) => e.id === dept.manager_id);
+      return manager ? `${manager.first_name} ${manager.last_name}` : "Department Lead";
     }
 
     function getDeptProjects(deptName: string): {
@@ -317,7 +310,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         .map((dept) => {
           const deptCode = dept.code || dept.name.substring(0, 3).toUpperCase();
           const empCount = getDeptEmployeeCount(dept.id);
-          const managerName = getDeptManagerName(dept.name);
+          const managerName = getDeptManagerName(dept);
           const projects = getDeptProjects(dept.name);
           return `
           <tr class="hover:bg-slate-700/30 transition-colors">
