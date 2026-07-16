@@ -90,6 +90,29 @@ const currentPath = Astro.url.pathname;
         adminLink.classList.remove('flex');
       }
     }
+
+    // Hide Recruitment and Analytics for non-admin and non-hr
+    const recruitmentLink = document.querySelector('[data-nav-item="recruitment"]') as HTMLElement;
+    if (recruitmentLink) {
+      if (user.role === 'admin' || user.role === 'hr') {
+        recruitmentLink.classList.remove('hidden');
+        recruitmentLink.classList.add('flex');
+      } else {
+        recruitmentLink.classList.add('hidden');
+        recruitmentLink.classList.remove('flex');
+      }
+    }
+
+    const analyticsLink = document.querySelector('[data-nav-item="analytics"]') as HTMLElement;
+    if (analyticsLink) {
+      if (user.role === 'admin' || user.role === 'hr') {
+        analyticsLink.classList.remove('hidden');
+        analyticsLink.classList.add('flex');
+      } else {
+        analyticsLink.classList.add('hidden');
+        analyticsLink.classList.remove('flex');
+      }
+    }
   }
 
   authStore.subscribe((state: any) => updateUser(state.user));

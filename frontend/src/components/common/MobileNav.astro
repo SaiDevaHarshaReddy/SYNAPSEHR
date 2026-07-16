@@ -18,6 +18,7 @@ const currentPath = Astro.url.pathname;
       return (
         <a
           href={item.href}
+          data-mobile-nav-item={item.label.toLowerCase()}
           class:list={[
             'flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all duration-200 min-w-[56px]',
             isActive
@@ -79,7 +80,39 @@ const currentPath = Astro.url.pathname;
 
 <script>
   import { showToast } from '../../stores/index';
+  import { authStore } from '../../stores/index';
   (window as any).showToast = showToast;
+
+  function updateMobileNav(user: any) {
+    if (!user) return;
+    
+    // Hide Recruit and Analytics for non-admin and non-hr
+    const recruitLink = document.querySelector('[data-mobile-nav-item="recruit"]') as HTMLElement;
+    if (recruitLink) {
+      if (user.role === 'admin' || user.role === 'hr') {
+        recruitLink.classList.remove('hidden');
+        recruitLink.classList.add('flex');
+      } else {
+        recruitLink.classList.add('hidden');
+        recruitLink.classList.remove('flex');
+      }
+    }
+
+    const analyticsLink = document.querySelector('[data-mobile-nav-item="analytics"]') as HTMLElement;
+    if (analyticsLink) {
+      if (user.role === 'admin' || user.role === 'hr') {
+        analyticsLink.classList.remove('hidden');
+        analyticsLink.classList.add('flex');
+      } else {
+        analyticsLink.classList.add('hidden');
+        analyticsLink.classList.remove('flex');
+      }
+    }
+  }
+
+  authStore.subscribe((state: any) => updateMobileNav(state.user));
+  const initialMobileState = authStore.get();
+  if (initialMobileState.user) updateMobileNav(initialMobileState.user);
 </script>
 
 <style>
