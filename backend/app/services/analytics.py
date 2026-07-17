@@ -59,7 +59,27 @@ class AnalyticsService:
         if end_date:
             pending_query = pending_query.where(LeaveRequest.created_at <= end_date)
             
-        pending_approvals = (await self.session.execute(pending_query)).scalar() or 0
+        pending_leave_count = (await self.session.execute(pending_query)).scalar() or 0
+        
+        # Pending workflows
+        pending_wf_query = select(func.count()).select_from(Workflow).where(
+            Workflow.status == "pending"
+        )
+        pending_wf_query = pending_wf_query.join(Employee, Workflow.employee_id == Employee.id).join(Department, Employee.department_id == Department.id)
+        if organization_id:
+            pending_wf_query = pending_wf_query.where(
+                Department.organization_id == organization_id
+            )
+        if department_id:
+            pending_wf_query = pending_wf_query.where(Employee.department_id == department_id)
+        if start_date:
+            pending_wf_query = pending_wf_query.where(Workflow.created_at >= start_date)
+        if end_date:
+            pending_wf_query = pending_wf_query.where(Workflow.created_at <= end_date)
+            
+        pending_wf_count = (await self.session.execute(pending_wf_query)).scalar() or 0
+
+        pending_approvals = pending_leave_count + pending_wf_count
 
         # Today's leave
         today = datetime.now().date()

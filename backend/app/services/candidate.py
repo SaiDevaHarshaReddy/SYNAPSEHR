@@ -507,18 +507,17 @@ Return ONLY the JSON object."""
 
     async def _call_ai(self, prompt: str) -> str:
         """Call the free AI model (Pollinations or fallback)."""
-        import aiohttp
+        import httpx
         import urllib.parse
 
         encoded = urllib.parse.quote(prompt)
         url = f"https://text.pollinations.ai/{encoded}"
 
         try:
-            timeout = aiohttp.ClientTimeout(total=20)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.get(url) as response:
-                    if response.status == 200:
-                        return await response.text()
+            async with httpx.AsyncClient(timeout=20.0) as client:
+                response = await client.get(url)
+                if response.status_code == 200:
+                    return response.text
         except Exception as e:
             logger.warning("pollinations_ai_failed", error=str(e))
 
