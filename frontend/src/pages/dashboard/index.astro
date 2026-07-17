@@ -408,50 +408,57 @@ import EmployeeNotifications from "../../components/dashboard/EmployeeNotificati
         }
     }
 
+    function updateVisibilityForRole(user: any) {
+      if (!user) return;
+      
+      const isHrOrAdmin = ['admin', 'administrator', 'hr'].includes(user.role?.toLowerCase());
+      
+      const hrElements = document.querySelectorAll('[data-hr-only]');
+      const empElements = document.querySelectorAll('[data-employee-only]');
+      
+      hrElements.forEach(el => {
+        if (isHrOrAdmin) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      });
+      
+      empElements.forEach(el => {
+        if (!isHrOrAdmin) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      });
+      
+      const quickActionsRow = document.getElementById('quick-actions-row');
+      const quickActionsGrid = document.getElementById('quick-actions-grid');
+      
+      if (isHrOrAdmin) {
+        if (quickActionsRow) quickActionsRow.classList.add('lg:grid-cols-2');
+        if (quickActionsGrid) {
+          quickActionsGrid.classList.remove('sm:grid-cols-4', 'lg:grid-cols-4');
+          quickActionsGrid.classList.add('grid-cols-2');
+        }
+        initDashboard();
+      } else {
+        if (quickActionsRow) quickActionsRow.classList.remove('lg:grid-cols-2');
+        if (quickActionsGrid) {
+          quickActionsGrid.classList.remove('grid-cols-2');
+          quickActionsGrid.classList.add('grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-4');
+        }
+      }
+    }
+
     document.addEventListener('astro:page-load', () => {
       if (window.location.pathname === '/dashboard') {
         const user = authStore.get().user;
-        const isHrOrAdmin = user && ['admin', 'administrator', 'hr'].includes(user.role);
-        
-        const hrElements = document.querySelectorAll('[data-hr-only]');
-        const empElements = document.querySelectorAll('[data-employee-only]');
-        
-        hrElements.forEach(el => {
-          if (isHrOrAdmin) {
-            el.classList.remove('hidden');
-          } else {
-            el.classList.add('hidden');
-          }
-        });
-        
-        empElements.forEach(el => {
-          if (!isHrOrAdmin) {
-            el.classList.remove('hidden');
-          } else {
-            el.classList.add('hidden');
-          }
-        });
-        
-        const quickActionsRow = document.getElementById('quick-actions-row');
-        const quickActionsGrid = document.getElementById('quick-actions-grid');
-        
-        if (isHrOrAdmin) {
-          if (quickActionsRow) quickActionsRow.classList.add('lg:grid-cols-2');
-          if (quickActionsGrid) {
-            quickActionsGrid.classList.remove('sm:grid-cols-4', 'lg:grid-cols-4');
-            quickActionsGrid.classList.add('grid-cols-2');
-          }
-        } else {
-          if (quickActionsRow) quickActionsRow.classList.remove('lg:grid-cols-2');
-          if (quickActionsGrid) {
-            quickActionsGrid.classList.remove('grid-cols-2');
-            quickActionsGrid.classList.add('grid-cols-1', 'sm:grid-cols-2', 'md:grid-cols-4');
-          }
+        if (user) {
+          updateVisibilityForRole(user);
         }
         
-        if (isHrOrAdmin) {
-          initDashboard();
-        }
+        // Also subscribe to changes in case user data is loaded async
+        const unsubAuth = authStore.subscribe(state => {
+          if (state.user) {
+            updateVisibilityForRole(state.user);
+          }
+        });
+        unsubscribes.push(unsubAuth);
       }
     });
 
