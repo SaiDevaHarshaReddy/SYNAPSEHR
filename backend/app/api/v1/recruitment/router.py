@@ -36,10 +36,10 @@ def _extract_text_from_upload(content: bytes, filename: str) -> str:
             pass
 
         try:
-            import PyPDF2
-            reader = PyPDF2.PdfReader(io.BytesIO(content))
+            import pypdf
+            reader = pypdf.PdfReader(io.BytesIO(content))
             return "\n".join(page.extract_text() or "" for page in reader.pages)
-        except Exception:
+        except Exception as e:
             pass
 
     if filename_lower.endswith(".docx"):

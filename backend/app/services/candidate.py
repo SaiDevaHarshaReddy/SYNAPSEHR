@@ -508,14 +508,17 @@ Return ONLY the JSON object."""
     async def _call_ai(self, prompt: str) -> str:
         """Call the free AI model (Pollinations or fallback)."""
         import httpx
-        import urllib.parse
 
-        encoded = urllib.parse.quote(prompt)
-        url = f"https://text.pollinations.ai/{encoded}"
+        url = "https://text.pollinations.ai/"
+        payload = {
+            "messages": [
+                {"role": "user", "content": prompt}
+            ]
+        }
 
         try:
             async with httpx.AsyncClient(timeout=20.0) as client:
-                response = await client.get(url)
+                response = await client.post(url, json=payload)
                 if response.status_code == 200:
                     return response.text
         except Exception as e:
