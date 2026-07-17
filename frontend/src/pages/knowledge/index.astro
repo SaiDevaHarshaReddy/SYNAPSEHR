@@ -15,6 +15,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         </p>
       </div>
       <button
+        id="upload-doc-btn"
         onclick="document.getElementById('upload-modal').classList.remove('hidden')"
         class="btn btn-primary"
       >
@@ -370,10 +371,11 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
 <script>
     import { api } from "../../services/api";
-    import { showToast } from "../../stores/index";
+    import { showToast, authStore } from "../../stores/index";
     import { knowledgeStore } from "../../stores/dataStore";
 
     let documents: any[] = [];
+    let canManage = false;
 
     const kbContents: Record<string, string> = {
       "Employee Handbook 2026": `
@@ -613,7 +615,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
           <td class="px-6 py-4 whitespace-nowrap text-sm flex gap-3">
             <button onclick="viewKbDoc('${doc.id}')" class="text-indigo-400 hover:text-indigo-300 font-medium">View</button>
             <button onclick="downloadKbDoc('${doc.id}')" class="text-emerald-400 hover:text-emerald-300 font-medium">Download</button>
-            <button onclick="deleteDoc('${doc.id}')" class="text-red-400 hover:text-red-300 font-medium">Delete</button>
+            ${canManage ? `<button onclick="deleteDoc('${doc.id}')" class="text-red-400 hover:text-red-300 font-medium">Delete</button>` : ''}
           </td>
         </tr>
       `,
@@ -763,7 +765,16 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     document.addEventListener('astro:page-load', () => {
       if (window.location.pathname === '/knowledge') {
+        const user = authStore.get().user;
+        canManage = user?.role === 'hr' || user?.role === 'administrator';
+        
+        const uploadBtn = document.getElementById('upload-doc-btn');
+        if (uploadBtn) {
+          uploadBtn.style.display = canManage ? 'flex' : 'none';
+        }
+
         bindEvents();
+        renderDocuments();
         
         if (knowledgeStore.get().length === 0) {
           api.get("/api/v1/knowledge").then(res => {
