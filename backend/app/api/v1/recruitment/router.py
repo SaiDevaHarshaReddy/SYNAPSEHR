@@ -137,6 +137,18 @@ async def score_candidate(
     return SuccessResponse(message="Candidate scored", data=candidate)
 
 
+@router.delete("/candidates/{candidate_id}")
+async def delete_candidate(
+    candidate_id: UUID,
+    current_user: dict = Depends(require_role("hr")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a candidate (HR/Admin only)."""
+    service = CandidateService(db)
+    await service.delete_candidate(candidate_id)
+    return SuccessResponse(message="Candidate deleted successfully")
+
+
 @router.post(
     "/candidates/{candidate_id}/interview-questions",
     response_model=SuccessResponse[CandidateResponse],

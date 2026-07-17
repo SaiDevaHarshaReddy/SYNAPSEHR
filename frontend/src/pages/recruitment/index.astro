@@ -583,6 +583,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 <script>
   import { api } from "../../services/api";
   import { candidatesStore } from "../../stores/dataStore";
+  import { authStore } from "../../stores";
 
   let allCandidates: any[] = [];
   let currentCandidateId: string | null = null;
@@ -802,6 +803,12 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             ? `<span class="font-bold ${scoreColor(c.overall_score)}">${c.overall_score}%</span>`
             : '<span class="text-slate-500">Not scored</span>';
 
+        const userRole = authStore.get().user?.role || "";
+        const canDelete = ["hr", "admin", "administrator"].includes(userRole);
+        const deleteBtn = canDelete ? `<button class="btn py-1 px-2.5 text-xs text-red-400 hover:bg-red-500/10 border border-transparent delete-candidate" onclick="event.stopPropagation(); window.deleteCandidate('${c.id}')">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>` : "";
+
         return `<tr class="hover:bg-slate-700/30 cursor-pointer transition-colors" data-id="${c.id}">
         <td>
           <div class="flex items-center gap-3">
@@ -831,6 +838,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
               <option value="rejected" ${c.stage === 'rejected' ? 'selected' : ''}>Rejected</option>
             </select>
             <button class="btn btn-secondary py-1 px-2.5 text-xs view-candidate" data-id="${c.id}">View</button>
+            ${deleteBtn}
           </div>
         </td>
       </tr>`;
@@ -1135,10 +1143,22 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     try {
       await api.patch(`/api/v1/recruitment/candidates/${id}/stage`, { stage });
       await refreshCandidates();
+      (window as any).showToast("Stage updated successfully", "success");
     } catch (err) {
-      console.error("Failed to update candidate stage:", err);
-      alert("Failed to update candidate stage. Please try again.");
-      await refreshCandidates(); // Revert dropdown
+      console.error("Failed to update stage", err);
+      (window as any).showToast("Failed to update stage", "error");
+    }
+  };
+
+  (window as any).deleteCandidate = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this candidate?")) return;
+    try {
+      await api.delete(`/api/v1/recruitment/candidates/${id}`);
+      await refreshCandidates();
+      (window as any).showToast("Candidate deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete candidate", err);
+      (window as any).showToast("Failed to delete candidate", "error");
     }
   };
 </script>
