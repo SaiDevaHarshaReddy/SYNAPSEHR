@@ -73,15 +73,19 @@
   const initialState = authStore.get();
   if (initialState.user) updateUser(initialState.user);
 
-  // Logout handler
-  document.getElementById('logout-btn')?.addEventListener('click', async () => {
-    try {
-      await api.logout();
-    } catch (e) {
-      console.error('Logout error:', e);
+  // Logout handler using event delegation to survive ViewTransitions DOM replacements
+  document.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('#logout-btn')) {
+      e.preventDefault();
+      try {
+        await api.logout();
+      } catch (err) {
+        console.error('Logout error:', err);
+      }
+      sessionStorage.removeItem('access_token');
+      sessionStorage.removeItem('refresh_token');
+      window.location.href = '/login';
     }
-    sessionStorage.removeItem('access_token');
-    sessionStorage.removeItem('refresh_token');
-    window.location.href = '/login';
   });
 </script>
