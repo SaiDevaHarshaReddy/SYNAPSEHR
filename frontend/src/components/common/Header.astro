@@ -70,8 +70,12 @@
   }
 
   authStore.subscribe((state: any) => updateUser(state.user));
-  const initialState = authStore.get();
-  if (initialState.user) updateUser(initialState.user);
+  
+  // Update UI on initial load and after every ViewTransitions navigation
+  document.addEventListener('astro:page-load', () => {
+    const state = authStore.get();
+    if (state.user) updateUser(state.user);
+  });
 
   // Logout handler using event delegation to survive ViewTransitions DOM replacements
   document.addEventListener('click', async (e) => {
