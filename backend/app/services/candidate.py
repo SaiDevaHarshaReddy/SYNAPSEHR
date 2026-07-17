@@ -517,7 +517,7 @@ Return ONLY the JSON object."""
         }
 
         try:
-            async with httpx.AsyncClient(timeout=20.0) as client:
+            async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(url, json=payload)
                 if response.status_code == 200:
                     return response.text

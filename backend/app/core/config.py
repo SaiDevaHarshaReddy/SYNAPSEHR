@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     SMTP_USE_TLS: bool = True
 
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:4321", "http://localhost:3000", "https://synapsehrproject.vercel.app"]
+    CORS_ORIGINS: List[str] = ["*"]
     CORS_ALLOW_CREDENTIALS: bool = True
 
     # Rate Limiting
