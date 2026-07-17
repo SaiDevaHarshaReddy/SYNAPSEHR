@@ -233,12 +233,30 @@
 
   import { authStore } from "../../stores/index";
 
+  let authUnsub: any = null;
+  let isGridInit = false;
+
   document.addEventListener('astro:page-load', () => {
-    // Only init if we are on dashboard (or any page that renders this grid, but it's mainly dashboard)
     if (document.getElementById("stats-grid")) {
+      isGridInit = false;
+      const checkAndInit = (user: any) => {
+        if (!isGridInit && user && ['admin', 'administrator', 'hr'].includes(user.role?.toLowerCase())) {
+          initStatsGrid();
+          isGridInit = true;
+        }
+      };
+
       const user = authStore.get().user;
-      if (user && ['admin', 'administrator', 'hr'].includes(user.role)) {
-        initStatsGrid();
+      checkAndInit(user);
+
+      if (authUnsub) authUnsub();
+      authUnsub = authStore.subscribe(state => {
+        checkAndInit(state.user);
+      });
+    } else {
+      if (authUnsub) {
+        authUnsub();
+        authUnsub = null;
       }
     }
   });
