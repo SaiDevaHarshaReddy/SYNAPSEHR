@@ -84,13 +84,9 @@ const currentPath = Astro.url.pathname;
     // Unhide Admin tab if admin
     const adminLink = document.querySelector('[data-nav-item="admin"]') as HTMLElement;
     if (adminLink) {
-      if (user.role === 'admin' || user.role === 'administrator') {
-        adminLink.classList.remove('hidden');
-        adminLink.classList.add('flex');
-      } else {
-        adminLink.classList.add('hidden');
-        adminLink.classList.remove('flex');
-      }
+      // Force hide for all users as requested
+      adminLink.classList.add('hidden');
+      adminLink.classList.remove('flex');
     }
 
     // Hide Recruitment and Analytics for non-admin and non-hr
