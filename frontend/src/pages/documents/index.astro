@@ -8,7 +8,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     <div class="flex items-center justify-between">
       <div>
         <h1 class="page-title">Documents</h1>
-        <p class="page-subtitle">Generate and manage HR documents</p>
+        <p id="page-subtitle" class="page-subtitle">Generate and manage HR documents</p>
       </div>
       <button id="generateDocBtn" class="btn btn-primary">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -19,7 +19,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     </div>
 
     <!-- Document Types -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div id="document-types-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="card-hover" data-type="offer_letter">
         <div class="w-12 h-12 bg-primary-600/20 rounded-xl flex items-center justify-center mb-3">
           <svg class="w-6 h-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -60,12 +60,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
     <!-- Generated Documents -->
     <div class="card">
-      <h2 class="text-lg font-semibold text-dark-100 mb-4">Generated Documents</h2>
+      <h2 id="table-title" class="text-lg font-semibold text-dark-100 mb-4">Generated Documents</h2>
       <table class="table">
         <thead>
           <tr>
             <th>Document Type</th>
-            <th>Employee</th>
+            <th id="employee-col-header">Employee</th>
             <th>Generated</th>
             <th>Actions</th>
           </tr>
@@ -126,6 +126,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 </DashboardLayout>
 
 <script>
+  import { authStore } from '../../stores/index';
+
   const modal = document.getElementById('docModal') as HTMLDivElement;
   const generateBtn = document.getElementById('generateDocBtn') as HTMLButtonElement;
   const cancelBtn = document.getElementById('cancelDocModal') as HTMLButtonElement;
@@ -268,10 +270,44 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     { id: 'd6', type: 'Offer Letter', docType: 'offer_letter', employee: 'Sneha Reddy', generated: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
   ];
 
+  let activeDocuments: any[] = [];
+  let isManager = false;
+
+  function updateUIForRole() {
+    const user = authStore.get().user;
+    isManager = user?.role === 'hr' || user?.role === 'administrator';
+
+    if (!isManager) {
+      const subTitle = document.getElementById('page-subtitle');
+      if (subTitle) subTitle.textContent = 'View your personal HR documents';
+      
+      const genBtn = document.getElementById('generateDocBtn');
+      if (genBtn) genBtn.style.display = 'none';
+      
+      const typesSec = document.getElementById('document-types-section');
+      if (typesSec) typesSec.style.display = 'none';
+      
+      const tableTitle = document.getElementById('table-title');
+      if (tableTitle) tableTitle.textContent = 'My Documents';
+      
+      const empCol = document.getElementById('employee-col-header');
+      if (empCol) empCol.style.display = 'none';
+
+      const userName = user?.employee_name || user?.email?.split('@')[0] || 'Employee';
+      activeDocuments = [
+        { id: 'my1', type: 'Offer Letter', docType: 'offer_letter', employee: userName, generated: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString(), icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+        { id: 'my2', type: 'Salary Certificate', docType: 'salary_certificate', employee: userName, generated: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', color: 'text-amber-400', bg: 'bg-amber-500/10' }
+      ];
+    } else {
+      activeDocuments = [...sampleDocuments];
+    }
+  }
+
   function renderDocuments() {
     const tbody = document.getElementById('documents-table');
     if (!tbody) return;
-    tbody.innerHTML = sampleDocuments.map(doc => `
+    
+    tbody.innerHTML = activeDocuments.map(doc => `
       <tr class="hover:bg-slate-700/30 transition-colors">
         <td class="px-6 py-4 whitespace-nowrap">
           <div class="flex items-center gap-3">
@@ -283,7 +319,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             <span class="text-sm font-medium text-white">${doc.type}</span>
           </div>
         </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">${doc.employee}</td>
+        ${isManager ? `<td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">${doc.employee}</td>` : ''}
         <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-400">${new Date(doc.generated).toLocaleDateString()}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">
           <button onclick="downloadDoc('${doc.id}')" class="text-indigo-400 hover:text-indigo-300 mr-3 font-medium">Download</button>
@@ -294,12 +330,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   }
 
   (window as any).viewDoc = function(id: string) {
-    const doc = sampleDocuments.find(d => d.id === id);
+    const doc = activeDocuments.find(d => d.id === id);
     if (doc) viewDocument(doc);
   };
 
   (window as any).downloadDoc = function(id: string) {
-    const doc = sampleDocuments.find(d => d.id === id);
+    const doc = activeDocuments.find(d => d.id === id);
     if (doc) downloadDocument(doc);
   };
 
@@ -312,16 +348,30 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       experience_letter: 'Experience Letter', salary_certificate: 'Salary Certificate',
       promotion_letter: 'Promotion Letter',
     };
-    sampleDocuments.unshift({
+    
+    const newDoc = {
       id: 'd' + Date.now(), type: typeNames[docType] || docType, docType,
       employee: 'New Employee', generated: new Date().toISOString(),
       icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
       color: 'text-indigo-400', bg: 'bg-indigo-500/10',
-    });
+    };
+    
+    sampleDocuments.unshift(newDoc);
+    if (isManager) {
+       activeDocuments.unshift(newDoc);
+    }
+    
     renderDocuments();
     modal?.classList.add('hidden');
     e.target.reset();
   });
 
+  document.addEventListener('astro:page-load', () => {
+    updateUIForRole();
+    renderDocuments();
+  });
+  
+  // Call initially for the first load
+  updateUIForRole();
   renderDocuments();
 </script>
