@@ -49,7 +49,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
               <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Department</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Designation</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Actions</th>
+              <th id="actions-header" class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody id="employee-table" class="divide-y divide-slate-800">
@@ -259,6 +259,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 <script>
   import { api } from '../../services/api';
   import { employeesStore, departmentsStore } from '../../stores/dataStore';
+  import { authStore } from '../../stores/index';
 
   let currentPage = 1;
   let employees: any[] = [];
@@ -266,6 +267,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   let departments: any[] = [];
   let currentEmployee: any = null;
   let isEditing = false;
+  let canManage = false;
 
   // Variables for DOM elements (initialized in page-load)
   let listView: HTMLDivElement | null;
@@ -291,6 +293,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   let editDeptSelect: HTMLSelectElement | null;
 
   function bindDOM() {
+    const user = authStore.get().user;
+    canManage = user?.role === 'hr' || user?.role === 'administrator';
+
     listView = document.getElementById('employee-list-view') as HTMLDivElement;
     detailView = document.getElementById('employee-detail-view') as HTMLDivElement;
     searchInput = document.getElementById('search') as HTMLInputElement;
@@ -304,6 +309,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     // Add employee triggers
     addModal = document.getElementById('addEmployeeModal') as HTMLDivElement;
     const addBtn = document.getElementById('add-employee-btn');
+    if (addBtn && !canManage) addBtn.style.display = 'none';
+    const actionsHeader = document.getElementById('actions-header');
+    if (actionsHeader && !canManage) actionsHeader.style.display = 'none';
     const cancelAddBtn = document.getElementById('cancel-add-btn');
     const closeAddBtn = document.getElementById('close-add-btn');
     addEmployeeForm = document.getElementById('add-employee-form') as HTMLFormElement;
@@ -316,6 +324,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     // Detail triggers
     const backBtn = document.getElementById('back-to-list-btn');
     editBtn = document.getElementById('edit-employee-btn') as HTMLButtonElement;
+    if (editBtn && !canManage) editBtn.style.display = 'none';
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
     const contactBtn = document.getElementById('contact-employee-btn');
     editActionsRow = document.getElementById('edit-actions-row') as HTMLDivElement;
@@ -524,9 +533,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
             ${emp.status === 'active' ? 'Active' : 'Inactive'}
           </span>
         </td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm">
+        ${canManage ? `<td class="px-6 py-4 whitespace-nowrap text-sm">
           <button onclick="event.stopPropagation(); navigateToDetail('${emp.id}')" class="text-indigo-400 hover:text-indigo-300 font-semibold">View</button>
-        </td>
+        </td>` : ''}
       </tr>
     `).join('');
     updatePagination();
