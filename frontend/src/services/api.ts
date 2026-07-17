@@ -245,8 +245,8 @@ class ApiService {
     if (department) formData.append('department', department);
 
     this.clearCache();
-    const response = await this.client.post<ApiResponse<any>>('/api/v1/knowledge/upload', formData);
-    return response.data.data!;
+    const response = await this.postForm('/api/v1/knowledge/upload', formData);
+    return response.data || response;
   }
 
   async listKnowledgeDocuments(): Promise<any[]> {
@@ -335,7 +335,11 @@ class ApiService {
 
   async postForm(url: string, formData: FormData): Promise<any> {
     this.clearCache();
-    const response = await this.client.post(url, formData);
+    const response = await this.client.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     return response.data;
   }
 
