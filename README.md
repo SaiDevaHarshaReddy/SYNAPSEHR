@@ -38,7 +38,6 @@ An autonomous AI workforce platform that executes HR operations, not just answer
 - Python 3.12+
 - Node.js 20+
 - PostgreSQL 17+
-- Docker (optional)
 
 ### Backend Setup
 
