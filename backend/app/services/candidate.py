@@ -91,7 +91,7 @@ class CandidateService:
 
         candidate = Candidate(
             organization_id=organization_id,
-            full_name=parsed.get("full_name", "Unknown Candidate"),
+            full_name=parsed.get("full_name") or "Unknown Candidate",
             email=parsed.get("email"),
             phone=parsed.get("phone"),
             resume_text=resume_text,
