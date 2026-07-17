@@ -345,6 +345,24 @@ class ApiService {
     return response.data.data!;
   }
 
+  // HR Tickets
+  async getHRTickets(): Promise<any[]> {
+    const response = await this._get<ApiResponse<any[]>>('/api/v1/hr-tickets');
+    return response.data.data!;
+  }
+
+  async createHRTicket(subject: string, message: string): Promise<any> {
+    this.clearCache();
+    const response = await this.client.post<ApiResponse<any>>('/api/v1/hr-tickets', { subject, message });
+    return response.data.data!;
+  }
+
+  async replyToHRTicket(ticketId: string, message: string): Promise<any> {
+    this.clearCache();
+    const response = await this.client.post<ApiResponse<any>>(`/api/v1/hr-tickets/${ticketId}/reply`, { message });
+    return response.data.data!;
+  }
+
   async delete(url: string): Promise<void> {
     this.clearCache();
     await this.client.delete(url);

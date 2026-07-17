@@ -33,6 +33,7 @@ async def lifespan(app: FastAPI):
 
     # Import all models to ensure they are registered with Base metadata
     import app.models.candidate  # noqa: F401
+    import app.models.hr_ticket  # noqa: F401
 
     # Initialize database
     await init_db()

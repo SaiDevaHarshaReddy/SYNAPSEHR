@@ -1,0 +1,280 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+---
+
+<DashboardLayout title="Support" description="Contact HR and get support">
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-white">Support Tickets</h1>
+        <p class="mt-1 text-sm text-slate-400">Contact HR and view your support messages</p>
+      </div>
+      <button id="new-ticket-btn" class="btn btn-primary hidden">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        New Ticket
+      </button>
+    </div>
+
+    <!-- Tickets List View -->
+    <div id="tickets-list-view" class="card">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-slate-800">
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Subject</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Employee</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Last Updated</th>
+            </tr>
+          </thead>
+          <tbody id="tickets-table" class="divide-y divide-slate-800">
+            <tr>
+              <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                <div class="flex flex-col items-center">
+                  <svg class="animate-spin h-8 w-8 text-indigo-400 mb-3" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  Loading tickets...
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Ticket Detail View -->
+    <div id="ticket-detail-view" class="space-y-6 hidden">
+      <div class="flex items-center justify-between">
+        <button id="back-to-list-btn" class="btn btn-secondary flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Back to Tickets
+        </button>
+      </div>
+
+      <div class="card p-6">
+        <h2 id="detail-subject" class="text-xl font-bold text-white mb-2">-</h2>
+        <p id="detail-meta" class="text-sm text-slate-400 mb-6">-</p>
+
+        <div id="ticket-messages" class="space-y-4 mb-6 max-h-[500px] overflow-y-auto pr-2">
+          <!-- Messages will be rendered here -->
+        </div>
+
+        <form id="reply-form" class="space-y-4 border-t border-slate-800 pt-6">
+          <div>
+            <label class="form-label">Reply</label>
+            <textarea id="reply-message" class="input" rows="3" placeholder="Type your reply here..." required></textarea>
+          </div>
+          <div class="flex justify-end">
+            <button type="submit" class="btn btn-primary" id="send-reply-btn">Send Reply</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Ticket Modal -->
+  <div id="newTicketModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div class="card w-full max-w-lg mx-4 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-white">Create New Ticket</h3>
+        <button id="close-new-btn" class="text-slate-400 hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <form id="new-ticket-form" class="space-y-4">
+        <div>
+          <label class="form-label">Subject</label>
+          <input type="text" id="new-subject" class="input" placeholder="e.g. Question about Payroll" required />
+        </div>
+        <div>
+          <label class="form-label">Message</label>
+          <textarea id="new-message" class="input" rows="5" placeholder="Please describe your issue..." required></textarea>
+        </div>
+        <div class="flex gap-3 justify-end pt-4">
+          <button type="button" id="cancel-new-btn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Ticket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+  import { api } from '../../services/api';
+  import { authStore } from '../../stores/index';
+
+  let tickets: any[] = [];
+  let currentTicket: any = null;
+  let isHr = false;
+
+  let listView: HTMLDivElement;
+  let detailView: HTMLDivElement;
+  let ticketsTable: HTMLTableSectionElement;
+  
+  let newTicketModal: HTMLDivElement;
+  let newTicketBtn: HTMLButtonElement;
+  let newTicketForm: HTMLFormElement;
+
+  function init() {
+    listView = document.getElementById('tickets-list-view') as HTMLDivElement;
+    detailView = document.getElementById('ticket-detail-view') as HTMLDivElement;
+    ticketsTable = document.getElementById('tickets-table') as HTMLTableSectionElement;
+    
+    newTicketModal = document.getElementById('newTicketModal') as HTMLDivElement;
+    newTicketBtn = document.getElementById('new-ticket-btn') as HTMLButtonElement;
+    newTicketForm = document.getElementById('new-ticket-form') as HTMLFormElement;
+
+    const user = authStore.get().user;
+    isHr = user?.role === 'hr' || user?.role === 'admin' || user?.role === 'administrator';
+
+    // Only non-HR users create tickets
+    if (!isHr) {
+      newTicketBtn.classList.remove('hidden');
+    }
+
+    newTicketBtn?.addEventListener('click', () => newTicketModal?.classList.remove('hidden'));
+    document.getElementById('cancel-new-btn')?.addEventListener('click', () => newTicketModal?.classList.add('hidden'));
+    document.getElementById('close-new-btn')?.addEventListener('click', () => newTicketModal?.classList.add('hidden'));
+
+    document.getElementById('back-to-list-btn')?.addEventListener('click', () => {
+      detailView.classList.add('hidden');
+      listView.classList.remove('hidden');
+      currentTicket = null;
+    });
+
+    newTicketForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const subject = (document.getElementById('new-subject') as HTMLInputElement).value;
+      const message = (document.getElementById('new-message') as HTMLTextAreaElement).value;
+      try {
+        const btn = document.querySelector('#new-ticket-form button[type="submit"]') as HTMLButtonElement;
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+        await api.createHRTicket(subject, message);
+        newTicketModal.classList.add('hidden');
+        newTicketForm.reset();
+        await loadTickets();
+      } catch (err) {
+        console.error(err);
+        alert('Failed to create ticket');
+      } finally {
+        const btn = document.querySelector('#new-ticket-form button[type="submit"]') as HTMLButtonElement;
+        btn.disabled = false;
+        btn.textContent = 'Submit Ticket';
+      }
+    });
+
+    document.getElementById('reply-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentTicket) return;
+      const messageInput = document.getElementById('reply-message') as HTMLTextAreaElement;
+      const message = messageInput.value;
+      try {
+        const btn = document.getElementById('send-reply-btn') as HTMLButtonElement;
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        const reply = await api.replyToHRTicket(currentTicket.id, message);
+        currentTicket.messages.push(reply);
+        messageInput.value = '';
+        renderMessages();
+      } catch (err) {
+        console.error(err);
+        alert('Failed to send reply');
+      } finally {
+        const btn = document.getElementById('send-reply-btn') as HTMLButtonElement;
+        btn.disabled = false;
+        btn.textContent = 'Send Reply';
+      }
+    });
+
+    loadTickets();
+  }
+
+  async function loadTickets() {
+    try {
+      tickets = await api.getHRTickets();
+      renderTickets();
+    } catch (err) {
+      console.error(err);
+      ticketsTable.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400">Error loading tickets</td></tr>';
+    }
+  }
+
+  function renderTickets() {
+    if (tickets.length === 0) {
+      ticketsTable.innerHTML = '<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400">No support tickets found</td></tr>';
+      return;
+    }
+
+    ticketsTable.innerHTML = tickets.map(t => `
+      <tr class="hover:bg-slate-800/40 transition-colors cursor-pointer" onclick="openTicket('${t.id}')">
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">${t.subject}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">${t.employee_name}</td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="px-2.5 py-0.5 text-xs font-medium rounded-full ${t.status === 'open' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}">
+            ${t.status.toUpperCase()}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-400">${new Date(t.updated_at).toLocaleDateString()}</td>
+      </tr>
+    `).join('');
+  }
+
+  (window as any).openTicket = (id: string) => {
+    currentTicket = tickets.find(t => t.id === id);
+    if (!currentTicket) return;
+
+    listView.classList.add('hidden');
+    detailView.classList.remove('hidden');
+
+    (document.getElementById('detail-subject') as HTMLElement).textContent = currentTicket.subject;
+    (document.getElementById('detail-meta') as HTMLElement).textContent = `Ticket by ${currentTicket.employee_name} • ${new Date(currentTicket.created_at).toLocaleString()}`;
+
+    renderMessages();
+  };
+
+  function renderMessages() {
+    const container = document.getElementById('ticket-messages');
+    if (!container || !currentTicket) return;
+
+    container.innerHTML = currentTicket.messages.map((m: any) => `
+      <div class="flex gap-4 ${m.is_hr ? 'bg-indigo-500/5 border border-indigo-500/10 rounded-xl p-4' : 'bg-slate-800/50 rounded-xl p-4'}">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${m.is_hr ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-white'}">
+          ${m.is_hr ? 'HR' : m.sender_name.charAt(0)}
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between mb-1">
+            <span class="font-medium text-sm ${m.is_hr ? 'text-indigo-400' : 'text-slate-300'}">${m.is_hr ? 'HR Support' : m.sender_name}</span>
+            <span class="text-xs text-slate-500">${new Date(m.timestamp).toLocaleString()}</span>
+          </div>
+          <p class="text-slate-300 text-sm whitespace-pre-wrap">${m.text}</p>
+        </div>
+      </div>
+    `).join('');
+    
+    container.scrollTop = container.scrollHeight;
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    if (window.location.pathname.startsWith('/support')) {
+      if (authStore.get().user) {
+        init();
+      } else {
+        const unsub = authStore.subscribe(state => {
+          if (state.user) {
+            init();
+            unsub();
+          }
+        });
+      }
+    }
+  });
+</script>

@@ -15,6 +15,7 @@ from app.api.v1.notifications.router import router as notifications_router
 from app.api.v1.policies.router import router as policies_router
 from app.api.v1.recruitment.router import router as recruitment_router
 from app.api.v1.workflow.router import router as workflow_router
+from app.api.v1.hr_tickets.router import router as hr_tickets_router
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -31,4 +32,4 @@ api_router.include_router(notifications_router)
 api_router.include_router(workflow_router)
 api_router.include_router(admin_router)
 api_router.include_router(recruitment_router)
-
+api_router.include_router(hr_tickets_router)
