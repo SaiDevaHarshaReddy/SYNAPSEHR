@@ -335,11 +335,7 @@ class ApiService {
 
   async postForm(url: string, formData: FormData): Promise<any> {
     this.clearCache();
-    const response = await this.client.post(url, formData, {
-      headers: {
-        'Content-Type': undefined,
-      },
-    });
+    const response = await this.client.post(url, formData);
     return response.data;
   }
 
