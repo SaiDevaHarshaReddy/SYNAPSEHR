@@ -148,6 +148,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                 >Status</th
               >
               <th
+                id="actions-header"
                 class="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider"
                 >Actions</th
               >
@@ -244,11 +245,12 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
 <script>
     import { api } from "../../services/api";
-    import { showToast } from "../../stores/index";
+    import { authStore, showToast } from "../../stores/index";
     import { departmentsStore, employeesStore } from "../../stores/dataStore";
 
     let departments: any[] = [];
     let employees: any[] = [];
+    let canManage = false;
 
     // Project data per department
     const deptProjects: Record<string, { active: number; completed: number }> = {
@@ -329,10 +331,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="badge badge-success">Active</span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">
+            ${canManage ? `<td class="px-6 py-4 whitespace-nowrap text-sm">
               <button class="text-indigo-400 hover:text-indigo-300 mr-3">Edit</button>
               <button class="text-red-400 hover:text-red-300" onclick="deleteDepartment('${dept.id}')">Delete</button>
-            </td>
+            </td>` : ''}
           </tr>
         `;
         }).join("");
@@ -361,6 +363,15 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     };
 
     function bindEvents() {
+      const user = authStore.get().user;
+      canManage = user?.role === 'hr' || user?.role === 'administrator';
+
+      const addBtn = document.getElementById("add-department-btn");
+      if (addBtn && !canManage) addBtn.style.display = "none";
+
+      const actionsHeader = document.getElementById("actions-header");
+      if (actionsHeader && !canManage) actionsHeader.style.display = "none";
+
       document.getElementById("department-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target as HTMLFormElement);
