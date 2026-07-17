@@ -113,6 +113,18 @@ const currentPath = Astro.url.pathname;
         analyticsLink.classList.remove('flex');
       }
     }
+
+    // Hide Employees for non-admin and non-hr
+    const employeesLink = document.querySelector('[data-nav-item="employees"]') as HTMLElement;
+    if (employeesLink) {
+      if (user.role === 'admin' || user.role === 'administrator' || user.role === 'hr') {
+        employeesLink.classList.remove('hidden');
+        employeesLink.classList.add('flex');
+      } else {
+        employeesLink.classList.add('hidden');
+        employeesLink.classList.remove('flex');
+      }
+    }
   }
 
   authStore.subscribe((state: any) => updateUser(state.user));
