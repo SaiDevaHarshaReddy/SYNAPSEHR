@@ -168,8 +168,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     import { authStore } from '../../stores/index';
     import { api } from '../../services/api';
 
-    function showSection(section: string) {
-      document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
+    function initSettings() {
+      function showSection(section: string) {
+        document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
       document.getElementById(`section-${section}`)?.classList.remove('hidden');
 
       document.querySelectorAll('.settings-nav-item').forEach(btn => {
@@ -311,5 +312,10 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         }
       });
     });
+
+    } // End of initSettings
+
+    // Initialize on first load and after every View Transition
+    document.addEventListener('astro:page-load', initSettings);
   </script>
 </DashboardLayout>
