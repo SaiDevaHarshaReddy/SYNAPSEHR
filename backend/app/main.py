@@ -29,21 +29,36 @@ logger = structlog.get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events."""
+    print("STARTUP: Starting lifespan...", flush=True)
     logger.info("application_startup", env=settings.APP_ENV)
 
     # Import all models to ensure they are registered with Base metadata
     import app.models.candidate  # noqa: F401
     import app.models.hr_ticket  # noqa: F401
+    print("STARTUP: Models imported.", flush=True)
 
     # Initialize database
-    await init_db()
-    logger.info("database_initialized")
+    print("STARTUP: Initializing DB...", flush=True)
+    try:
+        await init_db()
+        print("STARTUP: DB Initialized successfully.", flush=True)
+        logger.info("database_initialized")
+    except Exception as e:
+        print(f"STARTUP DB ERROR: {e}", flush=True)
+        raise
 
     # Initialize workflow engine
-    from app.workflows.engine import initialize_workflows
-    initialize_workflows()
-    logger.info("workflows_initialized")
+    print("STARTUP: Initializing workflows...", flush=True)
+    try:
+        from app.workflows.engine import initialize_workflows
+        initialize_workflows()
+        print("STARTUP: Workflows Initialized successfully.", flush=True)
+        logger.info("workflows_initialized")
+    except Exception as e:
+        print(f"STARTUP WORKFLOW ERROR: {e}", flush=True)
+        raise
 
+    print("STARTUP: Lifespan setup complete.", flush=True)
     yield
 
     # Cleanup
