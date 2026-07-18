@@ -36,6 +36,37 @@ class PolicyAgent(BaseAgent):
             )
 
             if not results:
+                # Fallback to direct file reading since RAG might be disabled
+                import os
+                from sqlalchemy import select
+                from app.models.policy_document import PolicyDocument
+                import uuid
+                
+                db = context.get("db")
+                org_id = context.get("organization_id")
+                if isinstance(org_id, str):
+                    org_id = uuid.UUID(org_id)
+                    
+                doc_query = select(PolicyDocument).where(PolicyDocument.organization_id == org_id)
+                db_results = await db.execute(doc_query)
+                docs = db_results.scalars().all()
+                
+                if docs:
+                    results = []
+                    for doc in docs:
+                        if os.path.exists(doc.storage_path):
+                            try:
+                                with open(doc.storage_path, "r", encoding="utf-8", errors="ignore") as f:
+                                    text = f.read()
+                                    results.append({
+                                        "source": doc.title,
+                                        "content": text,
+                                        "relevance_score": 1.0
+                                    })
+                            except Exception:
+                                pass
+                                
+            if not results:
                 # Knowledge base empty - fall back to HR agent with database context
                 logger.info("policy_agent_knowledge_empty", fallback_to_hr=True)
                 return await self._fallback_to_hr(message, context)
