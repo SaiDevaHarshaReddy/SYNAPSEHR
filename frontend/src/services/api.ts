@@ -107,6 +107,11 @@ class ApiService {
     return response.data.data!;
   }
 
+  async deleteEmployee(id: string): Promise<void> {
+    this.clearCache();
+    await this.client.delete(`/api/v1/employees/${id}`);
+  }
+
   // Departments
   async getDepartments(params?: PaginationParams): Promise<PaginatedResponse<Department>> {
     const response = await this._get<PaginatedResponse<Department>>('/api/v1/departments', { params });
@@ -335,10 +340,12 @@ class ApiService {
 
   async postForm(url: string, formData: FormData): Promise<any> {
     this.clearCache();
-    const response = await this.client.post(url, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+    let token = '';
+    if (typeof window !== 'undefined') {
+      token = sessionStorage.getItem('access_token') || '';
+    }
+    const response = await axios.post(`${API_BASE_URL}${url}`, formData, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
     return response.data;
   }

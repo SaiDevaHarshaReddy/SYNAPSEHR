@@ -11,17 +11,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
           HR insights, recruitment performance & operational metrics
         </p>
       </div>
-      <div class="flex items-center gap-3 flex-shrink-0">
-        <select id="filter-department" style="min-width:180px;padding:6px 12px;border-radius:10px;border:1px solid rgba(100,116,139,0.5);background:rgba(30,41,59,0.7);color:#e2e8f0;font-size:0.875rem;outline:none;cursor:pointer;" onchange="window.reloadAnalytics()">
-          <option value="">All Departments</option>
-        </select>
-        <select id="filter-date" style="min-width:150px;padding:6px 12px;border-radius:10px;border:1px solid rgba(100,116,139,0.5);background:rgba(30,41,59,0.7);color:#e2e8f0;font-size:0.875rem;outline:none;cursor:pointer;" onchange="window.reloadAnalytics()">
-          <option value="">All Time</option>
-          <option value="30">Last 30 Days</option>
-          <option value="90">Last 90 Days</option>
-          <option value="365">This Year</option>
-        </select>
-      </div>
     </div>
 
     <!-- KPI Cards -->
@@ -308,25 +297,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     let leaveChartInstance: any = null;
     let deptChartInstance: any = null;
     let scoreChartInstance: any = null;
-
-    async function loadDepartments() {
-      try {
-        const select = document.getElementById("filter-department") as HTMLSelectElement;
-        if (!select) return;
-        const res = await api.get("/api/v1/departments");
-        const depts = res.data.data;
-        if (depts) {
-          depts.forEach((d: any) => {
-            const opt = document.createElement("option");
-            opt.value = d.id;
-            opt.textContent = d.name;
-            select.appendChild(opt);
-          });
-        }
-      } catch (e) {
-        console.error("Failed to load departments", e);
-      }
-    }
 
     async function loadAnalytics() {
       try {
@@ -634,7 +604,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     (window as any).reloadAnalytics = loadAnalytics;
 
-    Promise.all([loadDepartments(), loadAnalytics()]);
+    loadAnalytics();
     // Poll every 5 seconds for real-time updates
     setInterval(loadAnalytics, 5000);
   </script>

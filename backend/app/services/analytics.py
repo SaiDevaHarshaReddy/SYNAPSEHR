@@ -31,7 +31,7 @@ class AnalyticsService:
         # Total employees
         emp_query = select(func.count()).select_from(Employee).join(
             Department, Employee.department_id == Department.id
-        )
+        ).where(Employee.status == "active")
         if organization_id:
             emp_query = emp_query.where(Department.organization_id == organization_id)
         if department_id:
@@ -163,6 +163,7 @@ class AnalyticsService:
         query = (
             select(Department.name, func.count(Employee.id))
             .join(Employee, Department.id == Employee.department_id)
+            .where(Employee.status == "active")
         )
         if organization_id:
             query = query.where(Department.organization_id == organization_id)

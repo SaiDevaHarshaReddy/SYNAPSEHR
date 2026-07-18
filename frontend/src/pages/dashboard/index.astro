@@ -170,8 +170,9 @@ import EmployeeNotifications from "../../components/dashboard/EmployeeNotificati
 
       unsubscribes.push(employeesStore.subscribe(employees => {
         if (employees && employees.length > 0) {
-          renderEmploymentChart(employees);
-          renderRecentHires(employees);
+          const activeEmployees = employees.filter((e: any) => e.status === 'active');
+          renderEmploymentChart(activeEmployees);
+          renderRecentHires(activeEmployees);
         }
       }));
 

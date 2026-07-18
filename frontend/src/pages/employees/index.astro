@@ -534,7 +534,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
           </span>
         </td>
         ${canManage ? `<td class="px-6 py-4 whitespace-nowrap text-sm">
-          <button onclick="event.stopPropagation(); navigateToDetail('${emp.id}')" class="text-indigo-400 hover:text-indigo-300 font-semibold">View</button>
+          <button onclick="event.stopPropagation(); navigateToDetail('${emp.id}')" class="text-indigo-400 hover:text-indigo-300 font-semibold mr-4">View</button>
+          <button onclick="event.stopPropagation(); window.deleteEmployee('${emp.id}')" class="text-red-400 hover:text-red-300 font-semibold">Delete</button>
         </td>` : ''}
       </tr>
     `).join('');
@@ -544,6 +545,22 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   (window as any).navigateToDetail = function(id: string) {
     window.history.pushState({}, '', `/employees?id=${id}`);
     checkUrlState();
+  };
+
+  (window as any).deleteEmployee = async function(id: string) {
+    if (confirm('Are you sure you want to delete this employee?')) {
+      try {
+        await api.deleteEmployee(id);
+        alert('Employee deleted successfully!');
+        const currentEmployees = employeesStore.get();
+        // The backend performs a soft-delete by deactivating the employee.
+        // Update the store so the user can still be seen under 'Inactive' status filter.
+        employeesStore.set(currentEmployees.map((e: any) => e.id === id ? { ...e, status: 'inactive' } : e));
+      } catch (err) {
+        console.error('Failed to delete employee:', err);
+        alert('Error deleting employee.');
+      }
+    }
   };
 
   function updatePagination() {
