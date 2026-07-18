@@ -53,18 +53,20 @@ class PolicyAgent(BaseAgent):
                 
                 if docs:
                     results = []
+                    from app.rag.parser import DocumentParser
                     for doc in docs:
                         if os.path.exists(doc.storage_path):
                             try:
-                                with open(doc.storage_path, "r", encoding="utf-8", errors="ignore") as f:
-                                    text = f.read()
-                                    results.append({
-                                        "source": doc.title,
-                                        "content": text,
-                                        "relevance_score": 1.0
-                                    })
-                            except Exception:
-                                pass
+                                text = DocumentParser.parse(doc.storage_path)
+                                results.append({
+                                    "source": doc.title,
+                                    "content": text,
+                                    "relevance_score": 1.0
+                                })
+                            except Exception as e:
+                                logger.error("document_parse_error", file=doc.storage_path, error=str(e))
+                        else:
+                            logger.error("document_file_not_found", file=doc.storage_path)
                                 
             if not results:
                 # Knowledge base empty - fall back to HR agent with database context
