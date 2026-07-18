@@ -55,7 +55,8 @@
         name = user.email.split('@')[0];
       }
 
-      if (user.role === 'administrator' || user.role === 'admin' || user.role === 'hr') {
+      const role = user.role as string;
+      if (role === 'administrator' || role === 'admin' || role === 'hr' || role === 'manager') {
         greetingEl.innerHTML = `${timeGreeting}, ${name}! <span class="text-gradient">Ready to manage your team?</span>`;
         descEl.classList.remove('hidden');
         iconEl.classList.remove('hidden');
