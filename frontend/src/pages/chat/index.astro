@@ -115,15 +115,19 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   <script>
     import { api } from "../../services/api";
 
-    const form = document.getElementById('chatForm') as HTMLFormElement;
-    const input = document.getElementById('chatInput') as HTMLInputElement;
-    const messages = document.getElementById('chatMessages') as HTMLDivElement;
-    const workflowTimeline = document.getElementById('workflowTimeline') as HTMLDivElement;
+    function initChat() {
+      const form = document.getElementById('chatForm') as HTMLFormElement;
+      const input = document.getElementById('chatInput') as HTMLInputElement;
+      const messages = document.getElementById('chatMessages') as HTMLDivElement;
+      const workflowTimeline = document.getElementById('workflowTimeline') as HTMLDivElement;
+
+      if (!form || !input || !messages) return;
 
     // Redirect to login if no token
     const token = sessionStorage.getItem('access_token');
     if (!token) {
       window.location.href = '/login';
+      return;
     }
 
     let conversationId: string | null = null;
@@ -354,5 +358,10 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       html = html.replace(/\n/g, '<br>');
       return html;
     }
+    
+    } // End of initChat
+
+    // Initialize on first load and after every View Transition
+    document.addEventListener('astro:page-load', initChat);
   </script>
 </DashboardLayout>
